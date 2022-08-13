@@ -1,4 +1,2 @@
-pub struct DiscretePoint {
-    pub x: usize,
-    pub y: usize
-}
+pub mod discrete_point;
+pub mod rect_size;

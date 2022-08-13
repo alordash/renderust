@@ -6,7 +6,7 @@ use std::{
 
 use rand::prelude::*;
 
-use crate::geometry::DiscretePoint;
+use crate::geometry::{discrete_point::DiscretePoint, rect_size::RectSize};
 
 #[derive(Default, Clone, Copy, Debug)]
 #[repr(C)]
@@ -40,8 +40,7 @@ impl Color {
 
 #[derive(Debug)]
 pub struct DrawBuffer {
-    width: usize,
-    height: usize,
+    size: RectSize,
     buffer: Vec<Color>,
 }
 
@@ -55,8 +54,7 @@ impl DrawBuffer {
     pub fn new(width: usize, height: usize, create_option: DrawBufferCreateOption) -> DrawBuffer {
         let size = width * height;
         DrawBuffer {
-            width,
-            height,
+            size: RectSize { width, height },
             buffer: match create_option {
                 DrawBufferCreateOption::BLANK => vec![Color::default(); size],
                 DrawBufferCreateOption::RANDOM => (0..size).map(|_| Color::random()).collect(),
@@ -65,36 +63,45 @@ impl DrawBuffer {
         }
     }
 
-    fn resize(&mut self) {
-        let new_size = self.width * self.height;
-        self.buffer.resize(new_size, Color::random());
+    fn resize(&mut self, new_size: RectSize) {
+        let new_len = new_size.width * new_size.height;
+        let new_value = Color::random();
+
+        self.buffer.resize(new_len, new_value);
+        // if self.width != new_size.0 {}
     }
 
     pub fn get_width(&self) -> usize {
-        self.width
+        self.size.width
     }
 
     pub fn set_width(&mut self, width: usize) {
-        self.width = width;
-        self.resize();
+        self.resize(RectSize {
+            width,
+            height: self.size.height,
+        });
+        self.size.width = width;
     }
 
     pub fn get_height(&self) -> usize {
-        self.height
+        self.size.height
     }
 
     pub fn set_height(&mut self, height: usize) {
-        self.height = height;
-        self.resize();
+        self.resize(RectSize {
+            width: self.size.width,
+            height,
+        });
+        self.size.height = height;
     }
 
-    pub fn get_size(&self) -> (usize, usize) {
-        (self.width, self.height)
+    pub fn get_size(&self) -> RectSize {
+        self.size
     }
 
-    pub fn set_size(&mut self, size: (usize, usize)) {
-        (self.width, self.height) = size;
-        self.resize();
+    pub fn set_size(&mut self, size: RectSize) {
+        self.resize(size);
+        self.size = size;
     }
 
     pub fn get_buffer_ref(&self) -> &Vec<Color> {
@@ -114,7 +121,10 @@ impl DrawBuffer {
 impl Index<(usize, usize)> for DrawBuffer {
     type Output = Color;
     fn index(&self, index: (usize, usize)) -> &Self::Output {
-        unsafe { self.buffer.get_unchecked(index.0 + index.1 * self.width) }
+        unsafe {
+            self.buffer
+                .get_unchecked(index.0 + index.1 * self.size.width)
+        }
     }
 }
 
@@ -122,7 +132,7 @@ impl IndexMut<(usize, usize)> for DrawBuffer {
     fn index_mut(&mut self, index: (usize, usize)) -> &mut Self::Output {
         unsafe {
             self.buffer
-                .get_unchecked_mut(index.0 + index.1 * self.width)
+                .get_unchecked_mut(index.0 + index.1 * self.size.width)
         }
     }
 }
