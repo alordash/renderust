@@ -41,7 +41,7 @@ impl Color {
 #[derive(Debug)]
 pub struct DrawBuffer {
     size: RectSize,
-    buffer: Vec<Color>,
+    pub buffer: Vec<Color>,
 }
 
 #[non_exhaustive]
@@ -67,8 +67,35 @@ impl DrawBuffer {
         let new_len = new_size.width * new_size.height;
         let new_value = Color::random();
 
-        self.buffer.resize(new_len, new_value);
-        // if self.width != new_size.0 {}
+        let mut filling_range: &mut dyn Iterator<Item = _> = &mut (0..self.size.height).rev();
+        let mut straight_range = (0..self.size.height);
+        if new_len > self.buffer.len() {
+            self.buffer.resize(new_len, new_value);
+        } else if new_len < self.buffer.len() {
+            filling_range = &mut straight_range;
+        }
+        if self.size.width != new_size.width {
+            let old_width = self.size.width;
+            let new_width = new_size.width;
+            unsafe {
+                println!("Refilling");
+                let buff_ptr = self.buffer.as_mut_ptr();
+                for i in filling_range {
+                    let dst_offset = new_width * i;
+                    let src_offset = old_width * i;
+                    let dst = buff_ptr.add(dst_offset);
+                    let src = buff_ptr.add(src_offset);
+                    let count = old_width.min(new_width);
+                    std::ptr::copy_nonoverlapping(src, dst, count);
+                    for j in dst_offset + old_width..dst_offset + new_width {
+                        *buff_ptr.add(j) = new_value;
+                    }
+                }
+            }
+        }
+        if new_len < self.buffer.len() {
+            self.buffer.resize(new_len, new_value);
+        }
     }
 
     pub fn get_width(&self) -> usize {
