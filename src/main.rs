@@ -3,62 +3,79 @@ mod geometry;
 
 use std::time::Instant;
 
-use drawin::{color::Color, draw_buffer::*};
-use geometry::{discrete_point::DiscretePoint, rect_size::RectSize};
+use drawin::{color::Color, draw_buffer::*, drawable::Drawable};
+use geometry::{discrete_line::DiscreteLine, discrete_point::DiscretePoint, rect_size::RectSize};
 use minifb::{Key, ScaleMode, Window, WindowOptions};
 use rand::prelude::*;
 
-const WIDTH: usize = 150;
-const HEIGHT: usize = 30;
-const DEFAULT_AREA: usize = WIDTH * HEIGHT;
+const BUFFER_WIDTH: usize = 100;
+const BUFFER_HEIGHT: usize = 100;
+
+const WINDOW_WIDTH: usize = 400;
+const WINDOW_HEIGHT: usize = 400;
+
+const WIDTH_SCALE: f32 = WINDOW_WIDTH as f32 / BUFFER_WIDTH as f32;
+const HEIGHT_SCALE: f32 = WINDOW_HEIGHT as f32 / BUFFER_HEIGHT as f32;
 
 fn main() {
     // Allocate the output buffer.
-    let mut draw_buffer = DrawBuffer::new(WIDTH, HEIGHT, DrawBufferCreateOption::BLANK);
+    let mut draw_buffer =
+        DrawBuffer::new(BUFFER_WIDTH, BUFFER_HEIGHT, DrawBufferCreateOption::BLANK);
 
     let mut window = Window::new(
         "Press ESC to exit",
-        WIDTH,
-        HEIGHT,
+        WINDOW_WIDTH,
+        WINDOW_HEIGHT,
         WindowOptions {
             resize: true,
-            scale_mode: ScaleMode::UpperLeft,
+            scale_mode: ScaleMode::AspectRatioStretch,
             ..WindowOptions::default()
         },
     )
     .expect("Unable to open Window");
 
-    let mut rng = rand::thread_rng();
+    let mut points: Vec<DiscretePoint> = Vec::new();
+    let mut is_mouse_pressed = false;
+
+    println!("W: {}, H: {}", WIDTH_SCALE, HEIGHT_SCALE);
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         let start = Instant::now();
 
-        let new_size: RectSize = window.get_size().into();
-        if draw_buffer.get_size() != new_size {
-            println!("Resizing: {:?} -> {:?}", draw_buffer.get_size(), new_size);
-            draw_buffer.set_size(new_size);
-        }
-
-        let RectSize { width, height } = draw_buffer.get_size();
-
-        // for _ in 0..DEFAULT_AREA {
-        let point = DiscretePoint {
-            x: rng.gen_range(0..width),
-            y: rng.gen_range(0..height),
-        };
-        let new_color = Color::random();
-
-        draw_buffer[point] = new_color;
+        // let new_size: RectSize = window.get_size().into();
+        // if draw_buffer.get_size() != new_size {
+        //     println!("Resizing: {:?} -> {:?}", draw_buffer.get_size(), new_size);
+        //     draw_buffer.set_size(new_size);
         // }
 
-        if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
-            let point: DiscretePoint = (x as usize, y as usize).into();
-
-            if window.get_mouse_down(minifb::MouseButton::Left) {
-                draw_buffer[point] = Color::new(255, 255, 255);
-            } else if window.get_mouse_down(minifb::MouseButton::Right) {
-                draw_buffer[point] = Color::new(0, 0, 0);
+        if window.get_mouse_down(minifb::MouseButton::Left) {
+            if !is_mouse_pressed {
+                is_mouse_pressed = true;
+                if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
+                    let point: DiscretePoint =
+                        ((x / WIDTH_SCALE) as isize, (y / HEIGHT_SCALE) as isize).into();
+                    points.push(point);
+                }
             }
+        } else {
+            is_mouse_pressed = false;
+        }
+
+        if points.len() > 1 {
+            let len = points.len();
+            let even_len = if len % 2 == 0 { len } else { len - 1 };
+            let iterating_points: Vec<DiscretePoint> = points.drain(0..even_len).collect();
+            for points_chunk in iterating_points.chunks_exact(2) {
+                unsafe {
+                    let (p1, p2) = (points_chunk.get_unchecked(0), points_chunk.get_unchecked(1));
+                    let line = DiscreteLine {
+                        begin: *p1,
+                        end: *p2,
+                    };
+                    line.draw(&mut draw_buffer, &Color::random());
+                }
+            }
+            println!("Previous len: {}, new: {}", len, points.len());
         }
 
         window

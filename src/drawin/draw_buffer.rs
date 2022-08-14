@@ -138,12 +138,12 @@ impl IndexMut<(usize, usize)> for DrawBuffer {
 impl Index<DiscretePoint> for DrawBuffer {
     type Output = Color;
     fn index(&self, index: DiscretePoint) -> &Self::Output {
-        <Self as Index<(usize, usize)>>::index(self, (index.x, index.y))
+        <Self as Index<(usize, usize)>>::index(self, (index.x as usize, index.y as usize))
     }
 }
 
 impl IndexMut<DiscretePoint> for DrawBuffer {
     fn index_mut(&mut self, index: DiscretePoint) -> &mut Self::Output {
-        <Self as IndexMut<(usize, usize)>>::index_mut(self, (index.x, index.y))
+        <Self as IndexMut<(usize, usize)>>::index_mut(self, (index.x as usize, index.y as usize))
     }
 }
