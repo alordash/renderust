@@ -4,39 +4,9 @@ use std::{
     slice,
 };
 
-use rand::prelude::*;
-
 use crate::geometry::{discrete_point::DiscretePoint, rect_size::RectSize};
 
-#[derive(Default, Clone, Copy, Debug)]
-#[repr(C)]
-pub struct Color {
-    pub b: u8,
-    pub g: u8,
-    pub r: u8,
-    pub alpha: u8,
-}
-
-impl Color {
-    pub fn random() -> Color {
-        let mut rng = rand::thread_rng();
-        let range = u8::MIN..u8::MAX;
-        Color {
-            r: rng.gen_range(range.clone()),
-            g: rng.gen_range(range.clone()),
-            b: rng.gen_range(range.clone()),
-            alpha: 255,
-        }
-    }
-
-    pub fn new(r: u8, g: u8, b: u8) -> Color {
-        Color { b, g, r, alpha: 0 }
-    }
-
-    pub fn new_with_alpha(r: u8, g: u8, b: u8, alpha: u8) -> Color {
-        Color { b, g, r, alpha }
-    }
-}
+use super::color::Color;
 
 #[derive(Debug)]
 pub struct DrawBuffer {
@@ -47,7 +17,7 @@ pub struct DrawBuffer {
 #[non_exhaustive]
 pub enum DrawBufferCreateOption {
     BLANK,
-    RANDOM,
+    RANDOM_FILLING,
 }
 
 impl DrawBuffer {
@@ -57,7 +27,7 @@ impl DrawBuffer {
             size: RectSize { width, height },
             buffer: match create_option {
                 DrawBufferCreateOption::BLANK => vec![Color::default(); size],
-                DrawBufferCreateOption::RANDOM => (0..size).map(|_| Color::random()).collect(),
+                DrawBufferCreateOption::RANDOM_FILLING => (0..size).map(|_| Color::random()).collect(),
                 _ => vec![Color::default(); size],
             },
         }
@@ -65,10 +35,11 @@ impl DrawBuffer {
 
     fn resize(&mut self, new_size: RectSize) {
         let new_len = new_size.width * new_size.height;
-        let new_value = Color::random();
+        let new_value = Color::default();
 
         let mut filling_range: &mut dyn Iterator<Item = _> = &mut (0..self.size.height).rev();
         let mut straight_range = (0..self.size.height);
+
         if new_len > self.buffer.len() {
             self.buffer.resize(new_len, new_value);
         } else if new_len < self.buffer.len() {
