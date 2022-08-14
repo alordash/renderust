@@ -21,13 +21,25 @@ pub enum DrawBufferCreateOption {
 }
 
 impl DrawBuffer {
+    pub fn clean(&mut self) {
+        self.buffer.fill(Color::default());
+    }
+
+    pub fn clean_with(&mut self, filling_color: &Color) {
+        self.buffer.fill(*filling_color);
+    }
+}
+
+impl DrawBuffer {
     pub fn new(width: usize, height: usize, create_option: DrawBufferCreateOption) -> DrawBuffer {
         let size = width * height;
         DrawBuffer {
             size: RectSize { width, height },
             buffer: match create_option {
                 DrawBufferCreateOption::BLANK => vec![Color::default(); size],
-                DrawBufferCreateOption::RANDOM_FILLING => (0..size).map(|_| Color::random()).collect(),
+                DrawBufferCreateOption::RANDOM_FILLING => {
+                    (0..size).map(|_| Color::random()).collect()
+                }
                 _ => vec![Color::default(); size],
             },
         }

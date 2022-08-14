@@ -14,9 +14,6 @@ const BUFFER_HEIGHT: usize = 100;
 const WINDOW_WIDTH: usize = 400;
 const WINDOW_HEIGHT: usize = 400;
 
-const WIDTH_SCALE: f32 = WINDOW_WIDTH as f32 / BUFFER_WIDTH as f32;
-const HEIGHT_SCALE: f32 = WINDOW_HEIGHT as f32 / BUFFER_HEIGHT as f32;
-
 fn main() {
     // Allocate the output buffer.
     let mut draw_buffer =
@@ -28,32 +25,34 @@ fn main() {
         WINDOW_HEIGHT,
         WindowOptions {
             resize: true,
-            scale_mode: ScaleMode::AspectRatioStretch,
+            scale_mode: ScaleMode::Stretch,
             ..WindowOptions::default()
         },
     )
     .expect("Unable to open Window");
 
+    let mut width_scale = WINDOW_WIDTH as f32 / BUFFER_WIDTH as f32;
+    let mut height_scale = WINDOW_HEIGHT as f32 / BUFFER_HEIGHT as f32;
+
     let mut points: Vec<DiscretePoint> = Vec::new();
     let mut is_mouse_pressed = false;
-
-    println!("W: {}, H: {}", WIDTH_SCALE, HEIGHT_SCALE);
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         let start = Instant::now();
 
-        // let new_size: RectSize = window.get_size().into();
-        // if draw_buffer.get_size() != new_size {
-        //     println!("Resizing: {:?} -> {:?}", draw_buffer.get_size(), new_size);
-        //     draw_buffer.set_size(new_size);
-        // }
+        let new_size: RectSize = window.get_size().into();
+        if draw_buffer.get_size() != new_size {
+            width_scale = new_size.width as f32 / BUFFER_WIDTH as f32;
+            height_scale = new_size.height as f32 / BUFFER_HEIGHT as f32;
+        }
 
         if window.get_mouse_down(minifb::MouseButton::Left) {
             if !is_mouse_pressed {
                 is_mouse_pressed = true;
                 if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
                     let point: DiscretePoint =
-                        ((x / WIDTH_SCALE) as isize, (y / HEIGHT_SCALE) as isize).into();
+                        ((x / width_scale) as isize, (y / height_scale) as isize).into();
+                    draw_buffer[point] = Color::new(255, 0, 0);
                     points.push(point);
                 }
             }
@@ -75,7 +74,10 @@ fn main() {
                     line.draw(&mut draw_buffer, &Color::random());
                 }
             }
-            println!("Previous len: {}, new: {}", len, points.len());
+        }
+
+        if window.is_key_down(Key::C) {
+            draw_buffer.clean();
         }
 
         window
