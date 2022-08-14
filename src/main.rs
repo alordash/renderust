@@ -40,15 +40,25 @@ fn main() {
         }
 
         let RectSize { width, height } = draw_buffer.get_size();
-        
-        for _ in 0..DEFAULT_AREA {
-            let point = DiscretePoint {
-                x: rng.gen_range(0..width),
-                y: rng.gen_range(0..height),
-            };
-            let new_color = Color::random();
 
-            draw_buffer[point] = new_color;
+        // for _ in 0..DEFAULT_AREA {
+        let point = DiscretePoint {
+            x: rng.gen_range(0..width),
+            y: rng.gen_range(0..height),
+        };
+        let new_color = Color::random();
+
+        draw_buffer[point] = new_color;
+        // }
+
+        if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
+            let point: DiscretePoint = (x as usize, y as usize).into();
+
+            if window.get_mouse_down(minifb::MouseButton::Left) {
+                draw_buffer[point] = Color::new(255, 255, 255);
+            } else if window.get_mouse_down(minifb::MouseButton::Right) {
+                draw_buffer[point] = Color::new(0, 0, 0);
+            }
         }
 
         window
