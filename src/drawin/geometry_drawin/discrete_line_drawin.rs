@@ -5,46 +5,29 @@ use crate::{
 
 impl Drawable for DiscreteLine {
     fn draw(&self, canvas: &mut crate::drawin::draw_buffer::DrawBuffer, color: &Color) {
-        let DiscretePoint {
-            x: mut x0,
-            y: mut y0,
-        } = self.begin;
-        let DiscretePoint {
-            x: mut x1,
-            y: mut y1,
-        } = self.end;
+        let mut p1 = self.begin;
+        let mut p2 = self.end;
 
-        let width = x1 - x0;
-        let height = y1 - y0;
+        // if p2.x < p1.x {
+        //     (p1, p2) = (p2, p1);
+        // }
 
-        if width.abs() > height.abs() {
-            if x1 < x0 {
-                (x1, x0) = (x0, x1);
-                (y1, y0) = (y0, y1);
-            }
+        let dx = p2.x - p1.x;
+        let dy = p2.y - p1.y;
+        let k = dy as f32 / dx as f32;
+        let mut angle_bigger_45_deg = false;
 
-            let width = x1 - x0;
-            let height = y1 - y0;
+        // if k.abs() > 1.0 {
+        //     angle_bigger_45_deg = true;
+        //     (p1.x, p1.y) = (p1.y, p1.y);
+        //     (p2.x, p2.y) = (p2.y, p2.x);
+        // }
 
-            for i in 0..width {
-                let x = x0 + i;
-                let y = y0 + height * i / width;
-                canvas[(x as usize, y as usize)] = color.clone();
-            }
-        } else {
-            if y1 < y0 {
-                (x1, x0) = (x0, x1);
-                (y1, y0) = (y0, y1);
-            }
+        let color = Color::random();
 
-            let width = x1 - x0;
-            let height = y1 - y0;
-
-            for i in 0..height {
-                let y = y0 + i;
-                let x = x0 + width * i / height;
-                canvas[(x as usize, y as usize)] = color.clone();
-            }
+        for x in p1.x..p2.x {
+            let y = (k * (x - p1.x) as f32) as isize + p1.y;
+            canvas[(x as usize, y as usize)] = color;
         }
     }
 }
