@@ -8,26 +8,27 @@ impl Drawable for DiscreteLine {
         let mut p1 = self.begin;
         let mut p2 = self.end;
 
-        // if p2.x < p1.x {
-        //     (p1, p2) = (p2, p1);
-        // }
-
-        let dx = p2.x - p1.x;
-        let dy = p2.y - p1.y;
-        let k = dy as f32 / dx as f32;
+        let mut dx = p2.x - p1.x;
+        let mut dy = p2.y - p1.y;
+        let mut k = dy as f32 / dx as f32;
         let mut angle_bigger_45_deg = false;
 
-        // if k.abs() > 1.0 {
-        //     angle_bigger_45_deg = true;
-        //     (p1.x, p1.y) = (p1.y, p1.y);
-        //     (p2.x, p2.y) = (p2.y, p2.x);
-        // }
+        if k.abs() > 1.0 {
+            angle_bigger_45_deg = true;
+            (p1.x, p1.y) = (p1.y, p1.x);
+            (p2.x, p2.y) = (p2.y, p2.x);
+            k = 1.0 / k;
+            (dx, dy) = (dy, dx);
+        }
 
-        let color = Color::random();
+        if p2.x < p1.x {
+            (p1, p2) = (p2, p1);
+        }
 
         for x in p1.x..p2.x {
             let y = (k * (x - p1.x) as f32) as isize + p1.y;
-            canvas[(x as usize, y as usize)] = color;
+            let (x0, y0) = if angle_bigger_45_deg { (y, x) } else { (x, y) };
+            canvas[(x0 as usize, y0 as usize)] = *color;
         }
     }
 }
