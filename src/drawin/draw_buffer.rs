@@ -133,7 +133,7 @@ impl Index<(usize, usize)> for DrawBuffer {
     fn index(&self, index: (usize, usize)) -> &Self::Output {
         unsafe {
             self.buffer
-                .get_unchecked(index.0 + index.1 * self.size.width)
+                .get_unchecked(index.0 + (self.size.height - index.1 - 1) * self.size.width)
         }
     }
 }
@@ -142,7 +142,7 @@ impl IndexMut<(usize, usize)> for DrawBuffer {
     fn index_mut(&mut self, index: (usize, usize)) -> &mut Self::Output {
         unsafe {
             self.buffer
-                .get_unchecked_mut(index.0 + index.1 * self.size.width)
+                .get_unchecked_mut(index.0 + (self.size.height - index.1 - 1) * self.size.width)
         }
     }
 }
