@@ -3,14 +3,14 @@ use std::{
     io::{BufRead, BufReader},
 };
 
-use crate::geometry::math_vectors::{Vec3f, Vec3i, Vec3xParsingError};
+use crate::geometry::math_vectors::{vec3f::Vec3f, vec3ui::Vec3ui, Vec3ParsingError};
 
 #[derive(Debug, Default)]
 pub struct WavefrontObj {
     pub vertices: Vec<Vec3f>,
     pub vertex_textures: Vec<Vec3f>,
     pub vertex_normals: Vec<Vec3f>,
-    pub faces: Vec<Vec3i>,
+    pub faces: Vec<Vec3ui>,
 }
 
 const LINE_ENDINGS: [&'static str; 2] = ["\r\n", "\n"];
@@ -20,7 +20,7 @@ impl WavefrontObj {
         return WavefrontObj::default();
     }
 
-    pub fn from_file(source: &File) -> Result<WavefrontObj, Vec3xParsingError> {
+    pub fn from_file(source: &File) -> Result<WavefrontObj, Vec3ParsingError> {
         let mut buff_reader = BufReader::new(source);
 
         let mut line = String::new();
@@ -57,7 +57,10 @@ impl WavefrontObj {
                 }
                 "f" => {
                     let ints_string: String = line.chars().skip(first_letters.len() + 1).collect();
-                    let vec3i = ints_string.parse::<Vec3i>()?;
+                    let mut vec3i = ints_string.parse::<Vec3ui>()?;
+                    for i in vec3i.0.iter_mut() {
+                        *i -= 1;
+                    }
                     wavefront_obj.faces.push(vec3i);
                 }
                 _ => (),

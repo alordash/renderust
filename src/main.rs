@@ -53,72 +53,73 @@ fn main() -> Result<(), String> {
         File::open(WAVEFRONT_SOURCE_PATH).map_err(|e| format!("Error opening file: {:?}", e))?;
     let wavefront_obj = WavefrontObj::from_file(&wavefront_obj_file)
         .map_err(|e| format!("Error parsing file: {:?}", e))?;
-    println!("wavefront_obj: {:?}", wavefront_obj);
+
+        wavefront_obj.draw(&mut draw_buffer, &Color::from_rgb(255, 255, 255));
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         let start = Instant::now();
 
-        let new_size: RectSize = window.get_size().into();
-        if draw_buffer.get_size() != new_size {
-            width_scale = new_size.width as f32 / BUFFER_WIDTH as f32;
-            height_scale = new_size.height as f32 / BUFFER_HEIGHT as f32;
-        }
+        // let new_size: RectSize = window.get_size().into();
+        // if draw_buffer.get_size() != new_size {
+        //     width_scale = new_size.width as f32 / BUFFER_WIDTH as f32;
+        //     height_scale = new_size.height as f32 / BUFFER_HEIGHT as f32;
+        // }
 
-        if window.get_mouse_down(minifb::MouseButton::Left) {
-            if !is_mouse_pressed {
-                is_mouse_pressed = true;
-                if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
-                    let point: DiscretePoint =
-                        ((x / width_scale) as isize, (y / height_scale) as isize).into();
-                    draw_buffer[point] = Color::from_rgb(255, 0, 0);
-                    points.push(point);
-                }
-            }
-        } else {
-            is_mouse_pressed = false;
-        }
+        // if window.get_mouse_down(minifb::MouseButton::Left) {
+        //     if !is_mouse_pressed {
+        //         is_mouse_pressed = true;
+        //         if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
+        //             let point: DiscretePoint =
+        //                 ((x / width_scale) as isize, (y / height_scale) as isize).into();
+        //             draw_buffer[point] = Color::from_rgb(255, 0, 0);
+        //             points.push(point);
+        //         }
+        //     }
+        // } else {
+        //     is_mouse_pressed = false;
+        // }
 
-        let size = draw_buffer.get_size();
-        let half_width = size.width as isize / 2;
-        let half_height = size.height as isize / 2;
+        // let size = draw_buffer.get_size();
+        // let half_width = size.width as isize / 2;
+        // let half_height = size.height as isize / 2;
 
-        let r = half_width.min(half_height) as f32;
+        // let r = half_width.min(half_height) as f32;
 
-        let first_point = DiscretePoint {
-            x: (r * angle.to_radians().cos()) as isize + half_width,
-            y: (r * angle.to_radians().sin()) as isize + half_height,
-        };
+        // let first_point = DiscretePoint {
+        //     x: (r * angle.to_radians().cos()) as isize + half_width,
+        //     y: (r * angle.to_radians().sin()) as isize + half_height,
+        // };
 
-        let second_point = DiscretePoint {
-            x: -(first_point.x - half_width as isize) + half_width,
-            y: -(first_point.y - half_height as isize) + half_height,
-        };
+        // let second_point = DiscretePoint {
+        //     x: -(first_point.x - half_width as isize) + half_width,
+        //     y: -(first_point.y - half_height as isize) + half_height,
+        // };
 
-        points.push(first_point);
-        points.push(second_point);
+        // points.push(first_point);
+        // points.push(second_point);
 
-        // angle += (t.sin() + 0.25) * angle_step;
-        angle += angle_step;
+        // // angle += (t.sin() + 0.25) * angle_step;
+        // angle += angle_step;
 
-        let passed_hue = (t * color_step) as u16 % 360_u16;
+        // let passed_hue = (t * color_step) as u16 % 360_u16;
 
-        let color = Color::from_hsv(passed_hue, 1.0, 1.0);
+        // let color = Color::from_hsv(passed_hue, 1.0, 1.0);
 
-        if points.len() > 1 {
-            let len = points.len();
-            let even_len = if len % 2 == 0 { len } else { len - 1 };
-            let iterating_points: Vec<DiscretePoint> = points.drain(0..even_len).collect();
-            for points_chunk in iterating_points.chunks_exact(2) {
-                unsafe {
-                    let (p1, p2) = (points_chunk.get_unchecked(0), points_chunk.get_unchecked(1));
-                    let line = DiscreteLine {
-                        begin: *p1,
-                        end: *p2,
-                    };
-                    line.draw(&mut draw_buffer, &color);
-                }
-            }
-        }
+        // if points.len() > 1 {
+        //     let len = points.len();
+        //     let even_len = if len % 2 == 0 { len } else { len - 1 };
+        //     let iterating_points: Vec<DiscretePoint> = points.drain(0..even_len).collect();
+        //     for points_chunk in iterating_points.chunks_exact(2) {
+        //         unsafe {
+        //             let (p1, p2) = (points_chunk.get_unchecked(0), points_chunk.get_unchecked(1));
+        //             let line = DiscreteLine {
+        //                 begin: *p1,
+        //                 end: *p2,
+        //             };
+        //             line.draw(&mut draw_buffer, &color);
+        //         }
+        //     }
+        // }
 
         if window.is_key_down(Key::C) {
             draw_buffer.clean();
