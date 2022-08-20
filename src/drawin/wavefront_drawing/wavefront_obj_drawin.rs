@@ -1,6 +1,6 @@
 use crate::{
     drawin::drawable::Drawable,
-    geometry::{discrete_line::DiscreteLine, discrete_point::DiscretePoint, rect_size::RectSize},
+    geometry::{primitives::discrete_line::DiscreteLine, primitives::discrete_point::DiscretePoint, rect_size::RectSize},
     wavefront::wavefront_obj::WavefrontObj,
 };
 

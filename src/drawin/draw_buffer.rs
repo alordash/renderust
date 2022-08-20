@@ -4,7 +4,7 @@ use std::{
     slice,
 };
 
-use crate::geometry::{discrete_point::DiscretePoint, rect_size::RectSize};
+use crate::geometry::{primitives::discrete_point::DiscretePoint, rect_size::RectSize};
 
 use super::color::Color;
 
