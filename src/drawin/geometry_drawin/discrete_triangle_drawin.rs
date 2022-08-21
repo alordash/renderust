@@ -1,7 +1,9 @@
 use crate::{
-    drawin::drawable::Drawable,
+    discretization::geometry_discretization::discrete_line_x_axis_calculator::DiscreteLineXAxisCalculator,
+    drawin::{color::Color, drawable::Drawable},
     geometry::primitives::{
-        discrete_line::DiscreteLine, polygons::discrete_triangle::DiscreteTriangle,
+        discrete_line::DiscreteLine, discrete_point::DiscretePoint,
+        polygons::discrete_triangle::DiscreteTriangle,
     },
 };
 
@@ -34,30 +36,37 @@ impl Drawable for DiscreteTriangle {
                 .get_unchecked(0)
         };
 
-        let mut long_line_iter = DiscreteLine {
+        let long_line = DiscreteLine {
             begin: *left_point,
             end: *right_point,
-        }
-        .into_iter();
-        let mut left_line_iter = DiscreteLine {
+        };
+        let left_line = DiscreteLine {
             begin: *left_point,
             end: *middle_point,
-        }
-        .into_iter();
-        let mut right_line_iter = DiscreteLine {
+        };
+        let right_line = DiscreteLine {
             begin: *middle_point,
             end: *right_point,
-        }
-        .into_iter();
+        };
 
-        let mut short_line_iter = &mut left_line_iter;
-        let mut short_line_left_iters = short_line_iter.get_iterations_count();
+        let long_line_calculator = DiscreteLineXAxisCalculator::from(long_line);
+        let left_line_calculator = DiscreteLineXAxisCalculator::from(left_line);
+        let right_line_calculator = DiscreteLineXAxisCalculator::from(right_line);
+
+        let mut short_line_calculator = &left_line_calculator;
+
+        let mut short_line_left_iters = short_line_calculator.get_x_calculation_range().len();
 
         for x in left_point.x..right_point.x {
-            let p1 = long_line_iter.next().unwrap();
-            let p2 = short_line_iter.next().unwrap();
+            let p1 = DiscretePoint {
+                x,
+                y: long_line_calculator.calculate_y_value(x),
+            };
+            let p2 = DiscretePoint {
+                x,
+                y: short_line_calculator.calculate_y_value(x),
+            };
 
-            // draw..
             let y_min = p1.y.min(p2.y);
             let y_max = p1.y.max(p2.y);
 
@@ -68,7 +77,7 @@ impl Drawable for DiscreteTriangle {
             if short_line_left_iters > 0 {
                 short_line_left_iters -= 1;
                 if short_line_left_iters == 0 {
-                    short_line_iter = &mut right_line_iter;
+                    short_line_calculator = &right_line_calculator;
                 }
             }
         }
