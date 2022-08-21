@@ -57,6 +57,10 @@ impl Drawable for DiscreteTriangle {
 
         let mut short_line_left_iters = short_line_calculator.get_x_calculation_range().len();
 
+        if short_line_left_iters == 0 {
+            short_line_calculator = &right_line_calculator;
+        }
+
         for x in left_point.x..right_point.x {
             let p1 = DiscretePoint {
                 x,
