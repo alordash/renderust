@@ -20,7 +20,8 @@ impl DiscreteLineXAxisCalculator {
     }
 
     pub fn calculate_y_value(&self, x: isize) -> isize {
-        return (x - self.begin.x) * self.dy / self.dx + self.begin.y;
+        // attempt to divide by zero
+        (x - self.begin.x) * self.dy / self.dx + self.begin.y
     }
 
     pub fn get_x_calculation_range(&self) -> Range<isize> {
