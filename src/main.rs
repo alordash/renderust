@@ -1,18 +1,19 @@
-#![feature(generators, generator_trait)]
-#![feature(type_alias_impl_trait)]
-#![feature(associated_type_defaults)]
+#![feature(min_specialization)]
 
 mod discretization;
 mod drawin;
 mod geometry;
 mod wavefront;
 
-use std::{fs::File, io::Error, ops::Generator, path::Path, pin::Pin, time::Instant};
+use std::{fs::File, io::Error, path::Path, pin::Pin, time::Instant};
 
 use drawin::{color::Color, draw_buffer::*, drawable::Drawable};
 use geometry::{
     primitives::discrete_line::DiscreteLine,
-    primitives::{discrete_point::DiscretePoint, polygons::discrete_triangle::DiscreteTriangle},
+    primitives::{
+        discrete_point::DiscretePoint, discrete_polygon::DiscretePolygon,
+        polygons::discrete_triangle::DiscreteTriangle,
+    },
     rect_size::RectSize,
 };
 use minifb::{Key, ScaleMode, Window, WindowOptions};
@@ -73,7 +74,26 @@ fn main() -> Result<(), String> {
     let triangle = DiscreteTriangle {
         points: triangle_points,
     };
-    triangle.draw(&mut draw_buffer, &Color::from_rgb(255, 255, 255));
+    let triangle2 = DiscreteTriangle {
+        points: [
+            triangle_points[1],
+            triangle_points[2],
+            DiscretePoint { x: 800, y: 650 },
+        ],
+    };
+    triangle.draw(&mut draw_buffer, &Color::from_rgb(255, 0, 0));
+    triangle2.draw(&mut draw_buffer, &Color::from_rgb(0, 255, 0));
+
+    let polygon = DiscretePolygon::<4> {
+        points: [
+            DiscretePoint { x: 100, y: 100 },
+            DiscretePoint { x: 500, y: 100 },
+            DiscretePoint { x: 500, y: 500 },
+            DiscretePoint { x: 100, y: 500 },
+        ],
+    };
+
+    polygon.draw(&mut draw_buffer, &Color::from_rgb(0, 0, 255));
 
     for point in triangle_points.iter() {
         point.draw(&mut draw_buffer, &Color::from_rgb(255, 0, 0));
@@ -163,7 +183,9 @@ fn main() -> Result<(), String> {
             for points_chunk in iterating_points.chunks_exact(3) {
                 unsafe {
                     let triangle_points: [DiscretePoint; 3] = points_chunk.try_into().unwrap();
-                    let triangle = DiscreteTriangle {points: triangle_points};
+                    let triangle = DiscreteTriangle {
+                        points: triangle_points,
+                    };
                     triangle.draw(&mut draw_buffer, &color);
                 }
             }
