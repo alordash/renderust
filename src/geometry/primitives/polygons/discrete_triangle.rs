@@ -1,9 +1,9 @@
-use crate::{geometry::primitives::discrete_polygon::DiscretePolygon, drawin::drawable::Drawable};
+use crate::{
+    drawin::drawable::Drawable,
+    geometry::primitives::{
+        discrete_line::DiscreteLine, discrete_point::DiscretePoint,
+        discrete_polygon::DiscretePolygon,
+    },
+};
 
 pub type DiscreteTriangle = DiscretePolygon<3>;
-
-impl Drawable for DiscreteTriangle {
-    fn draw(&self, canvas: &mut crate::drawin::draw_buffer::DrawBuffer, color: &crate::drawin::color::Color) {
-        let x_begin = self.0;
-    }
-}

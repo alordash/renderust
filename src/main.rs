@@ -11,7 +11,8 @@ use std::{fs::File, io::Error, ops::Generator, path::Path, pin::Pin, time::Insta
 
 use drawin::{color::Color, draw_buffer::*, drawable::Drawable};
 use geometry::{
-    primitives::discrete_line::DiscreteLine, primitives::discrete_point::DiscretePoint,
+    primitives::discrete_line::DiscreteLine,
+    primitives::{discrete_point::DiscretePoint, polygons::discrete_triangle::DiscreteTriangle},
     rect_size::RectSize,
 };
 use minifb::{Key, ScaleMode, Window, WindowOptions};
@@ -27,7 +28,6 @@ const WINDOW_HEIGHT: usize = 1000;
 const WAVEFRONT_SOURCE_PATH: &'static str = "./resources/african_head.obj";
 
 fn main() -> Result<(), String> {
-
     // Allocate the output buffer.
     let mut draw_buffer =
         DrawBuffer::new(BUFFER_WIDTH, BUFFER_HEIGHT, DrawBufferCreateOption::BLANK);
@@ -63,7 +63,15 @@ fn main() -> Result<(), String> {
     let wavefront_obj = WavefrontObj::from_file(&wavefront_obj_file)
         .map_err(|e| format!("Error parsing file: {:?}", e))?;
 
-    wavefront_obj.draw(&mut draw_buffer, &Color::from_rgb(255, 255, 255));
+    // wavefront_obj.draw(&mut draw_buffer, &Color::from_rgb(255, 255, 255));
+
+    let points = [
+        DiscretePoint { x: 350, y: 700 },
+        DiscretePoint { x: 750, y: 500 },
+        DiscretePoint { x: 600, y: 700 },
+    ];
+    let triangle = DiscreteTriangle { points };
+    triangle.draw(&mut draw_buffer, &Color::from_rgb(255, 255, 255));
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         let start = Instant::now();
