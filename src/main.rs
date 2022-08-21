@@ -39,7 +39,7 @@ fn main() -> Result<(), String> {
         WINDOW_HEIGHT,
         WindowOptions {
             resize: true,
-            scale_mode: ScaleMode::AspectRatioStretch,
+            scale_mode: ScaleMode::Stretch,
             ..WindowOptions::default()
         },
     )
@@ -64,46 +64,8 @@ fn main() -> Result<(), String> {
     let wavefront_obj = WavefrontObj::from_file(&wavefront_obj_file)
         .map_err(|e| format!("Error parsing file: {:?}", e))?;
 
+    wavefront_obj.fill(&mut draw_buffer, &Color::random());
     // wavefront_obj.draw(&mut draw_buffer, &Color::from_rgb(255, 255, 255));
-
-    let triangle_points = [
-        DiscretePoint { x: 350, y: 700 },
-        DiscretePoint { x: 650, y: 500 },
-        DiscretePoint { x: 600, y: 600 },
-    ];
-    let triangle = DiscreteTriangle {
-        points: triangle_points,
-    };
-    let triangle2 = DiscreteTriangle {
-        points: [
-            triangle_points[1],
-            triangle_points[2],
-            DiscretePoint { x: 800, y: 650 },
-        ],
-    };
-    triangle.draw(&mut draw_buffer, &Color::from_rgb(255, 0, 0));
-    triangle2.draw(&mut draw_buffer, &Color::from_rgb(0, 255, 0));
-
-    let polygon = DiscretePolygon::<4> {
-        points: [
-            DiscretePoint { x: 100, y: 100 },
-            DiscretePoint { x: 500, y: 100 },
-            DiscretePoint { x: 500, y: 500 },
-            DiscretePoint { x: 100, y: 500 },
-        ],
-    };
-
-    polygon.draw(&mut draw_buffer, &Color::from_rgb(0, 0, 255));
-
-    for point in triangle_points.iter() {
-        point.draw(&mut draw_buffer, &Color::from_rgb(255, 0, 0));
-    }
-
-    // let test_line = DiscreteLine {
-    //     begin: DiscretePoint { x: 600, y: 700 },
-    //     end: DiscretePoint { x: 750, y: 500 }
-    // };
-    // test_line.draw(&mut draw_buffer, &Color::from_rgb(255, 255, 255));
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         let start = Instant::now();
@@ -115,6 +77,7 @@ fn main() -> Result<(), String> {
         }
 
         if window.get_mouse_down(minifb::MouseButton::Left) {
+            wavefront_obj.draw(&mut draw_buffer, &Color::from_rgb(255, 255, 255));
             if !is_mouse_pressed {
                 is_mouse_pressed = true;
                 if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
