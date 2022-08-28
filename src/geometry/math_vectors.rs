@@ -1,5 +1,5 @@
-pub mod vec3f;
-pub mod vec3ui;
+use std::str::FromStr;
+use std::{ops::Add, string::ParseError};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Vec3ParsingError {
@@ -15,7 +15,6 @@ pub enum Vec3ParsingError {
 pub struct Vec3<T>(pub [T; 3])
 where
     T: Sized;
-
 impl<T> Vec3<T> {
     pub fn x(&self) -> &T {
         &self.0[0]
@@ -29,3 +28,47 @@ impl<T> Vec3<T> {
         &self.0[2]
     }
 }
+
+impl<T> Add for Vec3<T>
+where
+    T: Default + Copy + Add<Output = T>,
+{
+    type Output = Self;
+    fn add(self, rhs: Self) -> Self::Output {
+        let mut result = Vec3::<T>([T::default(); 3]);
+        for ((result_val, self_val), rhs_val) in result
+            .0
+            .iter_mut()
+            .zip(self.0.into_iter())
+            .zip(rhs.0.into_iter())
+        {
+            *result_val = self_val + rhs_val;
+        }
+        result
+    }
+}
+
+impl<T: Default + FromStr> FromStr for Vec3<T>
+where
+    <T as FromStr>::Err: 'static + std::error::Error,
+{
+    type Err = Vec3ParsingError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut float_strings = s.split_whitespace();
+        let mut vec3 = Vec3::default();
+        for i in 0..3 {
+            let value_string = float_strings
+                .next()
+                .ok_or(Vec3ParsingError::NotEnoughItems)?;
+            let value = value_string
+                .parse::<T>()
+                .map_err(|e| Vec3ParsingError::ParseError(Box::new(e)))?;
+            vec3.0[i] = value;
+        }
+
+        Ok(vec3)
+    }
+}
+
+pub mod vec3f;
+pub mod vec3ui;

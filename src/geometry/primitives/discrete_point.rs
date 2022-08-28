@@ -1,3 +1,5 @@
+use crate::{derive_self_add, derive_self_sub};
+
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct DiscretePoint {
     pub x: isize,
@@ -12,3 +14,6 @@ impl From<(isize, isize)> for DiscretePoint {
         }
     }
 }
+
+derive_self_add!(DiscretePoint, x, y);
+derive_self_sub!(DiscretePoint, x, y);
