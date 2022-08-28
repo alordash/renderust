@@ -1,5 +1,6 @@
 use std::str::FromStr;
-use std::{ops::Add, string::ParseError};
+
+use num::Num;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Vec3ParsingError {
@@ -15,36 +16,21 @@ pub enum Vec3ParsingError {
 pub struct Vec3<T>(pub [T; 3])
 where
     T: Sized;
-impl<T> Vec3<T> {
-    pub fn x(&self) -> &T {
-        &self.0[0]
-    }
 
-    pub fn y(&self) -> &T {
-        &self.0[1]
-    }
-
-    pub fn z(&self) -> &T {
-        &self.0[2]
-    }
-}
-
-impl<T> Add for Vec3<T>
+impl<T> Vec3<T>
 where
-    T: Default + Copy + Add<Output = T>,
+    T: Num + Copy,
 {
-    type Output = Self;
-    fn add(self, rhs: Self) -> Self::Output {
-        let mut result = Vec3::<T>([T::default(); 3]);
-        for ((result_val, self_val), rhs_val) in result
-            .0
-            .iter_mut()
-            .zip(self.0.into_iter())
-            .zip(rhs.0.into_iter())
-        {
-            *result_val = self_val + rhs_val;
-        }
-        result
+    pub fn x(&self) -> T {
+        self.0[0]
+    }
+
+    pub fn y(&self) -> T {
+        self.0[1]
+    }
+
+    pub fn z(&self) -> T {
+        self.0[2]
     }
 }
 
@@ -70,5 +56,7 @@ where
     }
 }
 
+pub mod arithmetics;
+pub mod linear_algebra;
 pub mod vec3f;
 pub mod vec3ui;
