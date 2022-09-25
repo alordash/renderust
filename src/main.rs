@@ -28,7 +28,7 @@ const WINDOW_HEIGHT: usize = 1000;
 
 const WAVEFRONT_SOURCE_PATH: &'static str = "./resources/african_head.obj";
 
-const POLYGON_SIZE: usize = 4;
+const POLYGON_SIZE: usize = 5;
 
 fn main() -> Result<(), String> {
     // Allocate the output buffer.
@@ -176,7 +176,7 @@ fn main() -> Result<(), String> {
 
         let end = Instant::now();
 
-        window.set_title(&format!("{:.1?} FPS", 1.0 / (end - start).as_secs_f32()));
+        window.set_title(&format!("({}) {:.1?} FPS", points.len(), 1.0 / (end - start).as_secs_f32()));
 
         t += time_step;
     }
