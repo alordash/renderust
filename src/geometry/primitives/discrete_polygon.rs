@@ -1,4 +1,4 @@
-use super::{discrete_line::DiscreteLine, discrete_point::DiscretePoint};oint::DiscretePoint;
+use super::{discrete_line::DiscreteLine, discrete_point::DiscretePoint};
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct DiscretePolygon<const N: usize> {

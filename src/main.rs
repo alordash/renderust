@@ -11,7 +11,7 @@ use drawin::{color::Color, draw_buffer::*, drawable::Drawable};
 use geometry::{
     primitives::{
         discrete_point::DiscretePoint,
-        polygons::discrete_triangle::DiscreteTriangle,
+        polygons::discrete_triangle::DiscreteTriangle, discrete_polygon::DiscretePolygon,
     },
     rect_size::RectSize,
 };
@@ -158,6 +158,7 @@ fn main() -> Result<(), String> {
         if window.is_key_pressed(Key::Space, minifb::KeyRepeat::No) && points.len() >= POLYGON_SIZE {
             let polygon = DiscretePolygon::<POLYGON_SIZE>::from(points.clone());
             points = points.into_iter().skip(POLYGON_SIZE).collect();
+            polygon.fill(&mut draw_buffer, &color);
             polygon.draw(&mut draw_buffer, &color);
         }
 
