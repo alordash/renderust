@@ -5,13 +5,12 @@ mod drawin;
 mod geometry;
 mod wavefront;
 
-use std::{fs::File, io::Error, path::Path, pin::Pin, time::Instant};
+use std::{fs::File, time::Instant};
 
 use drawin::{color::Color, draw_buffer::*, drawable::Drawable};
 use geometry::{
-    primitives::discrete_line::DiscreteLine,
     primitives::{
-        discrete_point::DiscretePoint, discrete_polygon::DiscretePolygon,
+        discrete_point::DiscretePoint,
         polygons::discrete_triangle::DiscreteTriangle,
     },
     rect_size::RectSize,

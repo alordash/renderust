@@ -3,7 +3,7 @@ use std::{
     io::{BufRead, BufReader},
 };
 
-use crate::geometry::math_vectors::{vec3f::Vec3f, vec3ui::Vec3ui, Vec3ParsingError};
+use crate::geometry::math_vectors::{vec3f::Vec3f, vec3ui::Vec3ui, Vec3ParsingError, Vec3};
 
 #[derive(Debug, Default)]
 pub struct WavefrontObj {
@@ -47,7 +47,7 @@ impl WavefrontObj {
                 "v" | "vt" | "vn" => {
                     let floats_string: String =
                         line.chars().skip(first_letters.len() + 1).collect();
-                    let vec3f = floats_string.parse::<Vec3f>()?;
+                    let vec3f = floats_string.parse::<Vec3f>()?; 
                     match first_letters.as_str() {
                         "v" => wavefront_obj.vertices.push(vec3f),
                         "vt" => wavefront_obj.vertex_textures.push(vec3f),
@@ -57,7 +57,7 @@ impl WavefrontObj {
                 }
                 "f" => {
                     let ints_string: String = line.chars().skip(first_letters.len() + 1).collect();
-                    let mut vec3i = ints_string.parse::<Vec3ui>()?;
+                    let mut vec3i = Vec3ui::from_wavefront_str(&ints_string)?;
                     for i in vec3i.0.iter_mut() {
                         *i -= 1;
                     }

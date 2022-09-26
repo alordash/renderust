@@ -1,13 +1,9 @@
-use std::str::FromStr;
-
 use super::{Vec3, Vec3ParsingError};
-
 
 pub type Vec3ui = Vec3<usize>;
 
-impl FromStr for Vec3ui {
-    type Err = Vec3ParsingError;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+impl Vec3ui {
+    pub fn from_wavefront_str(s: &str) -> Result<Self, Vec3ParsingError> {
         let mut int_strings = s.split(' ');
         let mut vec3i = Vec3ui::default();
         for i in 0..3 {

@@ -1,3 +1,6 @@
+use std::ops::Mul;
+
+use num::{Num, NumCast};
 use rand::prelude::*;
 
 #[derive(Default, Clone, Copy, Debug)]
@@ -51,5 +54,20 @@ impl Color {
         );
 
         Color::from_rgb(r, g, b)
+    }
+}
+
+impl<T: Num + Copy + NumCast> Mul<T> for Color {
+    type Output = Self;
+    fn mul(self, rhs: T) -> Self::Output {
+        let r = <u8 as NumCast>::from(T::from(self.r).unwrap() * rhs).unwrap();
+        let g = <u8 as NumCast>::from(T::from(self.g).unwrap() * rhs).unwrap();
+        let b = <u8 as NumCast>::from(T::from(self.b).unwrap() * rhs).unwrap();
+        Color {
+            r,
+            g,
+            b,
+            alpha: self.alpha,
+        }
     }
 }
