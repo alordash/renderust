@@ -57,23 +57,23 @@ impl<const N: usize> Drawable for DiscretePolygon<N> {
                 .map(|(_, b)| b)
                 .collect::<Vec<_>>();
 
-            println!("found {} suitable lines", suitable_lines.len());
             // let l1 = unsafe { suitable_lines.get_unchecked(0) };
             // let l2 = unsafe { suitable_lines.get_unchecked(1) };
             for x in range {
-                // let mut y1 = suitable_lines[0].next().unwrap().y;
-                // let mut y2 = suitable_lines[1].next().unwrap().y;
-                suitable_lines
-                    .sort_unstable_by(|a, b| a.calculate_y_value(x).cmp(&b.calculate_y_value(x)));
-                for two_calcs in suitable_lines.windows(2) {
-                    let calc1 = unsafe { two_calcs.get_unchecked(0) };
-                    let calc2 = unsafe { two_calcs.get_unchecked(1) };
-                    let mut y1 = calc1.calculate_y_value(x);
-                    let mut y2 = calc2.calculate_y_value(x);
+                let mut ys: Vec<isize> = suitable_lines
+                    .iter()
+                    .map(|v| v.calculate_y_value(x))
+                    .collect();
+                ys.sort_unstable();
+
+                for two_ys in ys.chunks_exact(2) {
+                    let mut y1 = *unsafe { two_ys.get_unchecked(0) };
+                    let mut y2 = *unsafe { two_ys.get_unchecked(1) };
+
                     if y1 > y2 {
                         (y1, y2) = (y2, y1);
                     }
-                    for y in y1..y2 {
+                    for y in y1..=y2 {
                         canvas[(x as usize, y as usize)] = *color;
                     }
                 }
