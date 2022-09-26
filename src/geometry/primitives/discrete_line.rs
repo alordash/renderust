@@ -12,10 +12,20 @@ impl DiscreteLine {
             (self.begin, self.end) = (self.end, self.begin);
         }
     }
-    
+
     pub fn order_by_y(&mut self) {
         if self.begin.y > self.end.y {
             (self.begin, self.end) = (self.end, self.begin);
+        }
+    }
+
+    pub fn new(begin_x: isize, begin_y: isize, end_x: isize, end_y: isize) -> DiscreteLine {
+        DiscreteLine {
+            begin: DiscretePoint {
+                x: begin_x,
+                y: begin_y,
+            },
+            end: DiscretePoint { x: end_x, y: end_y },
         }
     }
 }

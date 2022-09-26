@@ -4,6 +4,12 @@ pub struct DiscretePoint {
     pub y: isize,
 }
 
+impl DiscretePoint {
+    pub fn new(x: isize, y: isize) -> DiscretePoint {
+        DiscretePoint { x, y }
+    }
+}
+
 impl From<(isize, isize)> for DiscretePoint {
     fn from(source: (isize, isize)) -> Self {
         DiscretePoint {
