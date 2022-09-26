@@ -27,6 +27,8 @@ const WINDOW_HEIGHT: usize = 1000;
 
 const WAVEFRONT_SOURCE_PATH: &'static str = "./resources/african_head.obj";
 
+const POLYGON_SIZE: usize = 5;
+
 fn main() -> Result<(), String> {
     // Allocate the output buffer.
     let mut draw_buffer =
@@ -63,7 +65,7 @@ fn main() -> Result<(), String> {
     let wavefront_obj = WavefrontObj::from_file(&wavefront_obj_file)
         .map_err(|e| format!("Error parsing file: {:?}", e))?;
 
-    wavefront_obj.fill(&mut draw_buffer, &Color::from_rgb(255, 255, 255));
+    // wavefront_obj.fill(&mut draw_buffer, &Color::random());
     // wavefront_obj.draw(&mut draw_buffer, &Color::from_rgb(255, 255, 255));
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
@@ -76,7 +78,7 @@ fn main() -> Result<(), String> {
         }
 
         if window.get_mouse_down(minifb::MouseButton::Left) {
-            wavefront_obj.draw(&mut draw_buffer, &Color::from_rgb(255, 255, 255));
+            // wavefront_obj.draw(&mut draw_buffer, &Color::from_rgb(255, 255, 255));
             if !is_mouse_pressed {
                 is_mouse_pressed = true;
                 if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
@@ -138,22 +140,28 @@ fn main() -> Result<(), String> {
         //     }
         // }
 
-        if points.len() > 2 {
-            let len = points.len();
-            let dividable_len = (len / 3) * 3;
-            let iterating_points: Vec<DiscretePoint> = points.drain(0..dividable_len).collect();
-            for points_chunk in iterating_points.chunks_exact(3) {
-                unsafe {
-                    let triangle_points: [DiscretePoint; 3] = points_chunk.try_into().unwrap();
-                    let triangle = DiscreteTriangle {
-                        points: triangle_points,
-                    };
-                    triangle.draw(&mut draw_buffer, &color);
-                }
-            }
+        // if points.len() > 2 {
+        //     let len = points.len();
+        //     let dividable_len = (len / 3) * 3;
+        //     let iterating_points: Vec<DiscretePoint> = points.drain(0..dividable_len).collect();
+        //     for points_chunk in iterating_points.chunks_exact(3) {
+        //         unsafe {
+        //             let triangle_points: [DiscretePoint; 3] = points_chunk.try_into().unwrap();
+        //             let triangle = DiscreteTriangle {
+        //                 points: triangle_points,
+        //             };
+        //             triangle.draw(&mut draw_buffer, &color);
+        //         }
+        //     }
+        // }
+
+        if window.is_key_pressed(Key::Space, minifb::KeyRepeat::No) && points.len() >= POLYGON_SIZE {
+            let polygon = DiscretePolygon::<POLYGON_SIZE>::from(points.clone());
+            points = points.into_iter().skip(POLYGON_SIZE).collect();
+            polygon.draw(&mut draw_buffer, &color);
         }
 
-        if window.is_key_down(Key::C) {
+        if window.is_key_pressed(Key::C, minifb::KeyRepeat::No) {
             draw_buffer.clean();
         }
 
@@ -167,7 +175,7 @@ fn main() -> Result<(), String> {
 
         let end = Instant::now();
 
-        window.set_title(&format!("{:.1?} FPS", 1.0 / (end - start).as_secs_f32()));
+        window.set_title(&format!("({}) {:.1?} FPS", points.len(), 1.0 / (end - start).as_secs_f32()));
 
         t += time_step;
     }
