@@ -1,14 +1,21 @@
+use std::ops::Range;
+
 use crate::{
-    discretization::geometry_discretization::{
-        discrete_line_iterator::DiscreteLineIterator,
-        discrete_line_x_axis_calculator::DiscreteLineXAxisCalculator,
-    },
+    discretization::geometry_discretization::discrete_line_x_axis_calculator::DiscreteLineXAxisCalculator,
     drawin::drawable::Drawable,
     geometry::primitives::{discrete_line::DiscreteLine, discrete_polygon::DiscretePolygon},
 };
 
-struct FillingRegion<'a> {
-    lineIterators: Vec<&'a mut DiscreteLineIterator>,
+struct PolygonFillingRange<'a> {
+    range: Range<isize>,
+    line_calculators: Vec<&'a DiscreteLineXAxisCalculator>,
+}
+
+impl<'a> Iterator for PolygonFillingRange<'a> {
+    type Item = isize;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.range.next()
+    }
 }
 
 impl<const N: usize> Drawable for DiscretePolygon<N> {
@@ -17,50 +24,35 @@ impl<const N: usize> Drawable for DiscretePolygon<N> {
         canvas: &mut crate::drawin::draw_buffer::DrawBuffer,
         color: &crate::drawin::color::Color,
     ) {
-        let mut lines: Vec<_> = self
-            .points
-            .windows(2)
-            .map(|two_points| unsafe {
-                DiscreteLine {
-                    begin: *two_points.get_unchecked(0),
-                    end: *two_points.get_unchecked(1),
-                }
-            })
-            .collect();
-        lines.push(DiscreteLine {
-            begin: self.points[self.points.len() - 1],
-            end: self.points[0],
-        });
-        // println!("lines: {:?}", lines);
-        lines.iter().for_each(|l| l.draw(canvas, color));
-        lines.iter_mut().for_each(|l| l.order_by_x());
+        let mut lines = self.get_perimeter_lines();
+        lines.iter_mut().for_each(DiscreteLine::order_by_x);
 
-        let line_calculators: Vec<_> = lines
-            .iter()
-            .map(|l| DiscreteLineXAxisCalculator::from(*l))
+        let line_calculators: Vec<DiscreteLineXAxisCalculator> = lines
+            .into_iter()
+            .map(DiscreteLineXAxisCalculator::from)
             .collect();
 
         let mut x_sorted_points = self.points.clone();
         x_sorted_points.sort_unstable_by(|a, b| a.x.cmp(&b.x));
-        let ranges = x_sorted_points.windows(2).map(|two_points| unsafe {
-            two_points.get_unchecked(0).x..two_points.get_unchecked(1).x
+        let polygon_filling_ranges = x_sorted_points.windows(2).map(|two_points| unsafe {
+            let range = two_points.get_unchecked(0).x..two_points.get_unchecked(1).x;
+            let suitable_line_calculators: Vec<&DiscreteLineXAxisCalculator> = line_calculators
+                .iter()
+                .filter(|lc| {
+                    let lc_range = lc.get_x_calculation_range();
+                    lc_range.start <= range.start && range.end <= lc_range.end
+                })
+                .collect();
+            PolygonFillingRange {
+                line_calculators: suitable_line_calculators,
+                range,
+            }
         });
 
-        for range in ranges {
-            let mut suitable_lines = line_calculators
-                .iter()
-                .enumerate()
-                .filter(|(i, _)| {
-                    let l = lines[*i];
-                    l.begin.x <= range.start && range.end <= l.end.x
-                })
-                .map(|(_, b)| b)
-                .collect::<Vec<_>>();
-
-            // let l1 = unsafe { suitable_lines.get_unchecked(0) };
-            // let l2 = unsafe { suitable_lines.get_unchecked(1) };
-            for x in range {
-                let mut ys: Vec<isize> = suitable_lines
+        for polygon_filling_range in polygon_filling_ranges.into_iter() {
+            for x in polygon_filling_range.range {
+                let mut ys: Vec<isize> = polygon_filling_range
+                    .line_calculators
                     .iter()
                     .map(|v| v.calculate_y_value(x))
                     .collect();
