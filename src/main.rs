@@ -158,7 +158,7 @@ fn main() -> Result<(), String> {
         if window.is_key_pressed(Key::Space, minifb::KeyRepeat::No) && points.len() >= POLYGON_SIZE {
             let polygon = DiscretePolygon::<POLYGON_SIZE>::from(points.clone());
             points = points.into_iter().skip(POLYGON_SIZE).collect();
-            polygon.fill(&mut draw_buffer, &color);
+            polygon.fill(&mut draw_buffer, &color.copy_invert());
             polygon.draw(&mut draw_buffer, &color);
         }
 

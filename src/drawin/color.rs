@@ -55,6 +55,18 @@ impl Color {
 
         Color::from_rgb(r, g, b)
     }
+
+    pub fn invert(&mut self) {
+        self.r = u8::MAX - self.r;
+        self.g = u8::MAX - self.g;
+        self.b = u8::MAX - self.b;
+    }
+
+    pub fn copy_invert(&self) -> Color {
+        let mut color = *self;
+        color.invert();
+        color
+    }
 }
 
 impl<T: Num + Copy + NumCast> Mul<T> for Color {
