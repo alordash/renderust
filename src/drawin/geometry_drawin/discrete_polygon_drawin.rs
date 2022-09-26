@@ -24,6 +24,16 @@ impl<const N: usize> Drawable for DiscretePolygon<N> {
         canvas: &mut crate::drawin::draw_buffer::DrawBuffer,
         color: &crate::drawin::color::Color,
     ) {
+        self.get_perimeter_lines()
+            .into_iter()
+            .for_each(|l| l.draw(canvas, color));
+    }
+
+    fn fill(
+        &self,
+        canvas: &mut crate::drawin::draw_buffer::DrawBuffer,
+        color: &crate::drawin::color::Color,
+    ) {
         let mut lines = self.get_perimeter_lines();
         lines.iter_mut().for_each(DiscreteLine::order_by_x);
 
