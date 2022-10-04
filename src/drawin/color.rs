@@ -3,6 +3,8 @@ use std::ops::Mul;
 use num::{Num, NumCast};
 use rand::prelude::*;
 
+use crate::{derive_self_add, derive_self_sub};
+
 #[derive(Default, Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub struct Color {
@@ -83,3 +85,41 @@ impl<T: Num + Copy + NumCast> Mul<T> for Color {
         }
     }
 }
+
+// (b - a) * t + a
+
+impl Color {
+    pub fn mul_div<T: Num + Copy + NumCast>(self, mul: T, div: T) -> Color {
+        let r = <u8 as NumCast>::from(T::from(self.r).unwrap() * mul / div).unwrap();
+        let g = <u8 as NumCast>::from(T::from(self.g).unwrap() * mul / div).unwrap();
+        let b = <u8 as NumCast>::from(T::from(self.b).unwrap() * mul / div).unwrap();
+        Color {
+            r,
+            g,
+            b,
+            alpha: self.alpha,
+        }
+    }
+
+    pub fn mix(self, rhs: Color, t: i32, max: i32) -> Color {
+        let r = (((rhs.r as i32 - self.r as i32) * t / max) as u8).wrapping_add(self.r);
+        let g = (((rhs.g as i32 - self.g as i32) * t / max) as u8).wrapping_add(self.g);
+        let b = (((rhs.b as i32 - self.b as i32) * t / max) as u8).wrapping_add(self.b);
+        Color { r, g, b, ..self }
+    }
+}
+
+// impl Mul<isize> for Color {
+//     type Output = Color;
+//     fn mul(self, rhs: isize) -> Self::Output {
+//         Color {
+//             r: ((self.r as isize) * rhs) as u8,
+//             g: ((self.g as isize) * rhs) as u8,
+//             b: ((self.b as isize) * rhs) as u8,
+//             ..self
+//         }
+//     }
+// }
+
+derive_self_add!(Color, r, g, b, alpha);
+derive_self_sub!(Color, r, g, b, alpha);

@@ -1,3 +1,5 @@
+use crate::{discretization::geometry_discretization::line_x_axis_calculator::LineXAxisCalculator, drawin::draw_buffer::DrawBuffer};
+
 use super::point::Point;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -23,6 +25,14 @@ impl Line {
         Line {
             begin: Point::new(begin_x, begin_y),
             end: Point::new(end_x, end_y)
+        }
+    }
+
+    pub fn rough_draw(&self, canvas: &mut DrawBuffer) {
+        let calculator = LineXAxisCalculator::new(self.begin, self.end);
+        for x in self.begin.x..self.end.x {
+            let (y, color) = calculator.calculate_y_and_color_value(x);
+            canvas[(x as usize, y as usize)] = color;
         }
     }
 }

@@ -37,10 +37,8 @@ impl<const N: usize> Drawable for Polygon<N> {
         let mut lines = self.get_perimeter_lines();
         lines.iter_mut().for_each(Line::order_by_x);
 
-        let line_calculators: Vec<LineXAxisCalculator> = lines
-            .into_iter()
-            .map(LineXAxisCalculator::from)
-            .collect();
+        let line_calculators: Vec<LineXAxisCalculator> =
+            lines.into_iter().map(LineXAxisCalculator::from).collect();
 
         let mut x_sorted_points = self.points.clone();
         x_sorted_points.sort_unstable_by(|a, b| a.x.cmp(&b.x));
