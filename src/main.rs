@@ -28,7 +28,7 @@ const WINDOW_HEIGHT: usize = 1000;
 
 const WAVEFRONT_SOURCE_PATH: &'static str = "./resources/african_head.obj";
 
-const POLYGON_SIZE: usize = 1000;
+const POLYGON_SIZE: usize = 3;
 const POLYGON_COUNT: usize = 100;
 
 fn gen_points(width: usize, height: usize) -> Vec<Point> {
@@ -38,7 +38,7 @@ fn gen_points(width: usize, height: usize) -> Vec<Point> {
             Point::new_with_color(
                 rng.gen_range(0..width as isize),
                 rng.gen_range(0..height as isize),
-                Color::random()
+                Color::random(),
             )
         })
         .collect()
@@ -73,7 +73,7 @@ fn main() -> Result<(), String> {
     let mut t: f32 = 0.0;
     let time_step = 0.05;
 
-    let color_step = 3.5;
+    let color_step = 30.5;
 
     let wavefront_obj_file =
         File::open(WAVEFRONT_SOURCE_PATH).map_err(|e| format!("Error opening file: {:?}", e))?;
@@ -94,6 +94,8 @@ fn main() -> Result<(), String> {
 
     let mut rng = thread_rng();
 
+    let mut rough = true;
+
     while window.is_open() && !window.is_key_down(Key::Escape) {
         let start = Instant::now();
 
@@ -103,6 +105,10 @@ fn main() -> Result<(), String> {
             height_scale = new_size.height as f32 / BUFFER_HEIGHT as f32;
         }
 
+        let passed_hue = (t * color_step) as u16 % 360_u16;
+
+        let color = Color::from_hsv(passed_hue, 1.0, 1.0);
+
         if window.get_mouse_down(minifb::MouseButton::Left) {
             // wavefront_obj.draw(&mut draw_buffer, &Color::from_rgb(255, 255, 255));
             if !is_mouse_pressed {
@@ -111,7 +117,8 @@ fn main() -> Result<(), String> {
                     let y = new_size.height as f32 - y - 1.0;
                     let mut point: Point =
                         ((x / width_scale) as isize, (y / height_scale) as isize).into();
-                    point.color = Color::random();
+                    // point.color = Color::random();
+                    point.color = color;
                     draw_buffer[point] = Color::from_rgb(255, 0, 0);
                     points.push(point);
                 }
@@ -147,10 +154,6 @@ fn main() -> Result<(), String> {
         // // angle += (t.sin() + 0.25) * angle_step;
         // angle += angle_step;
 
-        let passed_hue = (t * color_step) as u16 % 360_u16;
-
-        let color = Color::from_hsv(passed_hue, 1.0, 1.0);
-
         // if points.len() > 1 {
         //     let len = points.len();
         //     let even_len = if len % 2 == 0 { len } else { len - 1 };
@@ -185,24 +188,36 @@ fn main() -> Result<(), String> {
         //     }
         // }
 
-        if !window.is_key_down(Key::Space) {
-            // let color = Color::random();
+        // if !window.is_key_down(Key::Space) {
+        //     // let color = Color::random();
 
-            // // points = gen_points(draw_buffer.get_width(), draw_buffer.get_height());
-            // // let polygon = DiscretePolygon::<POLYGON_SIZE>::from(points.clone());
-            let idx = rng.gen_range(0..POLYGON_COUNT);
-            let polygon = &polygons[idx];
-            polygon.fill(&mut draw_buffer, &color.copy_invert());
-            // polygon.draw(&mut draw_buffer, &color);
-        }
-
-        // if window.is_key_pressed(Key::Space, minifb::KeyRepeat::No) && points.len() >= POLYGON_SIZE
-        // {
-        //     let polygon = Polygon::<POLYGON_SIZE>::from(points.clone());
-        //     points = points.into_iter().skip(POLYGON_SIZE).collect();
+        //     // // points = gen_points(draw_buffer.get_width(), draw_buffer.get_height());
+        //     // // let polygon = DiscretePolygon::<POLYGON_SIZE>::from(points.clone());
+        //     let idx = rng.gen_range(0..POLYGON_COUNT);
+        //     let polygon = &polygons[idx];
         //     polygon.fill(&mut draw_buffer, &color.copy_invert());
         //     // polygon.draw(&mut draw_buffer, &color);
         // }
+
+        if window.is_key_pressed(Key::Space, minifb::KeyRepeat::No) && points.len() >= POLYGON_SIZE
+        {
+            let mut polygon = Polygon::<POLYGON_SIZE>::from(points.clone());
+            polygon.points[0].color = Color::from_rgb(255, 0, 0);
+            polygon.points[1].color = Color::from_rgb(0, 255, 0);
+            polygon.points[2].color = Color::from_rgb(0, 0, 255);
+            if rough {
+                polygon.rough_fill(&mut draw_buffer);
+            } else {
+                polygon.fill(&mut draw_buffer, &color.copy_invert());
+            }
+            rough = !rough;
+            // polygon.draw(&mut draw_buffer, &color);
+        }
+        if window.is_key_pressed(Key::Backspace, minifb::KeyRepeat::No)
+            && points.len() >= POLYGON_SIZE
+        {
+            points = points.into_iter().skip(POLYGON_SIZE).collect();
+        }
 
         if window.is_key_pressed(Key::C, minifb::KeyRepeat::No) {
             draw_buffer.clean();
@@ -219,9 +234,10 @@ fn main() -> Result<(), String> {
         let end = Instant::now();
 
         window.set_title(&format!(
-            "({}) {:.1?} FPS",
+            "({}) {:.1?} FPS, precise: {:?}",
             points.len(),
-            1.0 / (end - start).as_secs_f32()
+            1.0 / (end - start).as_secs_f32(),
+            rough
         ));
 
         t += time_step;

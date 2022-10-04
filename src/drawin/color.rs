@@ -93,6 +93,37 @@ impl Color {
         let b = (((rhs.b as i32 - self.b as i32) * t / t_max) as u8).wrapping_add(self.b);
         Color { r, g, b, ..self }
     }
+
+    pub fn interpolate_multiple(colors: &Vec<Color>, ts: Vec<i32>, t_total: i32) -> Color {
+        let t_max = *ts.iter().max().unwrap();
+        let r = colors
+            .iter()
+            .zip(ts.iter())
+            .map(|(c, t)| (c.r as i32) - (c.r as i32) * t / (t_total - t_max))
+            .sum::<i32>()
+            .max(0)
+             as u8;
+        let g = colors
+            .iter()
+            .zip(ts.iter())
+            .map(|(c, t)| (c.g as i32) - (c.g as i32) * t / (t_total - t_max))
+            .sum::<i32>()
+            .max(0)
+             as u8;
+        let b = colors
+            .iter()
+            .zip(ts.iter())
+            .map(|(c, t)| (c.b as i32) - (c.b as i32) * t / (t_total - t_max))
+            .sum::<i32>()
+            .max(0)
+             as u8;
+        Color {
+            r,
+            g,
+            b,
+            ..Default::default()
+        }
+    }
 }
 
 derive_self_add!(Color, r, g, b, alpha);
