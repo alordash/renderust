@@ -5,13 +5,17 @@ mod drawin;
 mod geometry;
 mod wavefront;
 
-use std::{fs::File, time::Instant};
+use std::{
+    fs::File,
+    ops::{RangeFull, RangeTo, RangeToInclusive},
+    time::Instant,
+};
 
 use drawin::{color::Color, draw_buffer::*, drawable::Drawable};
 use geometry::{
     primitives::{
-        discrete_point::DiscretePoint,
-        polygons::discrete_triangle::DiscreteTriangle, discrete_polygon::DiscretePolygon,
+        discrete_point::DiscretePoint, discrete_polygon::DiscretePolygon,
+        polygons::discrete_triangle::DiscreteTriangle,
     },
     rect_size::RectSize,
 };
@@ -27,7 +31,20 @@ const WINDOW_HEIGHT: usize = 1000;
 
 const WAVEFRONT_SOURCE_PATH: &'static str = "./resources/african_head.obj";
 
-const POLYGON_SIZE: usize = 5;
+const POLYGON_SIZE: usize = 1000;
+const POLYGON_COUNT: usize = 100;
+
+fn gen_points(width: usize, height: usize) -> Vec<DiscretePoint> {
+    let mut rng = thread_rng();
+    (0..POLYGON_SIZE)
+        .map(|_| {
+            DiscretePoint::new(
+                rng.gen_range(0..width as isize),
+                rng.gen_range(0..height as isize),
+            )
+        })
+        .collect()
+}
 
 fn main() -> Result<(), String> {
     // Allocate the output buffer.
@@ -67,6 +84,17 @@ fn main() -> Result<(), String> {
 
     // wavefront_obj.fill(&mut draw_buffer, &Color::random());
     // wavefront_obj.draw(&mut draw_buffer, &Color::from_rgb(255, 255, 255));
+
+    let polygons: Vec<_> = (0..POLYGON_COUNT)
+        .map(|_| {
+            DiscretePolygon::<POLYGON_SIZE>::from(gen_points(
+                draw_buffer.get_width(),
+                draw_buffer.get_height(),
+            ))
+        })
+        .collect();
+
+    let mut rng = thread_rng();
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         let start = Instant::now();
@@ -155,12 +183,24 @@ fn main() -> Result<(), String> {
         //     }
         // }
 
-        if window.is_key_pressed(Key::Space, minifb::KeyRepeat::No) && points.len() >= POLYGON_SIZE {
-            let polygon = DiscretePolygon::<POLYGON_SIZE>::from(points.clone());
-            points = points.into_iter().skip(POLYGON_SIZE).collect();
+        if !window.is_key_down(Key::Space) {
+            let color = Color::random();
+
+            // points = gen_points(draw_buffer.get_width(), draw_buffer.get_height());
+            // let polygon = DiscretePolygon::<POLYGON_SIZE>::from(points.clone());
+            let idx = rng.gen_range(0..POLYGON_COUNT);
+            let polygon = &polygons[idx];
             polygon.fill(&mut draw_buffer, &color.copy_invert());
             polygon.draw(&mut draw_buffer, &color);
         }
+
+        // if window.is_key_pressed(Key::Space, minifb::KeyRepeat::No) && points.len() >= POLYGON_SIZE
+        // {
+        //     let polygon = DiscretePolygon::<POLYGON_SIZE>::from(points.clone());
+        //     points = points.into_iter().skip(POLYGON_SIZE).collect();
+        //     polygon.fill(&mut draw_buffer, &color.copy_invert());
+        //     polygon.draw(&mut draw_buffer, &color);
+        // }
 
         if window.is_key_pressed(Key::C, minifb::KeyRepeat::No) {
             draw_buffer.clean();
@@ -176,7 +216,11 @@ fn main() -> Result<(), String> {
 
         let end = Instant::now();
 
-        window.set_title(&format!("({}) {:.1?} FPS", points.len(), 1.0 / (end - start).as_secs_f32()));
+        window.set_title(&format!(
+            "({}) {:.1?} FPS",
+            points.len(),
+            1.0 / (end - start).as_secs_f32()
+        ));
 
         t += time_step;
     }
