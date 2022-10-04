@@ -1,12 +1,12 @@
-use super::discrete_point::DiscretePoint;
+use super::point::Point;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub struct DiscreteLine {
-    pub begin: DiscretePoint,
-    pub end: DiscretePoint,
+pub struct Line {
+    pub begin: Point,
+    pub end: Point,
 }
 
-impl DiscreteLine {
+impl Line {
     pub fn order_by_x(&mut self) {
         if self.begin.x > self.end.x {
             (self.begin, self.end) = (self.end, self.begin);
@@ -19,13 +19,13 @@ impl DiscreteLine {
         }
     }
 
-    pub fn new(begin_x: isize, begin_y: isize, end_x: isize, end_y: isize) -> DiscreteLine {
-        DiscreteLine {
-            begin: DiscretePoint {
+    pub fn new(begin_x: isize, begin_y: isize, end_x: isize, end_y: isize) -> Line {
+        Line {
+            begin: Point {
                 x: begin_x,
                 y: begin_y,
             },
-            end: DiscretePoint { x: end_x, y: end_y },
+            end: Point { x: end_x, y: end_y },
         }
     }
 }

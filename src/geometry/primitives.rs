@@ -1,6 +1,6 @@
-pub mod discrete_line;
-pub mod discrete_point;
-pub mod discrete_polygon;
+pub mod line;
+pub mod point;
+pub mod polygon;
 pub mod polygons {
-    pub mod discrete_triangle;
+    pub mod triangle;
 }

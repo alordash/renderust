@@ -14,8 +14,8 @@ use std::{
 use drawin::{color::Color, draw_buffer::*, drawable::Drawable};
 use geometry::{
     primitives::{
-        discrete_point::DiscretePoint, discrete_polygon::DiscretePolygon,
-        polygons::discrete_triangle::DiscreteTriangle,
+        point::Point, polygon::Polygon,
+        polygons::triangle::Triangle,
     },
     rect_size::RectSize,
 };
@@ -34,11 +34,11 @@ const WAVEFRONT_SOURCE_PATH: &'static str = "./resources/african_head.obj";
 const POLYGON_SIZE: usize = 1000;
 const POLYGON_COUNT: usize = 100;
 
-fn gen_points(width: usize, height: usize) -> Vec<DiscretePoint> {
+fn gen_points(width: usize, height: usize) -> Vec<Point> {
     let mut rng = thread_rng();
     (0..POLYGON_SIZE)
         .map(|_| {
-            DiscretePoint::new(
+            Point::new(
                 rng.gen_range(0..width as isize),
                 rng.gen_range(0..height as isize),
             )
@@ -66,7 +66,7 @@ fn main() -> Result<(), String> {
     let mut width_scale = WINDOW_WIDTH as f32 / BUFFER_WIDTH as f32;
     let mut height_scale = WINDOW_HEIGHT as f32 / BUFFER_HEIGHT as f32;
 
-    let mut points: Vec<DiscretePoint> = Vec::new();
+    let mut points: Vec<Point> = Vec::new();
     let mut is_mouse_pressed = false;
 
     let mut angle: f32 = 0.0;
@@ -87,7 +87,7 @@ fn main() -> Result<(), String> {
 
     let polygons: Vec<_> = (0..POLYGON_COUNT)
         .map(|_| {
-            DiscretePolygon::<POLYGON_SIZE>::from(gen_points(
+            Polygon::<POLYGON_SIZE>::from(gen_points(
                 draw_buffer.get_width(),
                 draw_buffer.get_height(),
             ))
@@ -111,7 +111,7 @@ fn main() -> Result<(), String> {
                 is_mouse_pressed = true;
                 if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
                     let y = new_size.height as f32 - y - 1.0;
-                    let point: DiscretePoint =
+                    let point: Point =
                         ((x / width_scale) as isize, (y / height_scale) as isize).into();
                     draw_buffer[point] = Color::from_rgb(255, 0, 0);
                     points.push(point);

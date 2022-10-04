@@ -1,8 +1,8 @@
-use crate::geometry::primitives::{discrete_line::DiscreteLine, discrete_point::DiscretePoint};
+use crate::geometry::primitives::{line::Line, point::Point};
 
-pub struct DiscreteLineIterator {
-    pub begin: DiscretePoint,
-    pub end: DiscretePoint,
+pub struct LineIterator {
+    pub begin: Point,
+    pub end: Point,
     pub angle_bigger_45_deg: bool,
     pub dx: isize,
     pub dy_error: isize,
@@ -11,24 +11,24 @@ pub struct DiscreteLineIterator {
     pub y: isize,
 }
 
-impl DiscreteLineIterator {
+impl LineIterator {
     pub fn get_iterations_count(&self) -> usize {
         (self.end.x - self.begin.x) as usize
     }
 }
 
-impl Iterator for DiscreteLineIterator {
-    type Item = DiscretePoint;
+impl Iterator for LineIterator {
+    type Item = Point;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.x < self.end.x {
             let result = if self.angle_bigger_45_deg {
-                DiscretePoint {
+                Point {
                     x: self.y,
                     y: self.x,
                 }
             } else {
-                DiscretePoint {
+                Point {
                     x: self.x,
                     y: self.y,
                 }
@@ -53,9 +53,9 @@ impl Iterator for DiscreteLineIterator {
     }
 }
 
-impl IntoIterator for DiscreteLine {
-    type Item = DiscretePoint;
-    type IntoIter = DiscreteLineIterator;
+impl IntoIterator for Line {
+    type Item = Point;
+    type IntoIter = LineIterator;
     fn into_iter(self) -> Self::IntoIter {
         let mut p1 = self.begin;
         let mut p2 = self.end;
@@ -81,7 +81,7 @@ impl IntoIterator for DiscreteLine {
         let y_error = 0;
         let y = p1.y;
 
-        DiscreteLineIterator {
+        LineIterator {
             angle_bigger_45_deg,
             begin: p1,
             end: p2,

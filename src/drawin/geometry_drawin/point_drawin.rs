@@ -1,6 +1,6 @@
-use crate::{drawin::drawable::Drawable, geometry::primitives::discrete_point::DiscretePoint};
+use crate::{drawin::drawable::Drawable, geometry::primitives::point::Point};
 
-impl Drawable for DiscretePoint {
+impl Drawable for Point {
     fn draw(
         &self,
         canvas: &mut crate::drawin::draw_buffer::DrawBuffer,

@@ -1,12 +1,12 @@
 use crate::{
-    discretization::geometry_discretization::discrete_line_x_axis_calculator::DiscreteLineXAxisCalculator,
+    discretization::geometry_discretization::line_x_axis_calculator::LineXAxisCalculator,
     drawin::{color::Color, drawable::Drawable},
     geometry::{
-        primitives::discrete_line::DiscreteLine, primitives::discrete_point::DiscretePoint,
+        primitives::line::Line, primitives::point::Point,
     },
 };
 
-impl Drawable for DiscreteLine {
+impl Drawable for Line {
     fn draw(&self, canvas: &mut crate::drawin::draw_buffer::DrawBuffer, color: &Color) {
         let line_iterator = self.into_iter();
         for point in line_iterator {

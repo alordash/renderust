@@ -1,13 +1,13 @@
 use crate::{
-    discretization::geometry_discretization::discrete_line_x_axis_calculator::DiscreteLineXAxisCalculator,
+    discretization::geometry_discretization::line_x_axis_calculator::LineXAxisCalculator,
     drawin::{color::Color, drawable::Drawable},
     geometry::primitives::{
-        discrete_line::DiscreteLine, discrete_point::DiscretePoint,
-        polygons::discrete_triangle::DiscreteTriangle,
+        line::Line, point::Point,
+        polygons::triangle::Triangle,
     },
 };
 
-impl Drawable for DiscreteTriangle {
+impl Drawable for Triangle {
     fn draw(
         &self,
         canvas: &mut crate::drawin::draw_buffer::DrawBuffer,
@@ -36,22 +36,22 @@ impl Drawable for DiscreteTriangle {
                 .get_unchecked(0)
         };
 
-        let long_line = DiscreteLine {
+        let long_line = Line {
             begin: *left_point,
             end: *right_point,
         };
-        let left_line = DiscreteLine {
+        let left_line = Line {
             begin: *left_point,
             end: *middle_point,
         };
-        let right_line = DiscreteLine {
+        let right_line = Line {
             begin: *middle_point,
             end: *right_point,
         };
 
-        let long_line_calculator = DiscreteLineXAxisCalculator::from(long_line);
-        let left_line_calculator = DiscreteLineXAxisCalculator::from(left_line);
-        let right_line_calculator = DiscreteLineXAxisCalculator::from(right_line);
+        let long_line_calculator = LineXAxisCalculator::from(long_line);
+        let left_line_calculator = LineXAxisCalculator::from(left_line);
+        let right_line_calculator = LineXAxisCalculator::from(right_line);
 
         let mut short_line_calculator = &left_line_calculator;
 
@@ -62,11 +62,11 @@ impl Drawable for DiscreteTriangle {
         }
 
         for x in left_point.x..right_point.x {
-            let p1 = DiscretePoint {
+            let p1 = Point {
                 x,
                 y: long_line_calculator.calculate_y_value(x),
             };
-            let p2 = DiscretePoint {
+            let p2 = Point {
                 x,
                 y: short_line_calculator.calculate_y_value(x),
             };

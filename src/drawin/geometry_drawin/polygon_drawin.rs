@@ -1,14 +1,14 @@
 use std::ops::Range;
 
 use crate::{
-    discretization::geometry_discretization::discrete_line_x_axis_calculator::DiscreteLineXAxisCalculator,
+    discretization::geometry_discretization::line_x_axis_calculator::LineXAxisCalculator,
     drawin::drawable::Drawable,
-    geometry::primitives::{discrete_line::DiscreteLine, discrete_polygon::DiscretePolygon},
+    geometry::primitives::{line::Line, polygon::Polygon},
 };
 
 struct PolygonFillingRange<'a> {
     range: Range<isize>,
-    line_calculators: Vec<&'a DiscreteLineXAxisCalculator>,
+    line_calculators: Vec<&'a LineXAxisCalculator>,
 }
 
 impl<'a> Iterator for PolygonFillingRange<'a> {
@@ -18,7 +18,7 @@ impl<'a> Iterator for PolygonFillingRange<'a> {
     }
 }
 
-impl<const N: usize> Drawable for DiscretePolygon<N> {
+impl<const N: usize> Drawable for Polygon<N> {
     default fn draw(
         &self,
         canvas: &mut crate::drawin::draw_buffer::DrawBuffer,
@@ -35,18 +35,18 @@ impl<const N: usize> Drawable for DiscretePolygon<N> {
         color: &crate::drawin::color::Color,
     ) {
         let mut lines = self.get_perimeter_lines();
-        lines.iter_mut().for_each(DiscreteLine::order_by_x);
+        lines.iter_mut().for_each(Line::order_by_x);
 
-        let line_calculators: Vec<DiscreteLineXAxisCalculator> = lines
+        let line_calculators: Vec<LineXAxisCalculator> = lines
             .into_iter()
-            .map(DiscreteLineXAxisCalculator::from)
+            .map(LineXAxisCalculator::from)
             .collect();
 
         let mut x_sorted_points = self.points.clone();
         x_sorted_points.sort_unstable_by(|a, b| a.x.cmp(&b.x));
         let polygon_filling_ranges = x_sorted_points.windows(2).map(|two_points| unsafe {
             let range = two_points.get_unchecked(0).x..two_points.get_unchecked(1).x;
-            let suitable_line_calculators: Vec<&DiscreteLineXAxisCalculator> = line_calculators
+            let suitable_line_calculators: Vec<&LineXAxisCalculator> = line_calculators
                 .iter()
                 .filter(|lc| {
                     let lc_range = lc.get_x_calculation_range();

@@ -4,7 +4,7 @@ use std::{
     slice,
 };
 
-use crate::geometry::{primitives::discrete_point::DiscretePoint, rect_size::RectSize};
+use crate::geometry::{primitives::point::Point, rect_size::RectSize};
 
 use super::color::Color;
 
@@ -147,15 +147,15 @@ impl IndexMut<(usize, usize)> for DrawBuffer {
     }
 }
 
-impl Index<DiscretePoint> for DrawBuffer {
+impl Index<Point> for DrawBuffer {
     type Output = Color;
-    fn index(&self, index: DiscretePoint) -> &Self::Output {
+    fn index(&self, index: Point) -> &Self::Output {
         <Self as Index<(usize, usize)>>::index(self, (index.x as usize, index.y as usize))
     }
 }
 
-impl IndexMut<DiscretePoint> for DrawBuffer {
-    fn index_mut(&mut self, index: DiscretePoint) -> &mut Self::Output {
+impl IndexMut<Point> for DrawBuffer {
+    fn index_mut(&mut self, index: Point) -> &mut Self::Output {
         <Self as IndexMut<(usize, usize)>>::index_mut(self, (index.x as usize, index.y as usize))
     }
 }
