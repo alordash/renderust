@@ -3,7 +3,7 @@ use std::ops::Mul;
 use num::{Num, NumCast};
 use rand::prelude::*;
 
-#[derive(Default, Clone, Copy, Debug)]
+#[derive(Default, Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub struct Color {
     pub b: u8,

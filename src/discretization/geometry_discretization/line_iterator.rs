@@ -23,15 +23,9 @@ impl Iterator for LineIterator {
     fn next(&mut self) -> Option<Self::Item> {
         if self.x < self.end.x {
             let result = if self.angle_bigger_45_deg {
-                Point {
-                    x: self.y,
-                    y: self.x,
-                }
+                Point::new(self.y, self.x)
             } else {
-                Point {
-                    x: self.x,
-                    y: self.y,
-                }
+                Point::new(self.x, self.y)
             };
 
             self.y_error += self.dy_error;

@@ -62,14 +62,8 @@ impl Drawable for Triangle {
         }
 
         for x in left_point.x..right_point.x {
-            let p1 = Point {
-                x,
-                y: long_line_calculator.calculate_y_value(x),
-            };
-            let p2 = Point {
-                x,
-                y: short_line_calculator.calculate_y_value(x),
-            };
+            let p1 = Point::new(x, long_line_calculator.calculate_y_value(x));
+            let p2 = Point::new(x, short_line_calculator.calculate_y_value(x));
 
             let y_min = p1.y.min(p2.y);
             let y_max = p1.y.max(p2.y);

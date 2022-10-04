@@ -8,6 +8,7 @@ macro_rules! derive_self_add {
             fn add(self, rhs: Self) -> Self::Output {
                 $t {
                     $($field: self.$field + rhs.$field,)+
+                    ..self
                 }
             }
         }
@@ -24,6 +25,7 @@ macro_rules! derive_self_sub {
             fn sub(self, rhs: Self) -> Self::Output {
                 $t {
                     $($field: self.$field - rhs.$field,)+
+                    ..self
                 }
             }
         }

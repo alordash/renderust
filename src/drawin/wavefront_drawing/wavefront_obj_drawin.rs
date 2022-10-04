@@ -3,9 +3,7 @@ use crate::{
     geometry::{
         math_vectors::{vec3f::Vec3f, Vec3},
         primitives::line::Line,
-        primitives::{
-            point::Point, polygons::triangle::Triangle,
-        },
+        primitives::{point::Point, polygons::triangle::Triangle},
         rect_size::RectSize,
     },
     wavefront::wavefront_obj::WavefrontObj,
@@ -31,8 +29,8 @@ impl Drawable for WavefrontObj {
                 let x1 = ((v1.x() + 1.0) * w_f32 / 2.0) as isize;
                 let y1 = ((v1.y() + 1.0) * h_f32 / 2.0) as isize;
 
-                let begin = Point { x: x0, y: y0 };
-                let end = Point { x: x1, y: y1 };
+                let begin = Point::new(x0, y0);
+                let end = Point::new(x1, y1);
                 let line = Line { begin, end };
                 line.draw(canvas, color);
             }
@@ -52,13 +50,13 @@ impl Drawable for WavefrontObj {
         for i in 0..self.faces.len() {
             let face = self.faces[i];
             let mut world_coords = [Vec3f::default(); 3];
-            let mut screen_coords = [Point { x: 0, y: 0 }; 3];
+            let mut screen_coords = [Point::new(0, 0); 3];
             for j in 0..3_usize {
                 let v0 = self.vertices[face.0[j]];
                 let x0 = ((v0.x() + 1.0) * w_f32 / 2.0) as isize;
                 let y0 = ((v0.y() + 1.0) * h_f32 / 2.0) as isize;
                 world_coords[j] = v0;
-                screen_coords[j] = Point { x: x0, y: y0 };
+                screen_coords[j] = Point::new(x0, y0);
             }
             let first_edge = world_coords[2] - world_coords[0];
             let second_edge = world_coords[1] - world_coords[0];

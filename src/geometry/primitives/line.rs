@@ -21,11 +21,8 @@ impl Line {
 
     pub fn new(begin_x: isize, begin_y: isize, end_x: isize, end_y: isize) -> Line {
         Line {
-            begin: Point {
-                x: begin_x,
-                y: begin_y,
-            },
-            end: Point { x: end_x, y: end_y },
+            begin: Point::new(begin_x, begin_y),
+            end: Point::new(end_x, end_y)
         }
     }
 }
