@@ -29,14 +29,12 @@ impl LineXAxisCalculator {
 
     pub fn calculate_y_and_color_value(&self, x: isize) -> (isize, Color) {
         // attempt to divide by zero
-        let d = (x - self.begin.x);
-        // let c = (self.end.color - self.begin.color) * d + self.begin.color;
-        // let c = (self.end.color - self.begin.color).mul_div(d, self.dx) + self.begin.color;
-        let c = self
+        let d = x - self.begin.x;
+        let color = self
             .begin
             .color
-            .mix(self.end.color, d as i32, self.dx as i32);
-        (d * self.dy / self.dx + self.begin.y, c)
+            .interpolate(self.end.color, d as i32, self.dx as i32);
+        (d * self.dy / self.dx + self.begin.y, color)
     }
 
     pub fn get_x_calculation_range(&self) -> Range<isize> {
