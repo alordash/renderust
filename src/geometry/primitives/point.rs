@@ -15,6 +15,10 @@ impl Point {
             color: Color::default(),
         }
     }
+
+    pub fn new_with_color(x: isize, y: isize, color: Color) -> Point {
+        Point { x, y, color }
+    }
 }
 
 impl From<(isize, isize)> for Point {

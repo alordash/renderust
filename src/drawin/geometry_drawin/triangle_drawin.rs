@@ -8,7 +8,7 @@ use crate::{
 };
 
 impl Drawable for Triangle {
-    fn draw(
+    fn fill(
         &self,
         canvas: &mut crate::drawin::draw_buffer::DrawBuffer,
         color: &crate::drawin::color::Color,

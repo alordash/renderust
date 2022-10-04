@@ -35,9 +35,10 @@ fn gen_points(width: usize, height: usize) -> Vec<Point> {
     let mut rng = thread_rng();
     (0..POLYGON_SIZE)
         .map(|_| {
-            Point::new(
+            Point::new_with_color(
                 rng.gen_range(0..width as isize),
                 rng.gen_range(0..height as isize),
+                Color::random()
             )
         })
         .collect()
@@ -150,24 +151,24 @@ fn main() -> Result<(), String> {
 
         let color = Color::from_hsv(passed_hue, 1.0, 1.0);
 
-        if points.len() > 1 {
-            let len = points.len();
-            let even_len = if len % 2 == 0 { len } else { len - 1 };
-            let mut iterating_points: Vec<Point> = points.drain(0..even_len).collect();
-            for points_chunk in iterating_points.chunks_exact_mut(2) {
-                unsafe {
-                    // points_chunk.get_unchecked_mut(1).color.invert();
-                    points_chunk.get_unchecked_mut(1).color.invert();
-                    let (p1, p2) = (points_chunk.get_unchecked(0), points_chunk.get_unchecked(1));
-                    let line = Line {
-                        begin: *p1,
-                        end: *p2,
-                    };
-                    // line.draw(&mut draw_buffer, &color);
-                    line.rough_draw(&mut draw_buffer);
-                }
-            }
-        }
+        // if points.len() > 1 {
+        //     let len = points.len();
+        //     let even_len = if len % 2 == 0 { len } else { len - 1 };
+        //     let mut iterating_points: Vec<Point> = points.drain(0..even_len).collect();
+        //     for points_chunk in iterating_points.chunks_exact_mut(2) {
+        //         unsafe {
+        //             // points_chunk.get_unchecked_mut(1).color.invert();
+        //             points_chunk.get_unchecked_mut(1).color.invert();
+        //             let (p1, p2) = (points_chunk.get_unchecked(0), points_chunk.get_unchecked(1));
+        //             let line = Line {
+        //                 begin: *p1,
+        //                 end: *p2,
+        //             };
+        //             // line.draw(&mut draw_buffer, &color);
+        //             line.rough_draw(&mut draw_buffer);
+        //         }
+        //     }
+        // }
 
         // if points.len() > 2 {
         //     let len = points.len();
@@ -189,18 +190,18 @@ fn main() -> Result<(), String> {
 
             // // points = gen_points(draw_buffer.get_width(), draw_buffer.get_height());
             // // let polygon = DiscretePolygon::<POLYGON_SIZE>::from(points.clone());
-            // let idx = rng.gen_range(0..POLYGON_COUNT);
-            // let polygon = &polygons[idx];
-            // polygon.fill(&mut draw_buffer, &color.copy_invert());
+            let idx = rng.gen_range(0..POLYGON_COUNT);
+            let polygon = &polygons[idx];
+            polygon.fill(&mut draw_buffer, &color.copy_invert());
             // polygon.draw(&mut draw_buffer, &color);
         }
 
         // if window.is_key_pressed(Key::Space, minifb::KeyRepeat::No) && points.len() >= POLYGON_SIZE
         // {
-        //     let polygon = DiscretePolygon::<POLYGON_SIZE>::from(points.clone());
+        //     let polygon = Polygon::<POLYGON_SIZE>::from(points.clone());
         //     points = points.into_iter().skip(POLYGON_SIZE).collect();
         //     polygon.fill(&mut draw_buffer, &color.copy_invert());
-        //     polygon.draw(&mut draw_buffer, &color);
+        //     // polygon.draw(&mut draw_buffer, &color);
         // }
 
         if window.is_key_pressed(Key::C, minifb::KeyRepeat::No) {
