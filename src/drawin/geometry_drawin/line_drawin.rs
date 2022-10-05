@@ -7,10 +7,10 @@ use crate::{
 };
 
 impl Drawable for Line {
-    fn draw(&self, canvas: &mut crate::drawin::draw_buffer::DrawBuffer, color: &Color) {
+    fn draw(&self, canvas: &mut crate::drawin::draw_buffer::DrawBuffer, color: Option<&Color>) {
         let line_iterator = self.into_iter();
         for point in line_iterator {
-            canvas[point] = *color;
+            canvas[point] = unsafe{ *color.unwrap_unchecked() };
         }
     }
 }

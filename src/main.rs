@@ -80,8 +80,8 @@ fn main() -> Result<(), String> {
     let wavefront_obj = WavefrontObj::from_file(&wavefront_obj_file)
         .map_err(|e| format!("Error parsing file: {:?}", e))?;
 
-    // wavefront_obj.fill(&mut draw_buffer, &Color::random());
-    // wavefront_obj.draw(&mut draw_buffer, &Color::from_rgb(255, 255, 255));
+    wavefront_obj.fill(&mut draw_buffer, Some(&Color::random()));
+    wavefront_obj.draw(&mut draw_buffer, Some(&Color::from_rgb(255, 255, 255)));
 
     let polygons: Vec<_> = (0..POLYGON_COUNT)
         .map(|_| {
@@ -127,97 +127,7 @@ fn main() -> Result<(), String> {
             is_mouse_pressed = false;
         }
 
-        // let size = draw_buffer.get_size();
-        // let half_width = size.width as isize / 2;
-        // let half_height = size.height as isize / 2;
-
-        // let r = half_width.min(half_height) as f32;
-
-        // let first_point = DiscretePoint {
-        //     x: (r * angle.to_radians().cos()) as isize + half_width,
-        //     y: (r * angle.to_radians().sin()) as isize + half_height,
-        // };
-
-        // // let second_point = DiscretePoint {
-        // //     x: -(first_point.x - half_width as isize) + half_width,
-        // //     y: -(first_point.y - half_height as isize) + half_height,
-        // // };
-
-        // let second_point = DiscretePoint {
-        //     x: half_width,
-        //     y: half_height,
-        // };
-
-        // points.push(first_point);
-        // points.push(second_point);
-
-        // // angle += (t.sin() + 0.25) * angle_step;
-        // angle += angle_step;
-
-        // if points.len() > 1 {
-        //     let len = points.len();
-        //     let even_len = if len % 2 == 0 { len } else { len - 1 };
-        //     let mut iterating_points: Vec<Point> = points.drain(0..even_len).collect();
-        //     for points_chunk in iterating_points.chunks_exact_mut(2) {
-        //         unsafe {
-        //             // points_chunk.get_unchecked_mut(1).color.invert();
-        //             points_chunk.get_unchecked_mut(1).color.invert();
-        //             let (p1, p2) = (points_chunk.get_unchecked(0), points_chunk.get_unchecked(1));
-        //             let line = Line {
-        //                 begin: *p1,
-        //                 end: *p2,
-        //             };
-        //             // line.draw(&mut draw_buffer, &color);
-        //             line.rough_draw(&mut draw_buffer);
-        //         }
-        //     }
-        // }
-
-        // if points.len() > 2 {
-        //     let len = points.len();
-        //     let dividable_len = (len / 3) * 3;
-        //     let iterating_points: Vec<DiscretePoint> = points.drain(0..dividable_len).collect();
-        //     for points_chunk in iterating_points.chunks_exact(3) {
-        //         unsafe {
-        //             let triangle_points: [DiscretePoint; 3] = points_chunk.try_into().unwrap();
-        //             let triangle = DiscreteTriangle {
-        //                 points: triangle_points,
-        //             };
-        //             triangle.draw(&mut draw_buffer, &color);
-        //         }
-        //     }
-        // }
-
-        // if !window.is_key_down(Key::Space) {
-        //     // let color = Color::random();
-
-        //     // // points = gen_points(draw_buffer.get_width(), draw_buffer.get_height());
-        //     // // let polygon = DiscretePolygon::<POLYGON_SIZE>::from(points.clone());
-        //     let idx = rng.gen_range(0..POLYGON_COUNT);
-        //     let polygon = &polygons[idx];
-        //     polygon.fill(&mut draw_buffer, &color.copy_invert());
-        //     // polygon.draw(&mut draw_buffer, &color);
-        // }
-
-        if window.is_key_pressed(Key::Space, minifb::KeyRepeat::No) && points.len() >= POLYGON_SIZE
-        {
-            let mut polygon = Polygon::<POLYGON_SIZE>::from(points.clone());
-            polygon.points[0].color = Color::from_rgb(255, 0, 0);
-            polygon.points[1].color = Color::from_rgb(0, 255, 0);
-            polygon.points[2].color = Color::from_rgb(0, 0, 255);
-            if rough {
-                polygon.rough_fill(&mut draw_buffer);
-            } else {
-                polygon.fill(&mut draw_buffer, &color.copy_invert());
-            }
-            rough = !rough;
-            // polygon.draw(&mut draw_buffer, &color);
-        }
-        if window.is_key_pressed(Key::Backspace, minifb::KeyRepeat::No)
-            && points.len() >= POLYGON_SIZE
-        {
-            points = points.into_iter().skip(POLYGON_SIZE).collect();
-        }
+        wavefront_obj.fill(&mut draw_buffer, Some(&color));
 
         if window.is_key_pressed(Key::C, minifb::KeyRepeat::No) {
             draw_buffer.clean();

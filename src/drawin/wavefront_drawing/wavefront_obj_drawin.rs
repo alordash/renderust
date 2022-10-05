@@ -1,5 +1,5 @@
 use crate::{
-    drawin::{color::Color, drawable::Drawable},
+    drawin::{color::Color, draw_buffer::DrawBuffer, drawable::Drawable},
     geometry::{
         math_vectors::{vec3f::Vec3f, Vec3},
         primitives::line::Line,
@@ -10,11 +10,7 @@ use crate::{
 };
 
 impl Drawable for WavefrontObj {
-    fn draw(
-        &self,
-        canvas: &mut crate::drawin::draw_buffer::DrawBuffer,
-        color: &crate::drawin::color::Color,
-    ) {
+    fn draw(&self, canvas: &mut DrawBuffer, color: Option<&Color>) {
         let RectSize { width, height } = canvas.get_size();
 
         let (w_f32, h_f32) = ((width - 1) as f32, (height - 1) as f32);
@@ -37,11 +33,7 @@ impl Drawable for WavefrontObj {
         }
     }
 
-    fn fill(
-        &self,
-        canvas: &mut crate::drawin::draw_buffer::DrawBuffer,
-        color: &crate::drawin::color::Color,
-    ) {
+    fn fill(&self, canvas: &mut DrawBuffer, color: Option<&Color>) {
         let RectSize { width, height } = canvas.get_size();
         let light_dir = Vec3::<f32>([0.0, 0.0, -1.0]);
 
@@ -67,10 +59,11 @@ impl Drawable for WavefrontObj {
             let intensity = normal.dot_product(light_dir);
 
             if intensity > 0.0 {
+                let color = color.map(|c| (*c * intensity));
                 let triangle = Triangle {
                     points: screen_coords,
                 };
-                triangle.draw(canvas, &(*color * intensity));
+                triangle.fill(canvas, color.as_ref());
             }
         }
     }
