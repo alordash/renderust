@@ -7,7 +7,7 @@ macro_rules! derive_self_add {
             type Output = Self;
             fn add(self, rhs: Self) -> Self::Output {
                 $t {
-                    $($field: self.$field + rhs.$field,)+
+                    $($field: self.$field.wrapping_add(rhs.$field),)+
                     ..self
                 }
             }
@@ -24,7 +24,7 @@ macro_rules! derive_self_sub {
             type Output = Self;
             fn sub(self, rhs: Self) -> Self::Output {
                 $t {
-                    $($field: self.$field - rhs.$field,)+
+                    $($field: self.$field.wrapping_sub(rhs.$field),)+
                     ..self
                 }
             }
