@@ -66,15 +66,15 @@ impl<const N: usize> Polygon<N> {
                     let (y1, y2) = (y_and_color1.0, y_and_color2.0);
 
                     for y in y1..y2 {
-                        let mut distances: Vec<i32> = self
+                        let mut distances: Vec<f32> = self
                             .points
                             .iter()
                             .map(|p| {
                                 let dst = *p - Point::new(x, y);
-                                (dst.x.pow(2) + dst.y.pow(2)).sqrt() as i32
+                                (1.0 / (dst.x.pow(2) + dst.y.pow(2)).sqrt() as f32)
                             })
                             .collect();
-                        let total_distance = distances.iter().sum::<i32>();
+                        let total_distance = distances.iter().sum::<f32>();
                         let new_color =
                             Color::interpolate_multiple(&colors, distances, total_distance);
 

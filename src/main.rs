@@ -28,7 +28,7 @@ const WINDOW_HEIGHT: usize = 1000;
 
 const WAVEFRONT_SOURCE_PATH: &'static str = "./resources/african_head.obj";
 
-const POLYGON_SIZE: usize = 3;
+const POLYGON_SIZE: usize = 5;
 const POLYGON_COUNT: usize = 100;
 
 fn gen_points(width: usize, height: usize) -> Vec<Point> {
@@ -237,7 +237,7 @@ fn main() -> Result<(), String> {
             "({}) {:.1?} FPS, precise: {:?}",
             points.len(),
             1.0 / (end - start).as_secs_f32(),
-            rough
+            !rough
         ));
 
         t += time_step;
