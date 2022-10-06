@@ -17,7 +17,7 @@ impl Point {
         }
     }
 
-    pub fn new_z(x: isize, y: isize, z: isize) -> Point {
+    pub fn new_with_z(x: isize, y: isize, z: isize) -> Point {
         Point {
             coords: Vec3([x, y, z]),
             color: Color::default(),

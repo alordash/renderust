@@ -28,7 +28,7 @@ const WINDOW_HEIGHT: usize = 1000;
 
 const WAVEFRONT_SOURCE_PATH: &'static str = "./resources/african_head.obj";
 
-const POLYGON_SIZE: usize = 5;
+const POLYGON_SIZE: usize = 3;
 const POLYGON_COUNT: usize = 100;
 
 fn gen_points(width: usize, height: usize) -> Vec<Point> {
@@ -96,6 +96,8 @@ fn main() -> Result<(), String> {
 
     let mut rough = true;
 
+    let mut polygon_depth = 0isize;
+
     while window.is_open() && !window.is_key_down(Key::Escape) {
         let start = Instant::now();
 
@@ -115,8 +117,11 @@ fn main() -> Result<(), String> {
                 is_mouse_pressed = true;
                 if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
                     let y = new_size.height as f32 - y - 1.0;
-                    let mut point: Point =
-                        ((x / width_scale) as isize, (y / height_scale) as isize).into();
+                    let mut point = Point::new_with_z(
+                        (x / width_scale) as isize,
+                        (y / height_scale) as isize,
+                        polygon_depth,
+                    );
                     // point.color = Color::random();
                     point.color = color;
                     draw_buffer[point] = Color::from_rgb(255, 0, 0);
@@ -129,8 +134,26 @@ fn main() -> Result<(), String> {
 
         wavefront_obj.fill(&mut draw_buffer, Some(&color));
 
+        if window.is_key_pressed(Key::Space, minifb::KeyRepeat::No) && points.len() >= POLYGON_SIZE
+        {
+            while points.len() >= 2 * POLYGON_SIZE {
+                points = points.into_iter().skip(POLYGON_SIZE).collect();
+            }
+            let polygon = Polygon::<POLYGON_SIZE>::from(points.clone());
+            polygon.fill(&mut draw_buffer, None);
+        }
+
         if window.is_key_pressed(Key::C, minifb::KeyRepeat::No) {
             draw_buffer.clean();
+        }
+
+        if let Some((scroll_x, scroll_y)) = window.get_scroll_wheel() {
+            polygon_depth += (scroll_y * 10.0) as isize;
+        }
+
+        if window.is_key_pressed(Key::Backspace, minifb::KeyRepeat::No) {
+            draw_buffer.clean();
+            draw_buffer.1.clean_with(&isize::MIN);
         }
 
         window
@@ -144,10 +167,11 @@ fn main() -> Result<(), String> {
         let end = Instant::now();
 
         window.set_title(&format!(
-            "({}) {:.1?} FPS, precise: {:?}",
+            "({}) {:.1?} FPS, precise: {:?}, depth: {:?}",
             points.len(),
             1.0 / (end - start).as_secs_f32(),
-            !rough
+            !rough,
+            polygon_depth
         ));
 
         t += time_step;

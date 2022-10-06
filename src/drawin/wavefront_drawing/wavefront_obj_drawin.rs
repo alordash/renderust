@@ -43,6 +43,8 @@ impl Drawable for WavefrontObj {
 
         let (w_f32, h_f32) = ((width - 1) as f32, (height - 1) as f32);
 
+        let prev_depths = canvas.1.clone();
+
         for i in 0..self.faces.len() {
             let face = self.faces[i];
             let mut world_coords = [Vec3f::default(); 3];
@@ -52,7 +54,7 @@ impl Drawable for WavefrontObj {
                 let x0 = ((v0.x() + 1.0) * w_f32 / 2.0) as isize;
                 let y0 = ((v0.y() + 1.0) * h_f32 / 2.0) as isize;
                 world_coords[j] = v0;
-                screen_coords[j] = Point::new_z(x0, y0, (100000.0 * world_coords[j].z()) as isize);
+                screen_coords[j] = Point::new_with_z(x0, y0, (1000.0 * world_coords[j].z()) as isize);
             }
             let first_edge = world_coords[2] - world_coords[0];
             let second_edge = world_coords[1] - world_coords[0];
@@ -71,6 +73,6 @@ impl Drawable for WavefrontObj {
             }
         }
 
-        canvas.1.clean_with(&isize::MIN);
+        canvas.1 = prev_depths;
     }
 }

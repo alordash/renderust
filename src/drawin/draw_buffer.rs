@@ -8,7 +8,7 @@ use crate::geometry::{primitives::point::Point, rect_size::RectSize};
 
 use super::color::Color;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PlaneBuffer<T> {
     size: RectSize,
     pub buffer: Vec<T>,
