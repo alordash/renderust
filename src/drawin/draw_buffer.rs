@@ -1,6 +1,6 @@
 use std::{
     mem::size_of,
-    ops::{Index, IndexMut},
+    ops::{Deref, Index, IndexMut, DerefMut},
     slice,
 };
 
@@ -14,7 +14,45 @@ pub struct PlaneBuffer<T> {
     pub buffer: Vec<T>,
 }
 
-pub type DrawBuffer = PlaneBuffer<Color>;
+pub struct DrawBuffer(pub PlaneBuffer<Color>, pub PlaneBuffer<isize>);
+
+impl Deref for DrawBuffer {
+    type Target = PlaneBuffer<Color>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for DrawBuffer {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl DrawBuffer {
+    pub fn new(
+        width: usize,
+        height: usize,
+        create_option: PlaneBufferCreateOption<Color>,
+    ) -> DrawBuffer {
+        let size = width * height;
+        let rect_size = RectSize { width, height };
+        DrawBuffer(
+            PlaneBuffer::<Color> {
+                size: rect_size,
+                buffer: match create_option {
+                    PlaneBufferCreateOption::BLANK => vec![Color::default(); size],
+                    PlaneBufferCreateOption::FILL(f) => (0..size).map(f).collect(),
+                    _ => vec![Color::default(); size],
+                },
+            },
+            PlaneBuffer {
+                size: rect_size,
+                buffer: vec![isize::MIN; size],
+            },
+        )
+    }
+}
 
 #[non_exhaustive]
 pub enum PlaneBufferCreateOption<T> {
@@ -160,6 +198,9 @@ impl<T> Index<Point> for PlaneBuffer<T> {
 
 impl<T> IndexMut<Point> for PlaneBuffer<T> {
     fn index_mut(&mut self, index: Point) -> &mut Self::Output {
-        <Self as IndexMut<(usize, usize)>>::index_mut(self, (index.x() as usize, index.y() as usize))
+        <Self as IndexMut<(usize, usize)>>::index_mut(
+            self,
+            (index.x() as usize, index.y() as usize),
+        )
     }
 }

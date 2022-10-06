@@ -1,5 +1,9 @@
 use crate::{
-    drawin::{color::Color, draw_buffer::{DrawBuffer, PlaneBuffer}, drawable::Drawable},
+    drawin::{
+        color::Color,
+        draw_buffer::{DrawBuffer, PlaneBuffer},
+        drawable::Drawable,
+    },
     geometry::{
         math_vectors::{vec3f::Vec3f, Vec3},
         primitives::line::Line,
@@ -48,7 +52,7 @@ impl Drawable for WavefrontObj {
                 let x0 = ((v0.x() + 1.0) * w_f32 / 2.0) as isize;
                 let y0 = ((v0.y() + 1.0) * h_f32 / 2.0) as isize;
                 world_coords[j] = v0;
-                screen_coords[j] = Point::new(x0, y0);
+                screen_coords[j] = Point::new_z(x0, y0, (100000.0 * world_coords[j].z()) as isize);
             }
             let first_edge = world_coords[2] - world_coords[0];
             let second_edge = world_coords[1] - world_coords[0];
@@ -66,5 +70,7 @@ impl Drawable for WavefrontObj {
                 triangle.fill(canvas, color.as_ref());
             }
         }
+
+        canvas.1.clean_with(&isize::MIN);
     }
 }

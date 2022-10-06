@@ -17,15 +17,18 @@ impl Point {
         }
     }
 
+    pub fn new_z(x: isize, y: isize, z: isize) -> Point {
+        Point {
+            coords: Vec3([x, y, z]),
+            color: Color::default(),
+        }
+    }
+
     pub fn new_with_color(x: isize, y: isize, color: Color) -> Point {
         Point {
             coords: Vec3([x, y, Default::default()]),
             color,
         }
-    }
-
-    pub fn xa(&mut self) -> &isize {
-        unsafe { self.coords.0.get_unchecked_mut(0) }
     }
 }
 
