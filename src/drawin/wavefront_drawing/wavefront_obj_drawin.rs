@@ -1,5 +1,5 @@
 use crate::{
-    drawin::{color::Color, draw_buffer::DrawBuffer, drawable::Drawable},
+    drawin::{color::Color, draw_buffer::{DrawBuffer, PlaneBuffer}, drawable::Drawable},
     geometry::{
         math_vectors::{vec3f::Vec3f, Vec3},
         primitives::line::Line,

@@ -12,7 +12,7 @@ pub enum Vec3ParsingError {
     FormatError(String),
 }
 
-#[derive(Default, Debug, Clone, Copy)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Vec3<T>(pub [T; 3])
 where
     T: Sized;

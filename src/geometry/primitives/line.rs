@@ -10,13 +10,13 @@ pub struct Line {
 
 impl Line {
     pub fn order_by_x(&mut self) {
-        if self.begin.x > self.end.x {
+        if self.begin.x() > self.end.x() {
             (self.begin, self.end) = (self.end, self.begin);
         }
     }
 
     pub fn order_by_y(&mut self) {
-        if self.begin.y > self.end.y {
+        if self.begin.y() > self.end.y() {
             (self.begin, self.end) = (self.end, self.begin);
         }
     }
@@ -30,7 +30,7 @@ impl Line {
 
     pub fn rough_draw(&self, canvas: &mut DrawBuffer) {
         let calculator = LineXAxisCalculator::new(self.begin, self.end);
-        for x in self.begin.x..self.end.x {
+        for x in self.begin.x()..self.end.x() {
             let (y, color) = calculator.calculate_y_and_color_value(x);
             canvas[(x as usize, y as usize)] = color;
         }

@@ -31,3 +31,20 @@ macro_rules! derive_self_sub {
         }
     }
 }
+
+#[macro_export]
+macro_rules! derive_self_xyz {
+    ($t:ident, $field:tt, $return_type:tt) => {
+        impl $t {
+            pub fn x(&self) -> $return_type {
+                self.$field.0[0]
+            }
+            pub fn y(&self) -> $return_type {
+                self.$field.0[1]
+            }
+            pub fn z(&self) -> $return_type {
+                self.$field.0[2]
+            }
+        }
+    }
+}

@@ -14,31 +14,31 @@ pub struct LineXAxisCalculator {
 
 impl LineXAxisCalculator {
     pub fn new(mut begin: Point, mut end: Point) -> LineXAxisCalculator {
-        if end.x < begin.x {
+        if end.x() < begin.x() {
             (begin, end) = (end, begin);
         }
-        let dx = end.x - begin.x;
-        let dy = end.y - begin.y;
+        let dx = end.x() - begin.x();
+        let dy = end.y() - begin.y();
         LineXAxisCalculator { begin, end, dx, dy }
     }
 
     pub fn calculate_y_value(&self, x: isize) -> isize {
         // attempt to divide by zero
-        (x - self.begin.x) * self.dy / self.dx + self.begin.y
+        (x - self.begin.x()) * self.dy / self.dx + self.begin.y()
     }
 
     pub fn calculate_y_and_color_value(&self, x: isize) -> (isize, Color) {
         // attempt to divide by zero
-        let d = x - self.begin.x;
+        let d = x - self.begin.x();
         let color = self
             .begin
             .color
             .interpolate(self.end.color, d as i32, self.dx as i32);
-        (d * self.dy / self.dx + self.begin.y, color)
+        (d * self.dy / self.dx + self.begin.y(), color)
     }
 
     pub fn get_x_calculation_range(&self) -> Range<isize> {
-        self.begin.x..self.end.x
+        self.begin.x()..self.end.x()
     }
 }
 

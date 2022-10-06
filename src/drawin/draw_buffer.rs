@@ -9,45 +9,49 @@ use crate::geometry::{primitives::point::Point, rect_size::RectSize};
 use super::color::Color;
 
 #[derive(Debug)]
-pub struct DrawBuffer {
+pub struct PlaneBuffer<T> {
     size: RectSize,
-    pub buffer: Vec<Color>,
+    pub buffer: Vec<T>,
 }
+
+pub type DrawBuffer = PlaneBuffer<Color>;
 
 #[non_exhaustive]
-pub enum DrawBufferCreateOption {
+pub enum PlaneBufferCreateOption<T> {
     BLANK,
-    RANDOM_FILLING,
+    FILL(fn(_: usize) -> T),
 }
 
-impl DrawBuffer {
+impl<T: Default + Copy> PlaneBuffer<T> {
     pub fn clean(&mut self) {
-        self.buffer.fill(Color::default());
+        self.buffer.fill(T::default());
     }
 
-    pub fn clean_with(&mut self, filling_color: &Color) {
-        self.buffer.fill(*filling_color);
+    pub fn clean_with(&mut self, filling_value: &T) {
+        self.buffer.fill(*filling_value);
     }
 }
 
-impl DrawBuffer {
-    pub fn new(width: usize, height: usize, create_option: DrawBufferCreateOption) -> DrawBuffer {
+impl<T: Default + Copy> PlaneBuffer<T> {
+    pub fn new(
+        width: usize,
+        height: usize,
+        create_option: PlaneBufferCreateOption<T>,
+    ) -> PlaneBuffer<T> {
         let size = width * height;
-        DrawBuffer {
+        PlaneBuffer::<T> {
             size: RectSize { width, height },
             buffer: match create_option {
-                DrawBufferCreateOption::BLANK => vec![Color::default(); size],
-                DrawBufferCreateOption::RANDOM_FILLING => {
-                    (0..size).map(|_| Color::random()).collect()
-                }
-                _ => vec![Color::default(); size],
+                PlaneBufferCreateOption::BLANK => vec![T::default(); size],
+                PlaneBufferCreateOption::FILL(f) => (0..size).map(f).collect(),
+                _ => vec![T::default(); size],
             },
         }
     }
 
     fn resize(&mut self, new_size: RectSize) {
         let new_len = new_size.width * new_size.height;
-        let new_value = Color::default();
+        let new_value = T::default();
 
         let mut filling_range: &mut dyn Iterator<Item = _> = &mut (0..self.size.height).rev();
         let mut straight_range = (0..self.size.height);
@@ -114,7 +118,7 @@ impl DrawBuffer {
         self.size = size;
     }
 
-    pub fn get_buffer_ref(&self) -> &Vec<Color> {
+    pub fn get_buffer_ref(&self) -> &Vec<T> {
         &self.buffer
     }
 
@@ -128,8 +132,8 @@ impl DrawBuffer {
     }
 }
 
-impl Index<(usize, usize)> for DrawBuffer {
-    type Output = Color;
+impl<T> Index<(usize, usize)> for PlaneBuffer<T> {
+    type Output = T;
     fn index(&self, index: (usize, usize)) -> &Self::Output {
         unsafe {
             self.buffer
@@ -138,7 +142,7 @@ impl Index<(usize, usize)> for DrawBuffer {
     }
 }
 
-impl IndexMut<(usize, usize)> for DrawBuffer {
+impl<T> IndexMut<(usize, usize)> for PlaneBuffer<T> {
     fn index_mut(&mut self, index: (usize, usize)) -> &mut Self::Output {
         unsafe {
             self.buffer
@@ -147,15 +151,15 @@ impl IndexMut<(usize, usize)> for DrawBuffer {
     }
 }
 
-impl Index<Point> for DrawBuffer {
-    type Output = Color;
+impl<T> Index<Point> for PlaneBuffer<T> {
+    type Output = T;
     fn index(&self, index: Point) -> &Self::Output {
-        <Self as Index<(usize, usize)>>::index(self, (index.x as usize, index.y as usize))
+        <Self as Index<(usize, usize)>>::index(self, (index.x() as usize, index.y() as usize))
     }
 }
 
-impl IndexMut<Point> for DrawBuffer {
+impl<T> IndexMut<Point> for PlaneBuffer<T> {
     fn index_mut(&mut self, index: Point) -> &mut Self::Output {
-        <Self as IndexMut<(usize, usize)>>::index_mut(self, (index.x as usize, index.y as usize))
+        <Self as IndexMut<(usize, usize)>>::index_mut(self, (index.x() as usize, index.y() as usize))
     }
 }

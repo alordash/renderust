@@ -47,7 +47,7 @@ fn gen_points(width: usize, height: usize) -> Vec<Point> {
 fn main() -> Result<(), String> {
     // Allocate the output buffer.
     let mut draw_buffer =
-        DrawBuffer::new(BUFFER_WIDTH, BUFFER_HEIGHT, DrawBufferCreateOption::BLANK);
+        DrawBuffer::new(BUFFER_WIDTH, BUFFER_HEIGHT, PlaneBufferCreateOption::BLANK);
 
     let mut window = Window::new(
         "Press ESC to exit",

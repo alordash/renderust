@@ -39,9 +39,9 @@ impl<const N: usize> Drawable for Polygon<N> {
             lines.into_iter().map(LineXAxisCalculator::from).collect();
 
         let mut x_sorted_points = self.points.clone();
-        x_sorted_points.sort_unstable_by(|a, b| a.x.cmp(&b.x));
+        x_sorted_points.sort_unstable_by(|a, b| a.x().cmp(&b.x()));
         let polygon_filling_ranges = x_sorted_points.windows(2).map(|two_points| unsafe {
-            let range = two_points.get_unchecked(0).x..two_points.get_unchecked(1).x;
+            let range = two_points.get_unchecked(0).x()..two_points.get_unchecked(1).x();
             let suitable_line_calculators: Vec<&LineXAxisCalculator> = line_calculators
                 .iter()
                 .filter(|lc| {

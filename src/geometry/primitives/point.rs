@@ -1,35 +1,44 @@
-use crate::{derive_self_add, derive_self_sub, drawin::color::Color};
+use crate::{
+    derive_self_add, derive_self_sub, derive_self_xyz, drawin::color::Color,
+    geometry::math_vectors::Vec3,
+};
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Point {
-    pub x: isize,
-    pub y: isize,
+    pub coords: Vec3<isize>,
     pub color: Color,
 }
 
 impl Point {
     pub fn new(x: isize, y: isize) -> Point {
         Point {
-            x,
-            y,
+            coords: Vec3([x, y, Default::default()]),
             color: Color::default(),
         }
     }
 
     pub fn new_with_color(x: isize, y: isize, color: Color) -> Point {
-        Point { x, y, color }
+        Point {
+            coords: Vec3([x, y, Default::default()]),
+            color,
+        }
+    }
+
+    pub fn xa(&mut self) -> &isize {
+        unsafe { self.coords.0.get_unchecked_mut(0) }
     }
 }
 
 impl From<(isize, isize)> for Point {
     fn from(source: (isize, isize)) -> Self {
         Point {
-            x: source.0,
-            y: source.1,
+            coords: Vec3([source.0, source.1, Default::default()]),
             color: Color::default(),
         }
     }
 }
 
-derive_self_add!(Point, x, y);
-derive_self_sub!(Point, x, y);
+derive_self_xyz!(Point, coords, isize);
+
+// derive_self_add!(Point, coords);
+// derive_self_sub!(Point, coords);
