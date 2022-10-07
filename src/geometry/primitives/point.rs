@@ -7,7 +7,8 @@ use crate::{
 pub struct Point {
     pub coords: Vec3<isize>,
     pub color: Color,
-    pub uv: Option<Vec3f>
+    pub uv: Option<Vec3f>,
+    pub normal: Option<Vec3f>
 }
 
 impl Point {
@@ -15,7 +16,8 @@ impl Point {
         Point {
             coords: Vec3([x, y, Default::default()]),
             color: Color::default(),
-            uv: None
+            uv: None,
+            normal: None
         }
     }
 
@@ -23,7 +25,8 @@ impl Point {
         Point {
             coords: Vec3([x, y, z]),
             color: Color::default(),
-            uv: None
+            uv: None,
+            normal: None
         }
     }
 
@@ -31,7 +34,8 @@ impl Point {
         Point {
             coords: Vec3([x, y, z]),
             color: Color::default(),
-            uv: Some(uv)
+            uv: Some(uv),
+            normal: None
         }
     }
 
@@ -39,7 +43,8 @@ impl Point {
         Point {
             coords: Vec3([x, y, Default::default()]),
             color,
-            uv: None
+            uv: None,
+            normal: None
         }
     }
 }
@@ -49,7 +54,8 @@ impl From<(isize, isize)> for Point {
         Point {
             coords: Vec3([source.0, source.1, Default::default()]),
             color: Color::default(),
-            uv: None
+            uv: None,
+            normal: None
         }
     }
 }

@@ -5,7 +5,7 @@ use crate::{
     drawin::{
         color::Color, draw_buffer::DrawBuffer, geometry_drawin::polygon_drawin::PolygonFillingRange,
     },
-    geometry::primitives::{line::Line, polygon::Polygon},
+    geometry::{primitives::{line::Line, polygon::Polygon}, math_vectors::vec3f::Vec3f},
 };
 
 pub type Triangle = Polygon<3>;
@@ -15,7 +15,7 @@ impl Triangle {
         &self,
         canvas: &mut DrawBuffer,
         texture: &DynamicImage,
-        intensity: f32,
+        light_dir: Vec3f,
     ) {
         let mut lines = self.get_perimeter_lines();
         lines.iter_mut().for_each(Line::order_by_x);
@@ -44,34 +44,38 @@ impl Triangle {
 
         for polygon_filling_range in polygon_filling_ranges.into_iter() {
             for x in polygon_filling_range.range {
-                let mut yz_uvs: Vec<_> = polygon_filling_range
+                let mut yz_uv_nms: Vec<_> = polygon_filling_range
                     .line_calculators
                     .iter()
-                    .map(|v| v.calculate_y_and_z_and_uv_value(x))
+                    .map(|v| v.calculate_y_and_z_and_uv_and_normal_value(x))
                     .collect();
-                yz_uvs.sort_unstable_by(|a, b| a.0.cmp(&b.0));
+                yz_uv_nms.sort_unstable_by(|a, b| a.0.cmp(&b.0));
 
-                for two_ys in yz_uvs.chunks_exact(2) {
-                    let mut yz_uv1 = *unsafe { two_ys.get_unchecked(0) };
-                    let mut yz_uv2 = *unsafe { two_ys.get_unchecked(1) };
+                for two_ys in yz_uv_nms.chunks_exact(2) {
+                    let mut yz_uv_nm1 = *unsafe { two_ys.get_unchecked(0) };
+                    let mut yz_uv_nm2 = *unsafe { two_ys.get_unchecked(1) };
 
-                    if yz_uv1.0 > yz_uv2.0 {
-                        (yz_uv1, yz_uv2) = (yz_uv2, yz_uv1);
+                    if yz_uv_nm1.0 > yz_uv_nm2.0 {
+                        (yz_uv_nm1, yz_uv_nm2) = (yz_uv_nm2, yz_uv_nm1);
                     }
-                    let ((y1, z1, uv1), (y2, z2, uv2)) = (
-                        (yz_uv1.0, yz_uv1.1, yz_uv1.2),
-                        (yz_uv2.0, yz_uv2.1, yz_uv2.2),
+                    let ((y1, z1, uv1, nm1), (y2, z2, uv2, nm2)) = (
+                        (yz_uv_nm1.0, yz_uv_nm1.1, yz_uv_nm1.2, yz_uv_nm1.3),
+                        (yz_uv_nm2.0, yz_uv_nm2.1, yz_uv_nm2.2, yz_uv_nm2.3),
                     );
                     let d = y2 - y1;
+                    let inv_d = 1.0 / d as f32;
                     let dz = z2 - z1;
                     let duv = uv2 - uv1;
+                    let dnm = nm2 - nm1;
 
                     for y in y1..y2 {
                         let dy = y - y1;
                         let z = dz * dy / d + z1;
-                        let uv = duv * dy as f32 * (1.0 / d as f32) + uv1;
+                        let uv = duv * dy as f32 * inv_d + uv1;
                         let uvx = (uv.0[0] * width as f32) as u32;
                         let uvy = (uv.0[1] * height as f32) as u32;
+                        let nm = dnm * dy as f32 * inv_d + nm1;
+                        let intensity = light_dir.dot_product(nm).max(0.0);
                         let new_color = Color::from(texture.get_pixel(uvx, uvy)) * intensity;
                         let p = (x as usize, y as usize);
                         if canvas.1[p] < z {

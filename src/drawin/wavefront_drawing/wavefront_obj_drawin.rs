@@ -61,16 +61,15 @@ impl Drawable for WavefrontObj {
                     (1000.0 * world_coords[j].z()) as isize,
                     self.vertex_textures[uvidx],
                 );
+                screen_coords[j].normal = Some(self.vertex_normals[face[0].0[j]]);
             }
 
-            let mut normal = face[0]
-                .0
-                .iter()
-                .map(|vnid| self.vertex_normals[*vnid])
-                .fold(Vec3f::default(), |acc, x| acc + x);
-            normal.normalize();
-
-            let intensity = normal.dot_product(light_dir);
+            // let mut normal = face[0]
+            //     .0
+            //     .iter()
+            //     .map(|vnid| self.vertex_normals[*vnid])
+            //     .fold(Vec3f::default(), |acc, x| acc + x);
+            // normal.normalize();
 
             // if intensity > 0.0 {
             // let color = color.map(|c| (*c * intensity.max(0.0)));
@@ -78,7 +77,7 @@ impl Drawable for WavefrontObj {
                 points: screen_coords,
             };
             // triangle.fill(canvas, color.as_ref());
-            triangle.fill_with_texture(canvas, &self.texture, intensity.max(0.0));
+            triangle.fill_with_texture(canvas, &self.texture, light_dir);
             // }
         }
 

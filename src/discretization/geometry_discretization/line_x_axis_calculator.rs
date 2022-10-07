@@ -15,6 +15,7 @@ pub struct LineXAxisCalculator {
     dy: isize,
     dz: isize,
     duv: Vec3f,
+    dnormal: Vec3f,
 }
 
 impl LineXAxisCalculator {
@@ -29,6 +30,10 @@ impl LineXAxisCalculator {
             (Some(buv), Some(euv)) => euv - buv,
             _ => Default::default(),
         };
+        let dnormal = match (begin.normal, end.normal) {
+            (Some(bnm), Some(enm)) => enm - bnm,
+            _ => Default::default(),
+        };
         LineXAxisCalculator {
             begin,
             end,
@@ -36,6 +41,7 @@ impl LineXAxisCalculator {
             dy,
             dz,
             duv,
+            dnormal,
         }
     }
 
@@ -44,14 +50,18 @@ impl LineXAxisCalculator {
         (x - self.begin.x()) * self.dy / self.dx + self.begin.y()
     }
 
-    pub fn calculate_y_and_z_and_uv_value(&self, x: isize) -> (isize, isize, Vec3f) {
+    pub fn calculate_y_and_z_and_uv_and_normal_value(
+        &self,
+        x: isize,
+    ) -> (isize, isize, Vec3f, Vec3f) {
         // attempt to divide by zero
         let d = x - self.begin.x();
+        let inv_dx = 1.0 / self.dx as f32;
         (
             d * self.dy / self.dx + self.begin.y(),
             d * self.dz / self.dx + self.begin.z(),
-            self.duv * d as f32 * (1.0 / self.dx as f32)
-                + unsafe { self.begin.uv.unwrap_unchecked() },
+            self.duv * d as f32 * inv_dx + unsafe { self.begin.uv.unwrap_unchecked() },
+            self.dnormal * d as f32 * inv_dx + unsafe { self.begin.normal.unwrap_unchecked() },
         )
     }
 
