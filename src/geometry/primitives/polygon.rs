@@ -1,6 +1,6 @@
 use super::{line::Line, point::Point};
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Polygon<const N: usize> {
     pub points: [Point; N],
 }

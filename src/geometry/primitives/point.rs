@@ -1,12 +1,13 @@
 use crate::{
     derive_self_add, derive_self_sub, derive_self_xyz, drawin::color::Color,
-    geometry::math_vectors::Vec3,
+    geometry::math_vectors::{Vec3, vec3f::Vec3f},
 };
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Point {
     pub coords: Vec3<isize>,
     pub color: Color,
+    pub uv: Option<Vec3f>
 }
 
 impl Point {
@@ -14,6 +15,7 @@ impl Point {
         Point {
             coords: Vec3([x, y, Default::default()]),
             color: Color::default(),
+            uv: None
         }
     }
 
@@ -21,6 +23,15 @@ impl Point {
         Point {
             coords: Vec3([x, y, z]),
             color: Color::default(),
+            uv: None
+        }
+    }
+
+    pub fn new_with_z_and_uv(x: isize, y: isize, z: isize, uv: Vec3f) -> Point {
+        Point {
+            coords: Vec3([x, y, z]),
+            color: Color::default(),
+            uv: Some(uv)
         }
     }
 
@@ -28,6 +39,7 @@ impl Point {
         Point {
             coords: Vec3([x, y, Default::default()]),
             color,
+            uv: None
         }
     }
 }
@@ -37,6 +49,7 @@ impl From<(isize, isize)> for Point {
         Point {
             coords: Vec3([source.0, source.1, Default::default()]),
             color: Color::default(),
+            uv: None
         }
     }
 }

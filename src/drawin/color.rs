@@ -1,5 +1,6 @@
 use std::ops::Mul;
 
+use image::Rgba;
 use num::{Num, NumCast};
 use rand::prelude::*;
 
@@ -71,6 +72,13 @@ impl Color {
     }
 }
 
+impl From<Rgba<u8>> for Color {
+    fn from(rgba: Rgba<u8>) -> Self {
+        let (r, g, b, alpha) = (rgba.data[0], rgba.data[1], rgba.data[2], rgba.data[3]);
+        Color { b, g, r, alpha }
+    }
+}
+
 impl<T: Num + Copy + NumCast> Mul<T> for Color {
     type Output = Self;
     fn mul(self, rhs: T) -> Self::Output {
@@ -100,22 +108,19 @@ impl Color {
             .zip(ts.iter())
             .map(|(c, t)| (c.r as f32) * t / (t_total))
             .sum::<f32>()
-            .max(0.0)
-             as u8;
+            .max(0.0) as u8;
         let g = colors
             .iter()
             .zip(ts.iter())
             .map(|(c, t)| (c.g as f32) * t / (t_total))
             .sum::<f32>()
-            .max(0.0)
-             as u8;
+            .max(0.0) as u8;
         let b = colors
             .iter()
             .zip(ts.iter())
             .map(|(c, t)| (c.b as f32) * t / (t_total))
             .sum::<f32>()
-            .max(0.0)
-             as u8;
+            .max(0.0) as u8;
         Color {
             r,
             g,

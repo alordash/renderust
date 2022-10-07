@@ -2,7 +2,10 @@ use std::ops::Range;
 
 use crate::{
     drawin::color::Color,
-    geometry::primitives::{line::Line, point::Point},
+    geometry::{
+        math_vectors::vec3f::Vec3f,
+        primitives::{line::Line, point::Point},
+    },
 };
 
 pub struct LineXAxisCalculator {
@@ -11,6 +14,7 @@ pub struct LineXAxisCalculator {
     dx: isize,
     dy: isize,
     dz: isize,
+    duv: Vec3f,
 }
 
 impl LineXAxisCalculator {
@@ -21,18 +25,34 @@ impl LineXAxisCalculator {
         let dx = end.x() - begin.x();
         let dy = end.y() - begin.y();
         let dz = end.z() - begin.z();
+        let duv = match (begin.uv, end.uv) {
+            (Some(buv), Some(euv)) => euv - buv,
+            _ => Default::default(),
+        };
         LineXAxisCalculator {
             begin,
             end,
             dx,
             dy,
             dz,
+            duv,
         }
     }
 
     pub fn calculate_y_value(&self, x: isize) -> isize {
         // attempt to divide by zero
         (x - self.begin.x()) * self.dy / self.dx + self.begin.y()
+    }
+
+    pub fn calculate_y_and_z_and_uv_value(&self, x: isize) -> (isize, isize, Vec3f) {
+        // attempt to divide by zero
+        let d = x - self.begin.x();
+        (
+            d * self.dy / self.dx + self.begin.y(),
+            d * self.dz / self.dx + self.begin.z(),
+            self.duv * d as f32 * (1.0 / self.dx as f32)
+                + unsafe { self.begin.uv.unwrap_unchecked() },
+        )
     }
 
     pub fn calculate_y_and_z_value(&self, x: isize) -> (isize, isize) {

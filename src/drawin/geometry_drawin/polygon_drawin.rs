@@ -12,9 +12,9 @@ use crate::{
     geometry::primitives::{line::Line, point::Point, polygon::Polygon},
 };
 
-struct PolygonFillingRange<'a> {
-    range: Range<isize>,
-    line_calculators: Vec<&'a LineXAxisCalculator>,
+pub struct PolygonFillingRange<'a> {
+    pub range: Range<isize>,
+    pub line_calculators: Vec<&'a LineXAxisCalculator>,
 }
 
 impl<'a> Iterator for PolygonFillingRange<'a> {

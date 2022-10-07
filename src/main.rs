@@ -20,6 +20,8 @@ use minifb::{Key, ScaleMode, Window, WindowOptions};
 use rand::prelude::*;
 use wavefront::wavefront_obj::WavefrontObj;
 
+use image::GenericImage;
+
 const BUFFER_WIDTH: usize = 1000;
 const BUFFER_HEIGHT: usize = 1000;
 
@@ -27,6 +29,7 @@ const WINDOW_WIDTH: usize = 1000;
 const WINDOW_HEIGHT: usize = 1000;
 
 const WAVEFRONT_SOURCE_PATH: &'static str = "./resources/african_head.obj";
+const TEXTURE_SOURCE_PATH: &'static str = "./resources/african_head_diffuse.tga";
 
 const POLYGON_SIZE: usize = 3;
 const POLYGON_COUNT: usize = 100;
@@ -43,6 +46,13 @@ fn gen_points(width: usize, height: usize) -> Vec<Point> {
         })
         .collect()
 }
+
+// fn image_test() {
+//     let img = image::open(TEXTURE_SOURCE_PATH).unwrap();
+//     println!("dimensons: {:?}", img.dimensions());
+//     println!("{:?}", img.color());
+//     let a = img.get_pixel(5, 5);
+// }
 
 fn main() -> Result<(), String> {
     // Allocate the output buffer.
@@ -75,9 +85,11 @@ fn main() -> Result<(), String> {
 
     let color_step = 30.5;
 
-    let wavefront_obj_file =
-        File::open(WAVEFRONT_SOURCE_PATH).map_err(|e| format!("Error opening file: {:?}", e))?;
-    let wavefront_obj = WavefrontObj::from_file(&wavefront_obj_file)
+    let wavefront_obj_file = File::open(WAVEFRONT_SOURCE_PATH)
+        .map_err(|e| format!("Error opening model file: {:?}", e))?;
+    let texture_file = File::open(TEXTURE_SOURCE_PATH)
+        .map_err(|e| format!("Error opening texture file: {:?}", e))?;
+    let wavefront_obj = WavefrontObj::from_file(&wavefront_obj_file, &texture_file)
         .map_err(|e| format!("Error parsing file: {:?}", e))?;
 
     wavefront_obj.fill(&mut draw_buffer, Some(&Color::random()));
@@ -97,6 +109,8 @@ fn main() -> Result<(), String> {
     let mut rough = true;
 
     let mut polygon_depth = 0isize;
+
+    // image_test();
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         let start = Instant::now();

@@ -2,7 +2,7 @@ use crate::{discretization::geometry_discretization::line_x_axis_calculator::Lin
 
 use super::point::Point;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Line {
     pub begin: Point,
     pub end: Point,

@@ -20,10 +20,10 @@ impl Drawable for WavefrontObj {
         let (w_f32, h_f32) = ((width - 1) as f32, (height - 1) as f32);
 
         for i in 0..self.faces.len() {
-            let face = self.faces[i];
+            let face = &self.faces[i];
             for j in 0..3_usize {
-                let v0 = self.vertices[face.0[j]];
-                let v1 = self.vertices[face.0[(j + 1) % 3]];
+                let v0 = self.vertices[face[0].0[j]];
+                let v1 = self.vertices[face[0].0[(j + 1) % 3]];
                 let x0 = ((v0.x() + 1.0) * w_f32 / 2.0) as isize;
                 let y0 = ((v0.y() + 1.0) * h_f32 / 2.0) as isize;
                 let x1 = ((v1.x() + 1.0) * w_f32 / 2.0) as isize;
@@ -46,29 +46,39 @@ impl Drawable for WavefrontObj {
         let prev_depths = canvas.1.clone();
 
         for i in 0..self.faces.len() {
-            let face = self.faces[i];
+            let face = &self.faces[i];
             let mut world_coords = [Vec3f::default(); 3];
             let mut screen_coords = [Point::new(0, 0); 3];
             for j in 0..3_usize {
-                let v0 = self.vertices[face.0[j]];
+                let v0 = self.vertices[face[0].0[j]];
                 let x0 = ((v0.x() + 1.0) * w_f32 / 2.0) as isize;
                 let y0 = ((v0.y() + 1.0) * h_f32 / 2.0) as isize;
                 world_coords[j] = v0;
-                screen_coords[j] = Point::new_with_z(x0, y0, (1000.0 * world_coords[j].z()) as isize);
+                let uvidx = face[1].0[j];
+                screen_coords[j] = Point::new_with_z_and_uv(
+                    x0,
+                    y0,
+                    (1000.0 * world_coords[j].z()) as isize,
+                    self.vertex_textures[uvidx],
+                );
             }
 
-            let mut normal = face.0.iter().map(|vnid| self.vertex_normals[*vnid]).fold(Vec3f::default(), |acc, x| acc + x);
+            let mut normal = face[0]
+                .0
+                .iter()
+                .map(|vnid| self.vertex_normals[*vnid])
+                .fold(Vec3f::default(), |acc, x| acc + x);
             normal.normalize();
-
 
             let intensity = normal.dot_product(light_dir);
 
             // if intensity > 0.0 {
-                let color = color.map(|c| (*c * intensity.max(0.0)));
-                let triangle = Triangle {
-                    points: screen_coords,
-                };
-                triangle.fill(canvas, color.as_ref());
+            // let color = color.map(|c| (*c * intensity.max(0.0)));
+            let triangle = Triangle {
+                points: screen_coords,
+            };
+            // triangle.fill(canvas, color.as_ref());
+            triangle.fill_with_texture(canvas, &self.texture, intensity.max(0.0));
             // }
         }
 
