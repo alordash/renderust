@@ -39,7 +39,7 @@ impl Drawable for WavefrontObj {
 
     fn fill(&self, canvas: &mut DrawBuffer, color: Option<&Color>) {
         let RectSize { width, height } = canvas.get_size();
-        let light_dir = Vec3::<f32>([0.0, 0.0, -1.0]);
+        let light_dir = Vec3::<f32>([0.0, 0.0, 1.0]);
 
         let (w_f32, h_f32) = ((width - 1) as f32, (height - 1) as f32);
 
@@ -64,7 +64,7 @@ impl Drawable for WavefrontObj {
             let intensity = normal.dot_product(light_dir);
 
             // if intensity > 0.0 {
-                let color = color.map(|c| (*c * intensity.abs()));
+                let color = color.map(|c| (*c * intensity.max(0.0)));
                 let triangle = Triangle {
                     points: screen_coords,
                 };
