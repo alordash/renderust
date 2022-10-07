@@ -56,21 +56,20 @@ impl Drawable for WavefrontObj {
                 world_coords[j] = v0;
                 screen_coords[j] = Point::new_with_z(x0, y0, (1000.0 * world_coords[j].z()) as isize);
             }
-            let first_edge = world_coords[2] - world_coords[0];
-            let second_edge = world_coords[1] - world_coords[0];
 
-            let mut normal = first_edge.cross_product(second_edge);
+            let mut normal = face.0.iter().map(|vnid| self.vertex_normals[*vnid]).fold(Vec3f::default(), |acc, x| acc + x);
             normal.normalize();
+
 
             let intensity = normal.dot_product(light_dir);
 
-            if intensity > 0.0 {
-                let color = color.map(|c| (*c * intensity));
+            // if intensity > 0.0 {
+                let color = color.map(|c| (*c * intensity.abs()));
                 let triangle = Triangle {
                     points: screen_coords,
                 };
                 triangle.fill(canvas, color.as_ref());
-            }
+            // }
         }
 
         canvas.1 = prev_depths;
