@@ -1,26 +1,31 @@
 #![feature(min_specialization)]
 
-mod discretization;
-mod drawin;
-mod geometry;
-mod wavefront;
-
-use std::{
-    fs::File,
-    ops::{RangeFull, RangeTo, RangeToInclusive},
-    time::Instant,
+use math::{
+    geometry::{
+        primitives::{point::Point2D, polygon::Polygon},
+        rect_size::RectSize,
+    },
+    vector::common_vectors::vec3f::Vec3f,
 };
 
-use drawin::{color::Color, draw_buffer::*, drawable::Drawable};
-use geometry::{
-    primitives::{line::Line, point::Point, polygon::Polygon, polygons::triangle::Triangle},
-    rect_size::RectSize,
-};
+pub mod math;
+pub mod parsing;
+pub mod plane_buffer;
+pub mod visual;
+pub mod wavefront;
+
 use minifb::{Key, ScaleMode, Window, WindowOptions};
-use rand::prelude::*;
+use plane_buffer::plane_buffer::PlaneBufferCreateOption;
+use std::{fs::File, time::Instant};
+use visual::{
+    color::color::Color,
+    drawing_buffer::DrawingBuffer,
+    rendering::{
+        polygon::polygon_rasterization::fill_polygon,
+        wavefront_obj::wavefront_obj_rendering::render_wavefront_mesh,
+    },
+};
 use wavefront::wavefront_obj::WavefrontObj;
-
-use image::GenericImage;
 
 const BUFFER_WIDTH: usize = 1000;
 const BUFFER_HEIGHT: usize = 1000;
@@ -32,32 +37,11 @@ const WAVEFRONT_SOURCE_PATH: &'static str = "./resources/african_head.obj";
 const TEXTURE_SOURCE_PATH: &'static str = "./resources/african_head_diffuse.tga";
 
 const POLYGON_SIZE: usize = 3;
-const POLYGON_COUNT: usize = 100;
-
-fn gen_points(width: usize, height: usize) -> Vec<Point> {
-    let mut rng = thread_rng();
-    (0..POLYGON_SIZE)
-        .map(|_| {
-            Point::new_with_color(
-                rng.gen_range(0..width as isize),
-                rng.gen_range(0..height as isize),
-                Color::random(),
-            )
-        })
-        .collect()
-}
-
-// fn image_test() {
-//     let img = image::open(TEXTURE_SOURCE_PATH).unwrap();
-//     println!("dimensons: {:?}", img.dimensions());
-//     println!("{:?}", img.color());
-//     let a = img.get_pixel(5, 5);
-// }
 
 fn main() -> Result<(), String> {
     // Allocate the output buffer.
     let mut draw_buffer =
-        DrawBuffer::new(BUFFER_WIDTH, BUFFER_HEIGHT, PlaneBufferCreateOption::BLANK);
+        DrawingBuffer::new(BUFFER_WIDTH, BUFFER_HEIGHT, PlaneBufferCreateOption::BLANK);
 
     let mut window = Window::new(
         "Press ESC to exit",
@@ -70,19 +54,13 @@ fn main() -> Result<(), String> {
         },
     )
     .expect("Unable to open Window");
+    let mut is_mouse_pressed = false;
 
     let mut width_scale = WINDOW_WIDTH as f32 / BUFFER_WIDTH as f32;
     let mut height_scale = WINDOW_HEIGHT as f32 / BUFFER_HEIGHT as f32;
 
-    let mut points: Vec<Point> = Vec::new();
-    let mut is_mouse_pressed = false;
-
-    let mut angle: f32 = 0.0;
-    let angle_step: f32 = 20.0_f32.to_radians();
-
     let mut t: f32 = 0.0;
     let time_step = 0.05;
-
     let color_step = 30.5;
 
     let wavefront_obj_file = File::open(WAVEFRONT_SOURCE_PATH)
@@ -92,25 +70,10 @@ fn main() -> Result<(), String> {
     let wavefront_obj = WavefrontObj::from_file(&wavefront_obj_file, &texture_file)
         .map_err(|e| format!("Error parsing file: {:?}", e))?;
 
-    wavefront_obj.fill(&mut draw_buffer, Some(&Color::random()));
-    wavefront_obj.draw(&mut draw_buffer, Some(&Color::from_rgb(255, 255, 255)));
+    // render_wavefront_grid(&wavefront_obj, &mut draw_buffer, Some(&Color::random()));
+    render_wavefront_mesh(&wavefront_obj, &mut draw_buffer, None);
 
-    let polygons: Vec<_> = (0..POLYGON_COUNT)
-        .map(|_| {
-            Polygon::<POLYGON_SIZE>::from(gen_points(
-                draw_buffer.get_width(),
-                draw_buffer.get_height(),
-            ))
-        })
-        .collect();
-
-    let mut rng = thread_rng();
-
-    let mut rough = true;
-
-    let mut polygon_depth = 0isize;
-
-    // image_test();
+    let mut points: Vec<Point2D> = Vec::new();
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         let start = Instant::now();
@@ -126,19 +89,16 @@ fn main() -> Result<(), String> {
         let color = Color::from_hsv(passed_hue, 1.0, 1.0);
 
         if window.get_mouse_down(minifb::MouseButton::Left) {
-            // wavefront_obj.draw(&mut draw_buffer, &Color::from_rgb(255, 255, 255));
             if !is_mouse_pressed {
                 is_mouse_pressed = true;
                 if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
                     let y = new_size.height as f32 - y - 1.0;
-                    let mut point = Point::new_with_z(
-                        (x / width_scale) as isize,
-                        (y / height_scale) as isize,
-                        polygon_depth,
-                    );
-                    // point.color = Color::random();
-                    point.color = color;
-                    draw_buffer[point] = Color::from_rgb(255, 0, 0);
+                    let mut point =
+                        Point2D::from((x / width_scale) as isize, (y / height_scale) as isize);
+                    *point.get_normal_mut() = Vec3f::new([1.0, 0.0, 0.0]);
+                    *point.get_z_depth_mut() = 2000;
+                    *point.get_color_mut() = Some(color);
+                    draw_buffer[point] = color;
                     points.push(point);
                 }
             }
@@ -146,28 +106,25 @@ fn main() -> Result<(), String> {
             is_mouse_pressed = false;
         }
 
-        wavefront_obj.fill(&mut draw_buffer, Some(&color));
-
         if window.is_key_pressed(Key::Space, minifb::KeyRepeat::No) && points.len() >= POLYGON_SIZE
         {
-            while points.len() >= 2 * POLYGON_SIZE {
-                points = points.into_iter().skip(POLYGON_SIZE).collect();
-            }
-            let polygon = Polygon::<POLYGON_SIZE>::from(points.clone());
-            polygon.fill(&mut draw_buffer, None);
+            *points[0].get_color_mut() = Some(Color::from_rgb(255, 0, 0));
+            *points[1].get_color_mut() = Some(Color::from_rgb(0, 255, 0));
+            *points[2].get_color_mut() = Some(Color::from_rgb(0, 0, 255));
+            let polygon = Polygon::<POLYGON_SIZE>::try_from(points.clone()).unwrap();
+            points = points.into_iter().skip(POLYGON_SIZE).collect();
+            fill_polygon(
+                &polygon,
+                &mut draw_buffer,
+                &wavefront_obj.texture,
+                Vec3f::new([1.0, 0.0, 0.0]),
+                None,
+            );
         }
 
         if window.is_key_pressed(Key::C, minifb::KeyRepeat::No) {
             draw_buffer.clean();
-        }
-
-        if let Some((scroll_x, scroll_y)) = window.get_scroll_wheel() {
-            polygon_depth += (scroll_y * 10.0) as isize;
-        }
-
-        if window.is_key_pressed(Key::Backspace, minifb::KeyRepeat::No) {
-            draw_buffer.clean();
-            draw_buffer.1.clean_with(&isize::MIN);
+            draw_buffer.get_z_buffer_mut().clean_with(&isize::MIN);
         }
 
         window
@@ -180,13 +137,7 @@ fn main() -> Result<(), String> {
 
         let end = Instant::now();
 
-        window.set_title(&format!(
-            "({}) {:.1?} FPS, precise: {:?}, depth: {:?}",
-            points.len(),
-            1.0 / (end - start).as_secs_f32(),
-            !rough,
-            polygon_depth
-        ));
+        window.set_title(&format!("{:.1?} FPS", 1.0 / (end - start).as_secs_f32()));
 
         t += time_step;
     }
