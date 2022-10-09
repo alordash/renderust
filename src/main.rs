@@ -62,10 +62,11 @@ fn main() -> Result<(), String> {
     let mut t: f32 = 0.0;
     let time_step = 0.05;
     let color_step = 30.5;
-    let angle_step = 5.0;
 
     let mut light_dir = Vec3f::new([0.0, 0.0, 1.0]).normalized();
     let look_dir = Vec3f::new([0.0, 0.0, 1.0]).normalized();
+
+    let mut polygon_points_z_depth = 0isize;
 
     let wavefront_obj_file = File::open(WAVEFRONT_SOURCE_PATH)
         .map_err(|e| format!("Error opening model file: {:?}", e))?;
@@ -89,7 +90,6 @@ fn main() -> Result<(), String> {
 
         let color = Color::from_hsv(passed_hue, 1.0, 1.0);
 
-        // light_dir = Vec3f::new([(t * angle_step).cos(), 0.0, (t * angle_step).sin()]);
         if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
             light_dir = Vec3f::new([
                 (x - WINDOW_WIDTH as f32 / 2.0),
@@ -110,7 +110,7 @@ fn main() -> Result<(), String> {
                     let mut point =
                         Point2D::from((x / width_scale) as isize, (y / height_scale) as isize);
                     *point.get_normal_mut() = Vec3f::new([1.0, 0.0, 0.0]);
-                    *point.get_z_depth_mut() = 0;
+                    *point.get_z_depth_mut() = polygon_points_z_depth;
                     *point.get_color_mut() = Some(Color::random());
                     draw_buffer[point] = Color::from_rgb(255, 0, 0);
                     points.push(point);
@@ -139,6 +139,10 @@ fn main() -> Result<(), String> {
             draw_buffer.get_z_buffer_mut().clean_with(&isize::MIN);
         }
 
+        if let Some((scroll_x, scroll_y)) = window.get_scroll_wheel() {
+            polygon_points_z_depth += (scroll_y * 10.0) as isize;
+        }
+
         window
             .update_with_buffer(
                 draw_buffer.get_buffer_as_u32_ref(),
@@ -149,7 +153,11 @@ fn main() -> Result<(), String> {
 
         let end = Instant::now();
 
-        window.set_title(&format!("{:.1?} FPS", 1.0 / (end - start).as_secs_f32()));
+        window.set_title(&format!(
+            "{:.1?} FPS, depth: {}",
+            1.0 / (end - start).as_secs_f32(),
+            polygon_points_z_depth
+        ));
 
         t += time_step;
     }
