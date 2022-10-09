@@ -27,7 +27,7 @@ impl DrawingBuffer {
     ) -> DrawingBuffer {
         DrawingBuffer(
             PlaneBuffer::new(width, height, create_option),
-            PlaneBuffer::new(width, height, PlaneBufferCreateOption::FILL(|_| isize::MIN)),
+            PlaneBuffer::new(width, height, PlaneBufferCreateOption::Fill(|_| isize::MIN)),
         )
     }
 

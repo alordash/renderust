@@ -35,13 +35,14 @@ const WINDOW_HEIGHT: usize = 1000;
 
 const WAVEFRONT_SOURCE_PATH: &'static str = "./resources/african_head.obj";
 const TEXTURE_SOURCE_PATH: &'static str = "./resources/african_head_diffuse.tga";
+const NORMAL_MAP_SOURCE_PATH: &'static str = "./resources/african_head_nm_tangent.tga";
 
 const POLYGON_SIZE: usize = 3;
 
 fn main() -> Result<(), String> {
     // Allocate the output buffer.
     let mut draw_buffer =
-        DrawingBuffer::new(BUFFER_WIDTH, BUFFER_HEIGHT, PlaneBufferCreateOption::BLANK);
+        DrawingBuffer::new(BUFFER_WIDTH, BUFFER_HEIGHT, PlaneBufferCreateOption::Blank);
 
     let mut window = Window::new(
         "Press ESC to exit",
@@ -72,7 +73,9 @@ fn main() -> Result<(), String> {
         .map_err(|e| format!("Error opening model file: {:?}", e))?;
     let texture_file = File::open(TEXTURE_SOURCE_PATH)
         .map_err(|e| format!("Error opening texture file: {:?}", e))?;
-    let wavefront_obj = WavefrontObj::from_file(&wavefront_obj_file, &texture_file)
+    let normal_map_file = File::open(NORMAL_MAP_SOURCE_PATH)
+        .map_err(|e| format!("Error opening normal map file: {:?}", e))?;
+    let wavefront_obj = WavefrontObj::from_file(&wavefront_obj_file, &texture_file, &normal_map_file)
         .map_err(|e| format!("Error parsing file: {:?}", e))?;
 
     let mut points: Vec<Point2D> = Vec::new();
