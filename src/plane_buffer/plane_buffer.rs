@@ -4,8 +4,9 @@ use crate::math::geometry::rect_size::RectSize;
 
 #[non_exhaustive]
 pub enum PlaneBufferCreateOption<T> {
-    BLANK,
-    FILL(fn(_: usize) -> T),
+    Blank,
+    Fill(fn(_: usize) -> T),
+    RawSource(Vec<T>)
 }
 
 #[derive(Debug, Clone)]
@@ -69,8 +70,9 @@ impl<T: Default + Copy> PlaneBuffer<T> {
         PlaneBuffer::<T> {
             size: RectSize { width, height },
             buffer: match create_option {
-                PlaneBufferCreateOption::BLANK => vec![T::default(); size],
-                PlaneBufferCreateOption::FILL(f) => (0..size).map(f).collect(),
+                PlaneBufferCreateOption::Blank => vec![T::default(); size],
+                PlaneBufferCreateOption::Fill(f) => (0..size).map(f).collect(),
+                PlaneBufferCreateOption::RawSource(source) => source,
                 _ => vec![T::default(); size],
             },
         }
