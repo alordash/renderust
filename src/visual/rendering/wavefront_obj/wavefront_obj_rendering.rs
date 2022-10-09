@@ -49,6 +49,7 @@ pub fn render_wavefront_mesh(
     light_dir: Vec3f,
     look_dir: Vec3f,
     color: Option<&Color>,
+    use_nm: bool,
 ) {
     let RectSize { width, height } = canvas.get_size();
 
@@ -75,6 +76,18 @@ pub fn render_wavefront_mesh(
         }
 
         let triangle = Triangle::new(screen_coords);
-        fill_polygon(&triangle, canvas, &wavefront_obj.texture, light_dir, look_dir, color);
+        fill_polygon(
+            &triangle,
+            canvas,
+            &wavefront_obj.texture,
+            if use_nm {
+                Some(&wavefront_obj.normal_map)
+            } else {
+                None
+            },
+            light_dir,
+            look_dir,
+            color,
+        );
     }
 }

@@ -6,6 +6,7 @@ use crate::{
         interpolation::Interpolator,
         vector::{common_vectors::vec3f::Vec3f, linear_algebra::LinAlgOperations},
     },
+    plane_buffer::plane_buffer::PlaneBuffer,
     visual::{
         color::color::Color, drawing_buffer::DrawingBuffer,
         rendering::line::line_rasterization::draw_line,
@@ -32,6 +33,7 @@ pub fn fill_polygon<const N: usize>(
     polygon: &Polygon<N>,
     canvas: &mut DrawingBuffer,
     texture: &DynamicImage,
+    normal_map: Option<&PlaneBuffer<Vec3f>>,
     light_dir: Vec3f,
     look_dir: Vec3f,
     color: Option<&Color>,
@@ -118,13 +120,17 @@ pub fn fill_polygon<const N: usize>(
                         y,
                         z_depth,
                         uv,
-                        normal,
+                        mut normal,
                         has_color,
                         ..
                     } = interpolated_values;
 
                     let uvx = (uv[0] * width as f32) as u32;
                     let uvy = (uv[1] * height as f32) as u32;
+
+                    if let Some(normal_map) = normal_map {
+                        normal = (normal + normal_map[(uvx as usize, uvy as usize)]).normalized();
+                    }
 
                     let visibility = look_dir.dot_product(normal);
                     if visibility < 0.0 {

@@ -3,7 +3,7 @@ use std::{
     io::{BufRead, BufReader},
 };
 
-use image::DynamicImage;
+use image::{DynamicImage, GenericImage};
 
 use crate::{
     math::vector::{common_vectors::vec3f::Vec3f, linear_algebra::LinAlgOperations},
@@ -35,8 +35,8 @@ fn normal_map_vecs_from_rgb(normal_map_img: DynamicImage) -> PlaneBuffer<Vec3f> 
         .collect();
 
     PlaneBuffer::new(
-        100,
-        100,
+        normal_map_img.width() as usize,
+        normal_map_img.height() as usize,
         crate::plane_buffer::plane_buffer::PlaneBufferCreateOption::RawSource(normals),
     )
 }
@@ -54,8 +54,7 @@ impl WavefrontObj {
             .flipv();
         let normal_map_reader = BufReader::new(normal_map_source);
         let normal_map_img = image::load(normal_map_reader, image::ImageFormat::TGA)
-            .unwrap()
-            .flipv();
+            .unwrap();
         let normal_map = normal_map_vecs_from_rgb(normal_map_img);
         let mut wavefront_obj = WavefrontObj {
             vertices: Default::default(),

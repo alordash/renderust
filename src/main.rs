@@ -75,8 +75,9 @@ fn main() -> Result<(), String> {
         .map_err(|e| format!("Error opening texture file: {:?}", e))?;
     let normal_map_file = File::open(NORMAL_MAP_SOURCE_PATH)
         .map_err(|e| format!("Error opening normal map file: {:?}", e))?;
-    let wavefront_obj = WavefrontObj::from_file(&wavefront_obj_file, &texture_file, &normal_map_file)
-        .map_err(|e| format!("Error parsing file: {:?}", e))?;
+    let wavefront_obj =
+        WavefrontObj::from_file(&wavefront_obj_file, &texture_file, &normal_map_file)
+            .map_err(|e| format!("Error parsing file: {:?}", e))?;
 
     let mut points: Vec<Point2D> = Vec::new();
 
@@ -102,7 +103,14 @@ fn main() -> Result<(), String> {
             .normalized();
         }
         let prev_z_buffer = draw_buffer.get_z_buffer().clone();
-        render_wavefront_mesh(&wavefront_obj, &mut draw_buffer, light_dir, look_dir, None);
+        render_wavefront_mesh(
+            &wavefront_obj,
+            &mut draw_buffer,
+            light_dir,
+            look_dir,
+            None,
+            window.get_mouse_down(minifb::MouseButton::Right),
+        );
         *draw_buffer.get_z_buffer_mut() = prev_z_buffer;
 
         if window.get_mouse_down(minifb::MouseButton::Left) {
@@ -131,6 +139,7 @@ fn main() -> Result<(), String> {
                 &polygon,
                 &mut draw_buffer,
                 &wavefront_obj.texture,
+                Some(&wavefront_obj.normal_map),
                 Vec3f::new([1.0, 0.0, 0.0]),
                 look_dir,
                 None,
