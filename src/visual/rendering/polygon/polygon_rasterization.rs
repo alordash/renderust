@@ -33,6 +33,7 @@ pub fn fill_polygon<const N: usize>(
     canvas: &mut DrawingBuffer,
     texture: &DynamicImage,
     light_dir: Vec3f,
+    look_dir: Vec3f,
     color: Option<&Color>,
 ) {
     let mut lines = polygon.get_perimeter_lines();
@@ -124,6 +125,11 @@ pub fn fill_polygon<const N: usize>(
 
                     let uvx = (uv[0] * width as f32) as u32;
                     let uvy = (uv[1] * height as f32) as u32;
+
+                    let visibility = look_dir.dot_product(normal);
+                    if visibility < 0.0 {
+                        continue;
+                    }
 
                     let intensity = light_dir.dot_product(normal).max(0.0);
                     let new_color = if has_color {

@@ -46,10 +46,11 @@ pub fn render_wavefront_grid(
 pub fn render_wavefront_mesh(
     wavefront_obj: &WavefrontObj,
     canvas: &mut DrawingBuffer,
+    light_dir: Vec3f,
+    look_dir: Vec3f,
     color: Option<&Color>,
 ) {
     let RectSize { width, height } = canvas.get_size();
-    let light_dir = Vec3f::new([0.0, 0.0, 1.0]);
 
     let (w_f32, h_f32) = ((width - 1) as f32, (height - 1) as f32);
 
@@ -74,6 +75,6 @@ pub fn render_wavefront_mesh(
         }
 
         let triangle = Triangle::new(screen_coords);
-        fill_polygon(&triangle, canvas, &wavefront_obj.texture, light_dir, color);
+        fill_polygon(&triangle, canvas, &wavefront_obj.texture, light_dir, look_dir, color);
     }
 }

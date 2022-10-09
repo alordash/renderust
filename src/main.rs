@@ -5,7 +5,7 @@ use math::{
         primitives::{point::Point2D, polygon::Polygon},
         rect_size::RectSize,
     },
-    vector::common_vectors::vec3f::Vec3f,
+    vector::{common_vectors::vec3f::Vec3f, linear_algebra::LinAlgOperations},
 };
 
 pub mod math;
@@ -22,7 +22,7 @@ use visual::{
     drawing_buffer::DrawingBuffer,
     rendering::{
         polygon::polygon_rasterization::fill_polygon,
-        wavefront_obj::wavefront_obj_rendering::render_wavefront_mesh,
+        wavefront_obj::wavefront_obj_rendering::{render_wavefront_grid, render_wavefront_mesh},
     },
 };
 use wavefront::wavefront_obj::WavefrontObj;
@@ -62,6 +62,10 @@ fn main() -> Result<(), String> {
     let mut t: f32 = 0.0;
     let time_step = 0.05;
     let color_step = 30.5;
+    let angle_step = 5.0;
+
+    let mut light_dir = Vec3f::new([0.0, 0.0, 1.0]).normalized();
+    let look_dir = Vec3f::new([0.0, 0.0, 1.0]).normalized();
 
     let wavefront_obj_file = File::open(WAVEFRONT_SOURCE_PATH)
         .map_err(|e| format!("Error opening model file: {:?}", e))?;
@@ -69,9 +73,6 @@ fn main() -> Result<(), String> {
         .map_err(|e| format!("Error opening texture file: {:?}", e))?;
     let wavefront_obj = WavefrontObj::from_file(&wavefront_obj_file, &texture_file)
         .map_err(|e| format!("Error parsing file: {:?}", e))?;
-
-    // render_wavefront_grid(&wavefront_obj, &mut draw_buffer, Some(&Color::random()));
-    render_wavefront_mesh(&wavefront_obj, &mut draw_buffer, None);
 
     let mut points: Vec<Point2D> = Vec::new();
 
@@ -88,6 +89,19 @@ fn main() -> Result<(), String> {
 
         let color = Color::from_hsv(passed_hue, 1.0, 1.0);
 
+        // light_dir = Vec3f::new([(t * angle_step).cos(), 0.0, (t * angle_step).sin()]);
+        if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
+            light_dir = Vec3f::new([
+                (x - WINDOW_WIDTH as f32 / 2.0),
+                0.0,
+                (y - WINDOW_HEIGHT as f32 / 2.0),
+            ])
+            .normalized();
+        }
+        let prev_z_buffer = draw_buffer.get_z_buffer().clone();
+        render_wavefront_mesh(&wavefront_obj, &mut draw_buffer, light_dir, look_dir, None);
+        *draw_buffer.get_z_buffer_mut() = prev_z_buffer;
+
         if window.get_mouse_down(minifb::MouseButton::Left) {
             if !is_mouse_pressed {
                 is_mouse_pressed = true;
@@ -96,9 +110,9 @@ fn main() -> Result<(), String> {
                     let mut point =
                         Point2D::from((x / width_scale) as isize, (y / height_scale) as isize);
                     *point.get_normal_mut() = Vec3f::new([1.0, 0.0, 0.0]);
-                    *point.get_z_depth_mut() = 2000;
-                    *point.get_color_mut() = Some(color);
-                    draw_buffer[point] = color;
+                    *point.get_z_depth_mut() = 0;
+                    *point.get_color_mut() = Some(Color::random());
+                    draw_buffer[point] = Color::from_rgb(255, 0, 0);
                     points.push(point);
                 }
             }
@@ -108,9 +122,6 @@ fn main() -> Result<(), String> {
 
         if window.is_key_pressed(Key::Space, minifb::KeyRepeat::No) && points.len() >= POLYGON_SIZE
         {
-            *points[0].get_color_mut() = Some(Color::from_rgb(255, 0, 0));
-            *points[1].get_color_mut() = Some(Color::from_rgb(0, 255, 0));
-            *points[2].get_color_mut() = Some(Color::from_rgb(0, 0, 255));
             let polygon = Polygon::<POLYGON_SIZE>::try_from(points.clone()).unwrap();
             points = points.into_iter().skip(POLYGON_SIZE).collect();
             fill_polygon(
@@ -118,6 +129,7 @@ fn main() -> Result<(), String> {
                 &mut draw_buffer,
                 &wavefront_obj.texture,
                 Vec3f::new([1.0, 0.0, 0.0]),
+                look_dir,
                 None,
             );
         }
