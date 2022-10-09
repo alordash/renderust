@@ -50,7 +50,7 @@ fn main() -> Result<(), String> {
         WINDOW_HEIGHT,
         WindowOptions {
             resize: true,
-            scale_mode: ScaleMode::Stretch,
+            scale_mode: ScaleMode::Center,
             ..WindowOptions::default()
         },
     )
@@ -95,10 +95,11 @@ fn main() -> Result<(), String> {
         let color = Color::from_hsv(passed_hue, 1.0, 1.0);
 
         if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
+            let window_size = RectSize::from(window.get_size());
             light_dir = Vec3f::new([
-                (x - WINDOW_WIDTH as f32 / 2.0),
+                (x - window_size.width as f32 / 2.0),
                 0.0,
-                (y - WINDOW_HEIGHT as f32 / 2.0),
+                (y - window_size.height as f32 / 2.0),
             ])
             .normalized();
         }
