@@ -129,7 +129,11 @@ pub fn fill_polygon<const N: usize>(
                     let uvy = (uv[1] * height as f32) as u32;
 
                     if let Some(normal_map) = normal_map {
-                        normal = (normal + normal_map[(uvx as usize, uvy as usize)]).normalized();
+                        // normal = (normal + normal_map[(uvx as usize, uvy as usize)]).normalized();
+                        let nm = normal_map[(uvx as usize, uvy as usize)];
+                        normal = nm
+                        //  * -1.0
+                         ;
                     }
 
                     let visibility = look_dir.dot_product(normal);

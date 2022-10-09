@@ -26,9 +26,9 @@ fn normal_map_vecs_from_rgb(normal_map_img: DynamicImage) -> PlaneBuffer<Vec3f> 
         .chunks_exact(3)
         .map(|rgb| unsafe {
             Vec3f::new([
-                *rgb.get_unchecked(0),
-                *rgb.get_unchecked(1),
-                *rgb.get_unchecked(2),
+                *rgb.get_unchecked(0) - 120.0,
+                *rgb.get_unchecked(1) - 120.0,
+                *rgb.get_unchecked(2) - 120.0,
             ])
             .normalized()
         })
@@ -53,8 +53,7 @@ impl WavefrontObj {
             .unwrap()
             .flipv();
         let normal_map_reader = BufReader::new(normal_map_source);
-        let normal_map_img = image::load(normal_map_reader, image::ImageFormat::TGA)
-            .unwrap();
+        let normal_map_img = image::load(normal_map_reader, image::ImageFormat::TGA).unwrap();
         let normal_map = normal_map_vecs_from_rgb(normal_map_img);
         let mut wavefront_obj = WavefrontObj {
             vertices: Default::default(),
