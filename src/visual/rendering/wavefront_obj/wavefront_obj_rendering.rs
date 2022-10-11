@@ -11,6 +11,7 @@ use crate::{
         drawing_buffer::DrawingBuffer,
         rendering::{
             line::line_rasterization::draw_line, polygon::polygon_rasterization::fill_polygon,
+            triangle::triangle_rasterization::fill_triangle,
         },
     },
     wavefront::wavefront_obj::WavefrontObj,
@@ -76,7 +77,7 @@ pub fn render_wavefront_mesh(
         }
 
         let triangle = Triangle::new(screen_coords);
-        fill_polygon(
+        fill_triangle(
             &triangle,
             canvas,
             &wavefront_obj.texture,
@@ -89,5 +90,18 @@ pub fn render_wavefront_mesh(
             look_dir,
             color,
         );
+        // fill_polygon(
+        //     &triangle,
+        //     canvas,
+        //     &wavefront_obj.texture,
+        //     if use_nm {
+        //         Some(&wavefront_obj.normal_map)
+        //     } else {
+        //         None
+        //     },
+        //     light_dir,
+        //     look_dir,
+        //     color,
+        // );
     }
 }

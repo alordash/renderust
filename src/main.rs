@@ -22,6 +22,7 @@ use visual::{
     drawing_buffer::DrawingBuffer,
     rendering::{
         polygon::polygon_rasterization::fill_polygon,
+        triangle::triangle_rasterization::fill_triangle,
         wavefront_obj::wavefront_obj_rendering::{render_wavefront_grid, render_wavefront_mesh},
     },
 };
@@ -134,14 +135,27 @@ fn main() -> Result<(), String> {
 
         if window.is_key_pressed(Key::Space, minifb::KeyRepeat::No) && points.len() >= POLYGON_SIZE
         {
+            *points[0].get_color_mut() = Some(Color::from_rgb(255, 0, 0));
+            *points[1].get_color_mut() = Some(Color::from_rgb(0, 255, 0));
+            *points[2].get_color_mut() = Some(Color::from_rgb(0, 0, 255));
             let polygon = Polygon::<POLYGON_SIZE>::try_from(points.clone()).unwrap();
             points = points.into_iter().skip(POLYGON_SIZE).collect();
-            fill_polygon(
+            // fill_polygon(
+            //     &polygon,
+            //     &mut draw_buffer,
+            //     &wavefront_obj.texture,
+            //     None,
+            //     Vec3f::new([1.0, 0.0, 0.0]),
+            //     look_dir,
+            //     None,
+            // );
+
+            fill_triangle(
                 &polygon,
                 &mut draw_buffer,
                 &wavefront_obj.texture,
-                Some(&wavefront_obj.normal_map),
-                Vec3f::new([1.0, 0.0, 0.0]),
+                None,
+                light_dir,
                 look_dir,
                 None,
             );
