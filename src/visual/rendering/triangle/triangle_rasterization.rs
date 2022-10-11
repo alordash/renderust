@@ -30,7 +30,7 @@ pub fn fill_triangle(
     points_sorted_by_x.sort_unstable_by(|a, b| a.x().cmp(&b.x()));
     let (texture_width, texture_height) = texture.dimensions();
 
-    let (left_point, middle_point, right_point) = unsafe {
+    let (l_p, m_p, r_p) = unsafe {
         (
             *points_sorted_by_x.get_unchecked(0),
             *points_sorted_by_x.get_unchecked(1),
@@ -38,54 +38,53 @@ pub fn fill_triangle(
         )
     };
 
-    let (l_interp, m_interp, r_interp) = (
-        PolygonInterpolationValues::from(left_point),
-        PolygonInterpolationValues::from(middle_point),
-        PolygonInterpolationValues::from(right_point),
+    let (l_v, m_v, r_v) = (
+        PolygonInterpolationValues::from(l_p),
+        PolygonInterpolationValues::from(m_p),
+        PolygonInterpolationValues::from(r_p),
     );
 
-    let (left_interpolator, long_interpolator, right_interpolator) = (
-        Interpolator::from((left_point.x(), middle_point.x())),
-        Interpolator::from((left_point.x(), right_point.x())),
-        Interpolator::from((middle_point.x(), right_point.x())),
+    let (l_calc, long_calc, r_calc) = (
+        Interpolator::from((l_p.x(), m_p.x())),
+        Interpolator::from((l_p.x(), r_p.x())),
+        Interpolator::from((m_p.x(), r_p.x())),
     );
 
-    let d_long_interpolation = r_interp - l_interp;
-    let dx = right_point.x() - left_point.x();
+    let d_long_v = r_v - l_v;
+    let d_x = r_p.x() - l_p.x();
 
-    let mut filling_fn = |short_interpolator: Interpolator<isize>,
-                          interpolation_start: PolygonInterpolationValues,
-                          interpolation_end: PolygonInterpolationValues| {
-        let d_interp = interpolation_end - interpolation_start;
-        let range = short_interpolator.get_interpolation_range();
+    let mut filler = |short_calc: Interpolator<isize>,
+                      v_start: PolygonInterpolationValues,
+                      v_end: PolygonInterpolationValues| {
+        let d_interp = v_end - v_start;
+        let range = short_calc.get_interpolation_range();
         let range_start = range.start;
         for x in range {
-            let mut interp1 = short_interpolator.interpolate(x, d_interp, interpolation_start);
-            interp1.color = interpolation_start.color.interpolate(
-                interpolation_end.color,
+            let mut v1 = short_calc.interpolate(x, d_interp, v_start);
+            v1.color = v_start.color.interpolate(
+                v_end.color,
                 (x - range_start) as i32,
-                (*short_interpolator.get_diff()) as i32,
+                (*short_calc.get_diff()) as i32,
             );
-            let mut interp2 = long_interpolator.interpolate(x, d_long_interpolation, l_interp);
-            interp2.color =
-                l_interp
-                    .color
-                    .interpolate(r_interp.color, (x - left_point.x()) as i32, dx as i32);
+            let mut v2 = long_calc.interpolate(x, d_long_v, l_v);
+            v2.color = l_v
+                .color
+                .interpolate(r_v.color, (x - l_p.x()) as i32, d_x as i32);
 
-            if interp1.y > interp2.y {
-                (interp1, interp2) = (interp2, interp1);
+            if v1.y > v2.y {
+                (v1, v2) = (v2, v1);
             }
 
-            let (y1, y2) = (interp1.y, interp2.y);
+            let (y1, y2) = (v1.y, v2.y);
             let dy = y2 - y1;
 
-            let local_interpolator = Interpolator::new(y1, y2);
-            let local_d_interp = interp2 - interp1;
+            let local_calc = Interpolator::new(y1, y2);
+            let local_d_v = v2 - v1;
 
             for y in y1..y2 {
                 let p = (x as usize, y as usize);
 
-                let local_interp = local_interpolator.interpolate(y, local_d_interp, interp1);
+                let local_v = local_calc.interpolate(y, local_d_v, v1);
 
                 let PolygonInterpolationValues {
                     y,
@@ -94,7 +93,7 @@ pub fn fill_triangle(
                     mut normal,
                     has_color,
                     ..
-                } = local_interp;
+                } = local_v;
 
                 let z_val = &mut canvas.get_z_buffer_mut()[p];
                 if *z_val > z_depth {
@@ -118,9 +117,7 @@ pub fn fill_triangle(
 
                 let intensity = light_dir.dot_product(normal).max(0.0);
                 let new_color = if has_color {
-                    interp1
-                        .color
-                        .interpolate(interp2.color, (y - y1) as i32, dy as i32)
+                    v1.color.interpolate(v2.color, (y - y1) as i32, dy as i32)
                 } else {
                     color
                         .map(|c| *c)
@@ -132,6 +129,6 @@ pub fn fill_triangle(
         }
     };
 
-    filling_fn(left_interpolator, l_interp, m_interp);
-    filling_fn(right_interpolator, m_interp, r_interp);
+    filler(l_calc, l_v, m_v);
+    filler(r_calc, m_v, r_v);
 }
