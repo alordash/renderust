@@ -1,18 +1,19 @@
+use glam::{Vec2, Vec3};
+
 use crate::{
     derive_div_by, derive_mul_by, derive_self_add, derive_self_sub,
     math::{
         geometry::primitives::point::Point2D,
-        vector::common_vectors::{vec2f::Vec2f, vec3f::Vec3f},
     },
     visual::color::color::Color,
 };
 
 #[derive(Clone, Copy)]
 pub struct PolygonInterpolationValues {
-    pub y: isize,
-    pub z_depth: isize,
-    pub uv: Vec2f,
-    pub normal: Vec3f,
+    pub y: i32,
+    pub z_depth: i32,
+    pub uv: Vec2,
+    pub normal: Vec3,
     pub color: Color,
     pub has_color: bool,
 }
@@ -20,7 +21,7 @@ pub struct PolygonInterpolationValues {
 impl From<Point2D> for PolygonInterpolationValues {
     fn from(p: Point2D) -> Self {
         PolygonInterpolationValues {
-            y: p.y(),
+            y: p.y,
             z_depth: *p.get_z_depth(),
             uv: *p.get_uv(),
             normal: *p.get_normal(),
@@ -32,5 +33,5 @@ impl From<Point2D> for PolygonInterpolationValues {
 
 derive_self_add!(PolygonInterpolationValues, y, z_depth, uv, normal);
 derive_self_sub!(PolygonInterpolationValues, y, z_depth, uv, normal);
-derive_mul_by!(PolygonInterpolationValues, isize, y, z_depth, uv, normal);
-derive_div_by!(PolygonInterpolationValues, isize, y, z_depth, uv, normal);
+derive_mul_by!(PolygonInterpolationValues, i32, y, i32, z_depth, i32, uv, f32, normal, f32);
+derive_div_by!(PolygonInterpolationValues, i32, y, i32, z_depth, i32, uv, f32, normal, f32);

@@ -1,13 +1,10 @@
-use std::os::windows;
-
+use glam::Vec3;
 use image::{DynamicImage, GenericImage};
-use nalgebra::Matrix3;
 
 use crate::{
     math::{
         geometry::primitives::polygon::Polygon,
         interpolation::Interpolator,
-        vector::{common_vectors::vec3f::Vec3f, linear_algebra::LinAlgOperations},
     },
     plane_buffer::plane_buffer::PlaneBuffer,
     visual::{
@@ -20,14 +17,14 @@ pub fn fill_triangle(
     polygon: &Polygon<3>,
     canvas: &mut DrawingBuffer,
     texture: &DynamicImage,
-    normal_map: Option<&PlaneBuffer<Vec3f>>,
-    light_dir: Vec3f,
-    look_dir: Vec3f,
+    normal_map: Option<&PlaneBuffer<Vec3>>,
+    light_dir: Vec3,
+    look_dir: Vec3,
     color: Option<&Color>,
 ) {
     let points = polygon.get_points();
     let mut points_sorted_by_x = points.clone();
-    points_sorted_by_x.sort_unstable_by(|a, b| a.x().cmp(&b.x()));
+    points_sorted_by_x.sort_unstable_by(|a, b| a.x.cmp(&b.x));
     let (texture_width, texture_height) = texture.dimensions();
 
     let (l_p, m_p, r_p) = unsafe {
@@ -45,15 +42,15 @@ pub fn fill_triangle(
     );
 
     let (l_calc, long_calc, r_calc) = (
-        Interpolator::from((l_p.x(), m_p.x())),
-        Interpolator::from((l_p.x(), r_p.x())),
-        Interpolator::from((m_p.x(), r_p.x())),
+        Interpolator::from((l_p.x, m_p.x)),
+        Interpolator::from((l_p.x, r_p.x)),
+        Interpolator::from((m_p.x, r_p.x)),
     );
 
     let d_long_v = r_v - l_v;
-    let d_x = r_p.x() - l_p.x();
+    let d_x = r_p.x - l_p.x;
 
-    let mut filler = |short_calc: Interpolator<isize>,
+    let mut filler = |short_calc: Interpolator<i32>,
                       v_start: PolygonInterpolationValues,
                       v_end: PolygonInterpolationValues| {
         let d_interp = v_end - v_start;
@@ -69,7 +66,7 @@ pub fn fill_triangle(
             let mut v2 = long_calc.interpolate(x, d_long_v, l_v);
             v2.color = l_v
                 .color
-                .interpolate(r_v.color, (x - l_p.x()) as i32, d_x as i32);
+                .interpolate(r_v.color, (x - l_p.x) as i32, d_x as i32);
 
             if v1.y > v2.y {
                 (v1, v2) = (v2, v1);
@@ -101,8 +98,8 @@ pub fn fill_triangle(
                 }
 
                 let (uvx, uvy) = (
-                    (uv.x() * texture_width as f32) as u32,
-                    (uv.y() * texture_height as f32) as u32,
+                    (uv.x * texture_width as f32) as u32,
+                    (uv.y * texture_height as f32) as u32,
                 );
 
                 if let Some(normal_map) = normal_map {
@@ -110,12 +107,12 @@ pub fn fill_triangle(
                     normal = nm;
                 }
 
-                let visibility = look_dir.dot_product(normal);
+                let visibility = look_dir.dot(normal);
                 if visibility < 0.0 {
                     continue;
                 }
 
-                let intensity = light_dir.dot_product(normal).max(0.0);
+                let intensity = light_dir.dot(normal).max(0.0);
                 let new_color = if has_color {
                     v1.color.interpolate(v2.color, (y - y1) as i32, dy as i32)
                 } else {

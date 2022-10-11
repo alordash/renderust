@@ -68,12 +68,12 @@ macro_rules! derive_self_sub {
 
 #[macro_export]
 macro_rules! derive_mul_by {
-    ($t:ident, $multiplier_type:ty, $($field:tt),+) => {
+    ($t:ident, $multiplier_type:ty, $($field:tt, $source_type:ty),+) => {
         impl std::ops::Mul<$multiplier_type> for $t {
             type Output = Self;
             fn mul(self, rhs: $multiplier_type) -> Self::Output {
                 $t {
-                    $($field: self.$field * rhs,)+
+                    $($field: (self.$field * rhs as $source_type),)+
                     ..self
                 }
             }
@@ -83,12 +83,12 @@ macro_rules! derive_mul_by {
 
 #[macro_export]
 macro_rules! derive_div_by {
-    ($t:ident, $divider_type:ty, $($field:tt),+) => {
+    ($t:ident, $divider_type:ty, $($field:tt, $source_type:ty),+) => {
         impl std::ops::Div<$divider_type> for $t {
             type Output = Self;
             fn div(self, rhs: $divider_type) -> Self::Output {
                 $t {
-                    $($field: self.$field / rhs,)+
+                    $($field: (self.$field / rhs as $source_type),)+
                     ..self
                 }
             }

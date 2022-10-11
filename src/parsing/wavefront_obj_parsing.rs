@@ -3,34 +3,31 @@ use std::{
     io::{BufRead, BufReader},
 };
 
+use glam::{UVec3, Vec3};
 use image::{DynamicImage, GenericImage};
 
-use crate::{
-    math::vector::{common_vectors::vec3f::Vec3f, linear_algebra::LinAlgOperations},
-    plane_buffer::plane_buffer::PlaneBuffer,
-    wavefront::wavefront_obj::WavefrontObj,
-};
+use crate::{plane_buffer::plane_buffer::PlaneBuffer, wavefront::wavefront_obj::WavefrontObj};
 
 use super::{
-    math_vec_parsing::str_parse_math_vec, wavefront_obj_faces_parsing::str_parse_wavefront_faces,
+    math_vec_parsing::str_parse_vec3, wavefront_obj_faces_parsing::str_parse_wavefront_faces,
 };
 
 const LINE_ENDINGS: [&'static str; 2] = ["\r\n", "\n"];
 
-fn normal_map_vecs_from_rgb(normal_map_img: DynamicImage) -> PlaneBuffer<Vec3f> {
-    let normals: Vec<Vec3f> = normal_map_img
+fn normal_map_vecs_from_rgb(normal_map_img: DynamicImage) -> PlaneBuffer<Vec3> {
+    let normals: Vec<Vec3> = normal_map_img
         .to_rgb()
         .iter()
         .map(|c| *c as f32)
         .collect::<Vec<f32>>()
         .chunks_exact(3)
         .map(|rgb| unsafe {
-            Vec3f::new([
-                *rgb.get_unchecked(0) - 120.0,
-                *rgb.get_unchecked(1) - 120.0,
-                *rgb.get_unchecked(2) - 120.0,
-            ])
-            .normalized()
+            Vec3::new(
+                *rgb.get_unchecked(0) - 128.0,
+                *rgb.get_unchecked(1) - 128.0,
+                *rgb.get_unchecked(2) - 128.0,
+            )
+            .normalize()
         })
         .collect();
 
@@ -85,7 +82,7 @@ impl WavefrontObj {
                 "v" | "vt" | "vn" => {
                     let floats_string: String =
                         line.chars().skip(first_letters.len() + 1).collect();
-                    let vec3f = str_parse_math_vec(&floats_string)?;
+                    let vec3f = str_parse_vec3(&floats_string)?;
                     match first_letters.as_str() {
                         "v" => wavefront_obj.vertices.push(vec3f),
                         "vt" => wavefront_obj.vertex_textures.push(vec3f),
@@ -99,7 +96,7 @@ impl WavefrontObj {
                     let mut vec3is = str_parse_wavefront_faces(&ints_string)?;
                     vec3is
                         .iter_mut()
-                        .for_each(|vec| vec.values_mut().iter_mut().for_each(|v| *v -= 1));
+                        .for_each(|vec| *vec -= UVec3::new(1, 1, 1));
                     wavefront_obj.faces.push(vec3is);
                 }
                 _ => (),

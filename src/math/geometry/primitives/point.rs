@@ -1,30 +1,29 @@
 use std::ops::{Deref, DerefMut};
 
-use crate::{
-    math::vector::common_vectors::{vec2::Vec2, vec2f::Vec2f, vec3f::Vec3f},
-    visual::color::color::Color,
-};
+use glam::{Vec2, Vec3, IVec2};
 
-#[derive(Clone, Copy, Default, Debug, PartialEq, PartialOrd)]
+use crate::visual::color::color::Color;
+
+#[derive(Clone, Copy, Default, Debug, PartialEq)]
 pub struct Point2D {
-    coords: Vec2<isize>,
-    z_depth: isize,
-    uv: Vec2f,
-    normal: Vec3f,
+    coords: IVec2,
+    z_depth: i32,
+    uv: Vec2,
+    normal: Vec3,
     color: Option<Color>,
 }
 
 impl Point2D {
-    pub fn new(coords: [isize; 2]) -> Point2D {
+    pub fn new(coords: [i32; 2]) -> Point2D {
         Point2D {
-            coords: Vec2::new(coords),
+            coords: IVec2::from_array(coords),
             ..Default::default()
         }
     }
 
-    pub fn new_full(coords: [isize; 2], z_depth: isize, uv: Vec2f, normal: Vec3f) -> Point2D {
+    pub fn new_full(coords: [i32; 2], z_depth: i32, uv: Vec2, normal: Vec3) -> Point2D {
         Point2D {
-            coords: Vec2::new(coords),
+            coords: IVec2::from_array(coords),
             z_depth,
             uv,
             normal,
@@ -32,19 +31,19 @@ impl Point2D {
         }
     }
 
-    pub fn from(x: isize, y: isize) -> Point2D {
+    pub fn from(x: i32, y: i32) -> Point2D {
         Point2D::new([x, y])
     }
 
-    pub fn get_z_depth(&self) -> &isize {
+    pub fn get_z_depth(&self) -> &i32 {
         &self.z_depth
     }
 
-    pub fn get_uv(&self) -> &Vec2f {
+    pub fn get_uv(&self) -> &Vec2 {
         &self.uv
     }
 
-    pub fn get_normal(&self) -> &Vec3f {
+    pub fn get_normal(&self) -> &Vec3 {
         &self.normal
     }
 
@@ -52,15 +51,15 @@ impl Point2D {
         &self.color
     }
 
-    pub fn get_z_depth_mut(&mut self) -> &mut isize {
+    pub fn get_z_depth_mut(&mut self) -> &mut i32 {
         &mut self.z_depth
     }
 
-    pub fn get_uv_mut(&mut self) -> &mut Vec2f {
+    pub fn get_uv_mut(&mut self) -> &mut Vec2 {
         &mut self.uv
     }
 
-    pub fn get_normal_mut(&mut self) -> &mut Vec3f {
+    pub fn get_normal_mut(&mut self) -> &mut Vec3 {
         &mut self.normal
     }
 
@@ -69,14 +68,14 @@ impl Point2D {
     }
 }
 
-impl From<(isize, isize)> for Point2D {
-    fn from(source: (isize, isize)) -> Self {
+impl From<(i32, i32)> for Point2D {
+    fn from(source: (i32, i32)) -> Self {
         Point2D::new([source.0, source.1])
     }
 }
 
 impl Deref for Point2D {
-    type Target = Vec2<isize>;
+    type Target = IVec2;
     fn deref(&self) -> &Self::Target {
         &self.coords
     }

@@ -1,17 +1,15 @@
-use std::{any::type_name, str::FromStr};
+use std::any::type_name;
 
-use crate::math::vector::math_vec::MathVec;
+use glam::Vec3;
 
-pub fn str_parse_math_vec<const N: usize, T: Default + FromStr + Copy>(
-    string: &str,
-) -> Result<MathVec<N, T>, String> {
+pub fn str_parse_vec3(string: &str) -> Result<Vec3, String> {
     let mut words = string.split_whitespace();
-    let mut math_vec = MathVec::new([T::default(); N]);
-    for i in 0..N {
+    let mut math_vec = Vec3::default();
+    for i in 0..3 {
         let value_string = words.next().ok_or("Not enough items")?;
         let value = value_string
-            .parse::<T>()
-            .map_err(|_| format!("Error parsing value of \"{}\"", type_name::<T>()))?;
+            .parse::<f32>()
+            .map_err(|_| format!("Error parsing value of \"{}\"", type_name::<f32>()))?;
         math_vec[i] = value;
     }
     Ok(math_vec)

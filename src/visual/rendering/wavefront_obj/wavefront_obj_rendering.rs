@@ -1,10 +1,11 @@
+use glam::{Vec3, Vec2};
+
 use crate::{
     math::{
         geometry::{
             primitives::{line::Line, point::Point2D, polygons::triangle::Triangle},
             rect_size::RectSize,
         },
-        vector::common_vectors::{vec2f::Vec2f, vec3f::Vec3f},
     },
     visual::{
         color::color::Color,
@@ -29,12 +30,12 @@ pub fn render_wavefront_grid(
     for i in 0..wavefront_obj.faces.len() {
         let face = &wavefront_obj.faces[i];
         for j in 0..3_usize {
-            let v0 = wavefront_obj.vertices[face[0].values()[j]];
-            let v1 = wavefront_obj.vertices[face[0].values()[(j + 1) % 3]];
-            let x0 = ((v0.x() + 1.0) * w_f32 / 2.0) as isize;
-            let y0 = ((v0.y() + 1.0) * h_f32 / 2.0) as isize;
-            let x1 = ((v1.x() + 1.0) * w_f32 / 2.0) as isize;
-            let y1 = ((v1.y() + 1.0) * h_f32 / 2.0) as isize;
+            let v0 = wavefront_obj.vertices[face[0][j] as usize];
+            let v1 = wavefront_obj.vertices[face[0][(j + 1) % 3] as usize];
+            let x0 = ((v0.x + 1.0) * w_f32 / 2.0) as i32;
+            let y0 = ((v0.y + 1.0) * h_f32 / 2.0) as i32;
+            let x1 = ((v1.x + 1.0) * w_f32 / 2.0) as i32;
+            let y1 = ((v1.y + 1.0) * h_f32 / 2.0) as i32;
 
             let begin = Point2D::from(x0, y0);
             let end = Point2D::from(x1, y1);
@@ -47,8 +48,8 @@ pub fn render_wavefront_grid(
 pub fn render_wavefront_mesh(
     wavefront_obj: &WavefrontObj,
     canvas: &mut DrawingBuffer,
-    light_dir: Vec3f,
-    look_dir: Vec3f,
+    light_dir: Vec3,
+    look_dir: Vec3,
     color: Option<&Color>,
     use_nm: bool,
 ) {
@@ -58,21 +59,21 @@ pub fn render_wavefront_mesh(
 
     for i in 0..wavefront_obj.faces.len() {
         let face = &wavefront_obj.faces[i];
-        let mut world_coords = [Vec3f::default(); 3];
+        let mut world_coords = [Vec3::default(); 3];
         let mut screen_coords = [Point2D::from(0, 0); 3];
 
         for j in 0..3_usize {
-            let v0 = wavefront_obj.vertices[face[0].values()[j]];
-            let x0 = ((v0.x() + 1.0) * w_f32 / 2.0) as isize;
-            let y0 = ((v0.y() + 1.0) * h_f32 / 2.0) as isize;
+            let v0 = wavefront_obj.vertices[face[0][j] as usize];
+            let x0 = ((v0.x + 1.0) * w_f32 / 2.0) as i32;
+            let y0 = ((v0.y + 1.0) * h_f32 / 2.0) as i32;
             world_coords[j] = v0;
-            let uvidx = face[1].values()[j];
+            let uvidx = face[1][j] as usize;
             let uv3d = wavefront_obj.vertex_textures[uvidx];
             screen_coords[j] = Point2D::new_full(
                 [x0, y0],
-                (1000.0 * world_coords[j].z()) as isize,
-                Vec2f::new([uv3d.x(), uv3d.y()]),
-                wavefront_obj.vertex_normals[face[0].values()[j]],
+                (1000.0 * world_coords[j].z) as i32,
+                Vec2::new(uv3d.x, uv3d.y),
+                wavefront_obj.vertex_normals[face[0][j] as usize],
             );
         }
 

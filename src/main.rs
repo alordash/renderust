@@ -1,11 +1,9 @@
 #![feature(min_specialization)]
 
-use math::{
-    geometry::{
-        primitives::{point::Point2D, polygon::Polygon},
-        rect_size::RectSize,
-    },
-    vector::{common_vectors::vec3f::Vec3f, linear_algebra::LinAlgOperations},
+use glam::Vec3;
+use math::geometry::{
+    primitives::{point::Point2D, polygon::Polygon},
+    rect_size::RectSize,
 };
 
 pub mod math;
@@ -65,10 +63,10 @@ fn main() -> Result<(), String> {
     let time_step = 0.05;
     let color_step = 30.5;
 
-    let mut light_dir = Vec3f::new([0.0, 0.0, 1.0]).normalized();
-    let look_dir = Vec3f::new([0.0, 0.0, 1.0]).normalized();
+    let mut light_dir = Vec3::new(0.0, 0.0, 1.0).normalize();
+    let look_dir = Vec3::new(0.0, 0.0, 1.0).normalize();
 
-    let mut polygon_points_z_depth = 0isize;
+    let mut polygon_points_z_depth = 0i32;
 
     let wavefront_obj_file = File::open(WAVEFRONT_SOURCE_PATH)
         .map_err(|e| format!("Error opening model file: {:?}", e))?;
@@ -97,12 +95,12 @@ fn main() -> Result<(), String> {
 
         if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
             let window_size = RectSize::from(window.get_size());
-            light_dir = Vec3f::new([
+            light_dir = Vec3::new(
                 (x - window_size.width as f32 / 2.0),
                 0.0,
                 (y - window_size.height as f32 / 2.0),
-            ])
-            .normalized();
+            )
+            .normalize();
         }
         let prev_z_buffer = draw_buffer.get_z_buffer().clone();
         render_wavefront_mesh(
@@ -121,8 +119,8 @@ fn main() -> Result<(), String> {
                 if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
                     let y = new_size.height as f32 - y - 1.0;
                     let mut point =
-                        Point2D::from((x / width_scale) as isize, (y / height_scale) as isize);
-                    *point.get_normal_mut() = Vec3f::new([1.0, 0.0, 0.0]);
+                        Point2D::from((x / width_scale) as i32, (y / height_scale) as i32);
+                    *point.get_normal_mut() = Vec3::new(1.0, 0.0, 0.0);
                     *point.get_z_depth_mut() = polygon_points_z_depth;
                     *point.get_color_mut() = Some(Color::random());
                     draw_buffer[point] = Color::from_rgb(255, 0, 0);
@@ -145,7 +143,7 @@ fn main() -> Result<(), String> {
             //     &mut draw_buffer,
             //     &wavefront_obj.texture,
             //     None,
-            //     Vec3f::new([1.0, 0.0, 0.0]),
+            //     Vec3::new(1.0, 0.0, 0.0),
             //     look_dir,
             //     None,
             // );
@@ -163,11 +161,11 @@ fn main() -> Result<(), String> {
 
         if window.is_key_pressed(Key::C, minifb::KeyRepeat::No) {
             draw_buffer.clean();
-            draw_buffer.get_z_buffer_mut().clean_with(&isize::MIN);
+            draw_buffer.get_z_buffer_mut().clean_with(&i32::MIN);
         }
 
         if let Some((scroll_x, scroll_y)) = window.get_scroll_wheel() {
-            polygon_points_z_depth += (scroll_y * 10.0) as isize;
+            polygon_points_z_depth += (scroll_y * 10.0) as i32;
         }
 
         window

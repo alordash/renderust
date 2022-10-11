@@ -1,10 +1,10 @@
+use glam::Vec3;
 use image::{DynamicImage, GenericImage};
 
 use crate::{
     math::{
         geometry::primitives::{line::Line, polygon::Polygon},
         interpolation::Interpolator,
-        vector::{common_vectors::vec3f::Vec3f, linear_algebra::LinAlgOperations},
     },
     plane_buffer::plane_buffer::PlaneBuffer,
     visual::{
@@ -33,23 +33,23 @@ pub fn fill_polygon<const N: usize>(
     polygon: &Polygon<N>,
     canvas: &mut DrawingBuffer,
     texture: &DynamicImage,
-    normal_map: Option<&PlaneBuffer<Vec3f>>,
-    light_dir: Vec3f,
-    look_dir: Vec3f,
+    normal_map: Option<&PlaneBuffer<Vec3>>,
+    light_dir: Vec3,
+    look_dir: Vec3,
     color: Option<&Color>,
 ) {
     let mut lines = polygon.get_perimeter_lines();
     lines.iter_mut().for_each(Line::order_by_x);
 
     let interpolators: Vec<(
-        Interpolator<isize>,
+        Interpolator<i32>,
         (PolygonInterpolationValues, PolygonInterpolationValues),
     )> = lines
         .into_iter()
         .map(|l| {
             let b = l.begin;
             let e = l.end;
-            let interpolator = Interpolator::from((b.x(), e.x()));
+            let interpolator = Interpolator::from((b.x, e.x));
             let begin_piv = PolygonInterpolationValues::from(b);
             let end_piv = PolygonInterpolationValues::from(e);
             let interpolation_values = end_piv - begin_piv;
@@ -58,14 +58,14 @@ pub fn fill_polygon<const N: usize>(
         .collect();
 
     let mut x_sorted_points: Vec<_> = polygon.get_points().iter().collect();
-    x_sorted_points.sort_unstable_by(|a, b| a.x().cmp(&b.x()));
+    x_sorted_points.sort_unstable_by(|a, b| a.x.cmp(&b.x));
     let polygon_filling_ranges: Vec<_> = x_sorted_points
         .windows(2)
         .map(|two_points| unsafe {
             let (p1, p2) = (two_points.get_unchecked(0), two_points.get_unchecked(1));
-            let range = p1.x()..p2.x();
+            let range = p1.x..p2.x;
             let suitable_interpolators: Vec<&(
-                Interpolator<isize>,
+                Interpolator<i32>,
                 (PolygonInterpolationValues, PolygonInterpolationValues),
             )> = interpolators
                 .iter()
@@ -136,12 +136,12 @@ pub fn fill_polygon<const N: usize>(
                          ;
                     }
 
-                    let visibility = look_dir.dot_product(normal);
+                    let visibility = look_dir.dot(normal);
                     if visibility < 0.0 {
                         continue;
                     }
 
-                    let intensity = light_dir.dot_product(normal).max(0.0);
+                    let intensity = light_dir.dot(normal).max(0.0);
                     let new_color = if has_color {
                         yz1.color
                             .interpolate(yz2.color, (y - y1) as i32, (y2 - y1) as i32)
