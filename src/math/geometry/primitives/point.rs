@@ -6,7 +6,7 @@ use crate::visual::color::color::Color;
 
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 pub struct Point2D {
-    coords: IVec2,
+    pub coords: IVec2,
     z_depth: i32,
     uv: Vec2,
     normal: Vec3,
