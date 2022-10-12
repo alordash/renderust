@@ -4,7 +4,6 @@ pub mod line {
 }
 pub mod polygon {
     pub mod polygon_rasterization;
-    pub mod polygon_interpolation_values;
     pub mod polygon_filling_range;
 }
 pub mod wavefront_obj {
@@ -13,3 +12,4 @@ pub mod wavefront_obj {
 pub mod triangle {
     pub mod triangle_rasterization;
 }
+pub mod interpolation_values;

@@ -1,12 +1,10 @@
 use std::ops::Range;
 
-use crate::math::interpolation::Interpolator;
-
-use super::polygon_interpolation_values::PolygonInterpolationValues;
+use crate::{math::interpolation::Interpolator, visual::rendering::interpolation_values::InterpolationValues};
 
 pub struct PolygonFillingRange<'a> {
     pub range: Range<i32>,
-    pub interpolators: Vec<&'a (Interpolator<i32>, (PolygonInterpolationValues, PolygonInterpolationValues))>
+    pub interpolators: Vec<&'a (Interpolator<i32>, (InterpolationValues, InterpolationValues))>
 }
 
 impl<'a> Iterator for PolygonFillingRange<'a> {

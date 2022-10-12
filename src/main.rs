@@ -102,7 +102,9 @@ fn main() -> Result<(), String> {
             )
             .normalize();
         }
-        let prev_z_buffer = draw_buffer.get_z_buffer().clone();
+        draw_buffer.get_z_buffer_mut().clean_with(&i32::MIN);
+        draw_buffer.clean();
+        // let prev_z_buffer = draw_buffer.get_z_buffer().clone();
         render_wavefront_mesh(
             &wavefront_obj,
             &mut draw_buffer,
@@ -111,7 +113,7 @@ fn main() -> Result<(), String> {
             None,
             window.get_mouse_down(minifb::MouseButton::Right),
         );
-        *draw_buffer.get_z_buffer_mut() = prev_z_buffer;
+        // *draw_buffer.get_z_buffer_mut() = prev_z_buffer;
 
         if window.get_mouse_down(minifb::MouseButton::Left) {
             if !is_mouse_pressed {

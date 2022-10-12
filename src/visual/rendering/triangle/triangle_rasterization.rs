@@ -8,8 +8,7 @@ use crate::{
     },
     plane_buffer::plane_buffer::PlaneBuffer,
     visual::{
-        color::color::Color, drawing_buffer::DrawingBuffer,
-        rendering::polygon::polygon_interpolation_values::PolygonInterpolationValues,
+        color::color::Color, drawing_buffer::DrawingBuffer, rendering::interpolation_values::InterpolationValues,
     },
 };
 
@@ -36,9 +35,9 @@ pub fn fill_triangle(
     };
 
     let (l_v, m_v, r_v) = (
-        PolygonInterpolationValues::from(l_p),
-        PolygonInterpolationValues::from(m_p),
-        PolygonInterpolationValues::from(r_p),
+        InterpolationValues::from(l_p),
+        InterpolationValues::from(m_p),
+        InterpolationValues::from(r_p),
     );
 
     let (l_calc, long_calc, r_calc) = (
@@ -51,8 +50,8 @@ pub fn fill_triangle(
     let d_x = r_p.x - l_p.x;
 
     let mut filler = |short_calc: Interpolator<i32>,
-                      v_start: PolygonInterpolationValues,
-                      v_end: PolygonInterpolationValues| {
+                      v_start: InterpolationValues,
+                      v_end: InterpolationValues| {
         let d_interp = v_end - v_start;
         let range = short_calc.get_interpolation_range();
         let range_start = range.start;
@@ -83,7 +82,7 @@ pub fn fill_triangle(
 
                 let local_v = local_calc.interpolate(y, local_d_v, v1);
 
-                let PolygonInterpolationValues {
+                let InterpolationValues {
                     y,
                     z_depth,
                     uv,

@@ -9,13 +9,12 @@ use crate::{
     plane_buffer::plane_buffer::PlaneBuffer,
     visual::{
         color::color::Color, drawing_buffer::DrawingBuffer,
-        rendering::line::line_rasterization::draw_line,
+        rendering::{line::line_rasterization::draw_line, interpolation_values::InterpolationValues},
     },
 };
 
 use super::{
     polygon_filling_range::PolygonFillingRange,
-    polygon_interpolation_values::PolygonInterpolationValues,
 };
 
 pub fn draw_polygon<const N: usize>(
@@ -43,15 +42,15 @@ pub fn fill_polygon<const N: usize>(
 
     let interpolators: Vec<(
         Interpolator<i32>,
-        (PolygonInterpolationValues, PolygonInterpolationValues),
+        (InterpolationValues, InterpolationValues),
     )> = lines
         .into_iter()
         .map(|l| {
             let b = l.begin;
             let e = l.end;
             let interpolator = Interpolator::from((b.x, e.x));
-            let begin_piv = PolygonInterpolationValues::from(b);
-            let end_piv = PolygonInterpolationValues::from(e);
+            let begin_piv = InterpolationValues::from(b);
+            let end_piv = InterpolationValues::from(e);
             let interpolation_values = end_piv - begin_piv;
             (interpolator, (interpolation_values, begin_piv))
         })
@@ -66,7 +65,7 @@ pub fn fill_polygon<const N: usize>(
             let range = p1.x..p2.x;
             let suitable_interpolators: Vec<&(
                 Interpolator<i32>,
-                (PolygonInterpolationValues, PolygonInterpolationValues),
+                (InterpolationValues, InterpolationValues),
             )> = interpolators
                 .iter()
                 .filter(|lc| {
@@ -116,7 +115,7 @@ pub fn fill_polygon<const N: usize>(
 
                 for y in y1..y2 {
                     let interpolated_values = local_interpolator.interpolate(y, dyz, yz1);
-                    let PolygonInterpolationValues {
+                    let InterpolationValues {
                         y,
                         z_depth,
                         uv,

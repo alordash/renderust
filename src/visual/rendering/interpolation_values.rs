@@ -9,7 +9,7 @@ use crate::{
 };
 
 #[derive(Clone, Copy)]
-pub struct PolygonInterpolationValues {
+pub struct InterpolationValues {
     pub y: i32,
     pub z_depth: i32,
     pub uv: Vec2,
@@ -18,9 +18,9 @@ pub struct PolygonInterpolationValues {
     pub has_color: bool,
 }
 
-impl From<Point2D> for PolygonInterpolationValues {
+impl From<Point2D> for InterpolationValues {
     fn from(p: Point2D) -> Self {
-        PolygonInterpolationValues {
+        InterpolationValues {
             y: p.y,
             z_depth: *p.get_z_depth(),
             uv: *p.get_uv(),
@@ -31,7 +31,7 @@ impl From<Point2D> for PolygonInterpolationValues {
     }
 }
 
-derive_self_add!(PolygonInterpolationValues, y, z_depth, uv, normal);
-derive_self_sub!(PolygonInterpolationValues, y, z_depth, uv, normal);
-derive_mul_by!(PolygonInterpolationValues, i32, y, i32, z_depth, i32, uv, f32, normal, f32);
-derive_div_by!(PolygonInterpolationValues, i32, y, i32, z_depth, i32, uv, f32, normal, f32);
+derive_self_add!(InterpolationValues, y, z_depth, uv, normal);
+derive_self_sub!(InterpolationValues, y, z_depth, uv, normal);
+derive_mul_by!(InterpolationValues, i32, y, i32, z_depth, i32, uv, f32, normal, f32);
+derive_div_by!(InterpolationValues, i32, y, i32, z_depth, i32, uv, f32, normal, f32);
