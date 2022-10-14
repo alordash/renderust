@@ -34,7 +34,7 @@ const WINDOW_HEIGHT: usize = 1000;
 
 const WAVEFRONT_SOURCE_PATH: &'static str = "./resources/african_head.obj";
 const TEXTURE_SOURCE_PATH: &'static str = "./resources/african_head_diffuse.tga";
-const NORMAL_MAP_SOURCE_PATH: &'static str = "./resources/african_head_nm.tga";
+const NORMAL_MAP_SOURCE_PATH: &'static str = "./resources/african_head_nm_tangent.tga";
 
 const POLYGON_SIZE: usize = 3;
 
