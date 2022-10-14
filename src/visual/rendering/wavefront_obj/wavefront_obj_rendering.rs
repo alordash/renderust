@@ -59,19 +59,17 @@ pub fn render_wavefront_mesh(
 
     for i in 0..wavefront_obj.faces.len() {
         let face = &wavefront_obj.faces[i];
-        let mut world_coords = [Vec3::default(); 3];
         let mut screen_coords = [Point2D::from(0, 0); 3];
 
         for j in 0..3_usize {
             let v0 = wavefront_obj.vertices[face[0][j] as usize];
             let x0 = ((v0.x + 1.0) * w_f32 / 2.0) as i32;
             let y0 = ((v0.y + 1.0) * h_f32 / 2.0) as i32;
-            world_coords[j] = v0;
             let uvidx = face[1][j] as usize;
             let uv3d = wavefront_obj.vertex_textures[uvidx];
             screen_coords[j] = Point2D::new_full(
                 [x0, y0],
-                (1000.0 * world_coords[j].z) as i32,
+                (1000.0 * v0.z) as i32,
                 Vec2::new(uv3d.x, uv3d.y),
                 wavefront_obj.vertex_normals[face[0][j] as usize],
             );
