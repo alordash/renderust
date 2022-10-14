@@ -18,17 +18,11 @@ fn normal_map_vecs_from_rgb(normal_map_img: DynamicImage) -> PlaneBuffer<Vec3> {
     let normals: Vec<Vec3> = normal_map_img
         .to_rgb()
         .iter()
-        .map(|c| *c as f32)
+        .map(|c| (*c as f32 / 255.0) * 2.0 - 1.0)
         .collect::<Vec<f32>>()
         .chunks_exact(3)
-        .map(|rgb| unsafe {
-            Vec3::new(
-                *rgb.get_unchecked(0) - 128.0,
-                *rgb.get_unchecked(1) - 128.0,
-                *rgb.get_unchecked(2) - 128.0,
-            )
-            .normalize()
-        })
+        .map(Vec3::from_slice)
+        .map(Vec3::normalize)
         .collect();
 
     PlaneBuffer::new(

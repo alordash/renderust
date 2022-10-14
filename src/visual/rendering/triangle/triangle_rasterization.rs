@@ -1,4 +1,4 @@
-use glam::{Mat3, Vec3};
+use glam::{Mat3, Vec3, Vec3Swizzles};
 use image::{DynamicImage, GenericImage};
 
 use crate::{
@@ -14,7 +14,7 @@ pub fn fill_triangle(
     polygon: &Polygon<3>,
     canvas: &mut DrawingBuffer,
     texture: &DynamicImage,
-    normal_map: Option<&PlaneBuffer<Vec3>>,
+    maybe_normal_map: Option<&PlaneBuffer<Vec3>>,
     light_dir: Vec3,
     look_dir: Vec3,
     color: Option<&Color>,
@@ -47,23 +47,29 @@ pub fn fill_triangle(
     let d_long_v = r_v - l_v;
     let d_x = r_p.x - l_p.x;
 
+    let mut A = Mat3::from_cols(
+        Vec3::from((
+            (m_p.coords - l_p.coords).as_vec2(),
+            (m_p.get_z_depth() - l_p.get_z_depth()) as f32,
+        )),
+        Vec3::from((
+            (r_p.coords - l_p.coords).as_vec2(),
+            (r_p.get_z_depth() - l_p.get_z_depth()) as f32,
+        )),
+        Vec3::ZERO,
+    );
+
+    let (l_uv, m_uv, r_uv) = (*l_p.get_uv(), *m_p.get_uv(), *r_p.get_uv());
+
+    let I = Vec3::new(m_uv.x - l_uv.x, r_uv.x - l_uv.x, 0.0);
+    let J = Vec3::new(m_uv.y - l_uv.y, r_uv.y - l_uv.y, 0.0);
+
     let mut filler = |short_calc: Interpolator<i32>,
                       v_start: InterpolationValues,
                       v_end: InterpolationValues| {
         let d_interp = v_end - v_start;
         let range = short_calc.get_interpolation_range();
         let range_start = range.start;
-
-        let mut A = Mat3::from_cols(
-            Vec3::from(((m_p.coords - l_p.coords).as_vec2(), 0.0)),
-            Vec3::from(((r_p.coords - l_p.coords).as_vec2(), 0.0)),
-            Vec3::ZERO,
-        );
-
-        let (l_uv, m_uv, r_uv) = (*l_p.get_uv(), *m_p.get_uv(), *r_p.get_uv());
-
-        let I = Vec3::new(m_uv.x - l_uv.x, r_uv.x - l_uv.x, 0.0);
-        let J = Vec3::new(m_uv.y - l_uv.y, r_uv.y - l_uv.y, 0.0);
 
         for x in range {
             let mut v1 = short_calc.interpolate(x, d_interp, v_start);
@@ -111,15 +117,20 @@ pub fn fill_triangle(
                     (uv.y * texture_height as f32) as u32,
                 );
 
-                if let Some(normal_map) = normal_map {
+                if let Some(normal_map) = maybe_normal_map {
+                    let (nuvx, nuvy) = (
+                        (uv.x * normal_map.get_width() as f32) as u32,
+                        (uv.y * normal_map.get_height() as f32) as u32,
+                    );
+
                     *A.col_mut(2) = normal;
-                    let AI = A.inverse();
+                    let AI = A.transpose().inverse();
                     let i = AI * I;
                     let j = AI * J;
 
                     let B = Mat3::from_cols(i.normalize(), j.normalize(), normal);
 
-                    let nm = normal_map[(uvx as usize, uvy as usize)];
+                    let nm = normal_map[(nuvx as usize, nuvy as usize)];
                     normal = (B * nm).normalize();
                 }
 
