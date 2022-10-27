@@ -66,7 +66,7 @@ fn main() -> Result<(), String> {
     let mut light_dir = Vec3::new(0.0, 0.0, 1.0).normalize();
     let look_dir = Vec3::new(0.0, 0.0, 1.0).normalize();
 
-    let mut polygon_points_z_depth = 0i32;
+    let mut polygon_points_z_depth = 5000i32;
 
     let wavefront_obj_file = File::open(WAVEFRONT_SOURCE_PATH)
         .map_err(|e| format!("Error opening model file: {:?}", e))?;
