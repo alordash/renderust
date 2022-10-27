@@ -123,8 +123,10 @@ pub fn fill_triangle(
                         (uv.y * normal_map.get_height() as f32) as u32,
                     );
 
-                    *A.col_mut(2) = normal;
-                    let AI = A.transpose().inverse();
+                    let mut AI = A.transpose();
+                    *AI.col_mut(2) = normal;
+                    AI = AI.inverse();
+                    
                     let i = AI * I;
                     let j = AI * J;
 
