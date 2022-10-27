@@ -111,7 +111,8 @@ fn main() -> Result<(), String> {
             light_dir,
             look_dir,
             None,
-            window.get_mouse_down(minifb::MouseButton::Right),
+            window.is_key_down(Key::LeftShift),
+            (polygon_points_z_depth.abs() as f32 / 1000.0).max(0.679)
         );
         // *draw_buffer.get_z_buffer_mut() = prev_z_buffer;
 
