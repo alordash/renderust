@@ -58,21 +58,19 @@ pub fn render_wavefront_mesh(
 
     let (w_f32, h_f32) = ((width - 1) as f32, (height - 1) as f32);
 
+    let transform_matrix = viewport_matrix * projection * model_view_matrix;
+    // let inverse_transposed_transform_matrix = transform_matrix.transpose().inverse();
+
     for i in 0..wavefront_obj.faces.len() {
         let face = &wavefront_obj.faces[i];
         let mut screen_coords = [Point2D::from(0, 0); 3];
 
         for j in 0..3_usize {
-            let vertex4 = viewport_matrix
-                * projection
-                * model_view_matrix
-                * Vec4::from((wavefront_obj.vertices[face[0][j] as usize], 1.0));
+            let vertex4 =
+                transform_matrix * Vec4::from((wavefront_obj.vertices[face[0][j] as usize], 1.0));
             let vertex = Vec3::from(vertex4.xyz()) / vertex4.w;
-            // let mut vertex4 = Vec4::from((vertex, 1.0));
-            // let mut transform_matrix = Mat4::from_diagonal(Vec4::new(1.0, 1.0, 1.0, 1.0));
-            // transform_matrix.col_mut(2)[3] = -1.0 / camera_z_pos;
-            // vertex4 = transform_matrix * vertex4;
-            // vertex = vertex4.xyz() / vertex4[3];
+            
+            // let normal = Vec4::from((wavefront_obj.vertex_normals[face[0][j] as usize], 0.0));
 
             let uvidx = face[1][j] as usize;
             let uv3d = wavefront_obj.vertex_textures[uvidx];

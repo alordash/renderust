@@ -6,7 +6,7 @@ use math::{
         primitives::{point::Point2D, polygon::Polygon},
         rect_size::RectSize,
     },
-    spherical_coordinate_system::spherical_to_cartesian,
+    spherical_coordinate_system::spherical_to_cartesian_yzx,
 };
 
 pub mod math;
@@ -85,13 +85,13 @@ fn main() -> Result<(), String> {
 
     let mut points: Vec<Point2D> = Vec::new();
 
-    let mut from = Vec3::new(0.0, 0.0, 1.0);
+    let mut from = Vec3::new(0.0, 0.0, 10.0);
     let to = Vec3::new(0.0, 0.0, 0.0);
     let up = Vec3::Y;
 
-    let mut cam_angle_theta = 0.0;
+    let mut cam_angle_theta = 0.5;
     let mut cam_angle_phi = 0.0;
-    let mut cam_distance = 1.0;
+    let mut cam_distance = 5.0;
 
     let mut view_matrix = create_view_matrix(from, to, up);
     let (w_f32, h_f32) = (draw_buffer.get_width() as f32, draw_buffer.get_height() as f32);
@@ -113,12 +113,12 @@ fn main() -> Result<(), String> {
         if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
             let window_size = RectSize::from(window.get_size());
 
-            cam_angle_theta = (y / window_size.height as f32) * std::f32::consts::PI;
+            cam_angle_theta = ((y / window_size.height as f32) * std::f32::consts::PI).max(0.00001);
             cam_angle_phi = ((x - window_size.width as f32 / 2.0) / window_size.width as f32)
                 * std::f32::consts::PI
                 * 2.0;
 
-            from = spherical_to_cartesian(cam_angle_theta, cam_angle_phi, cam_distance).into();
+            from = spherical_to_cartesian_yzx(cam_angle_theta, cam_angle_phi, cam_distance).into();
 
             // light_dir = Vec3::new(
             //     (x - window_size.width as f32 / 2.0),
