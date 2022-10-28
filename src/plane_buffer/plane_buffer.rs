@@ -58,6 +58,10 @@ impl<T> PlaneBuffer<T> {
             )
         }
     }
+
+    pub fn contains(&self, x: usize, y: usize) -> bool {
+        x < self.size.width && y < self.size.height
+    }
 }
 
 impl<T: Default + Copy> PlaneBuffer<T> {

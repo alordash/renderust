@@ -95,6 +95,9 @@ pub fn fill_triangle(
 
             for y in y1..y2 {
                 let p = (x as usize, y as usize);
+                if !canvas.contains(p.0, p.1) {
+                    continue;
+                }
 
                 let local_v = local_calc.interpolate(y, local_d_v, v1);
 
