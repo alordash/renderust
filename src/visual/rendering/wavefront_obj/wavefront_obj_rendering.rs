@@ -46,7 +46,7 @@ pub fn render_wavefront_grid(
 pub fn render_wavefront_mesh(
     wavefront_obj: &WavefrontObj,
     canvas: &mut DrawingBuffer,
-    light_dir: Vec3,
+    mut light_dir: Vec3,
     look_dir: Vec3,
     color: Option<&Color>,
     use_normal_map: bool,
@@ -54,23 +54,22 @@ pub fn render_wavefront_mesh(
     model_view_matrix: Mat4,
     viewport_matrix: Mat4,
 ) {
-    let RectSize { width, height } = canvas.get_size();
-
-    let (w_f32, h_f32) = ((width - 1) as f32, (height - 1) as f32);
-
     let transform_matrix = viewport_matrix * projection * model_view_matrix;
-    // let inverse_transposed_transform_matrix = transform_matrix.transpose().inverse();
+    let inverse_transposed_transform_matrix = transform_matrix.transpose().inverse();
 
     for i in 0..wavefront_obj.faces.len() {
         let face = &wavefront_obj.faces[i];
         let mut screen_coords = [Point2D::from(0, 0); 3];
 
         for j in 0..3_usize {
-            let vertex4 =
-                transform_matrix * Vec4::from((wavefront_obj.vertices[face[0][j] as usize], 1.0));
-            let vertex = Vec3::from(vertex4.xyz()) / vertex4.w;
-            
-            // let normal = Vec4::from((wavefront_obj.vertex_normals[face[0][j] as usize], 0.0));
+            let source_vertex = wavefront_obj.vertices[face[0][j] as usize];
+            let vertex4 = transform_matrix * Vec4::from((source_vertex, 1.0));
+            let vertex = vertex4.xyz() / vertex4.w;
+
+            let source_normal = wavefront_obj.vertex_normals[face[0][j] as usize];
+            let normal = (inverse_transposed_transform_matrix * Vec4::from((source_normal, 0.0)))
+                .xyz()
+                .normalize();
 
             let uvidx = face[1][j] as usize;
             let uv3d = wavefront_obj.vertex_textures[uvidx];
@@ -78,7 +77,7 @@ pub fn render_wavefront_mesh(
                 [vertex.x as i32, vertex.y as i32],
                 vertex.z as i32,
                 Vec2::new(uv3d.x, uv3d.y),
-                wavefront_obj.vertex_normals[face[0][j] as usize],
+                normal,
             );
         }
 
@@ -96,18 +95,5 @@ pub fn render_wavefront_mesh(
             look_dir,
             color,
         );
-        // fill_polygon(
-        //     &triangle,
-        //     canvas,
-        //     &wavefront_obj.texture,
-        //     if use_nm {
-        //         Some(&wavefront_obj.normal_map)
-        //     } else {
-        //         None
-        //     },
-        //     light_dir,
-        //     look_dir,
-        //     color,
-        // );
     }
 }

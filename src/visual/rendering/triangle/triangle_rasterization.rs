@@ -139,12 +139,12 @@ pub fn fill_triangle(
                     normal = (B * nm).normalize();
                 }
 
-                let visibility = look_dir.dot(normal).max(0.0) + 10.0;
+                let visibility = look_dir.dot(normal);
                 if visibility < 0.0 {
                     continue;
                 }
 
-                let intensity = light_dir.dot(normal).max(0.1);
+                let intensity = light_dir.dot(normal).max(0.0);
                 let new_color = if has_color {
                     v1.color.interpolate(v2.color, (y - y1) as i32, dy as i32)
                 } else {

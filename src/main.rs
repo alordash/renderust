@@ -66,7 +66,6 @@ fn main() -> Result<(), String> {
 
     let mut t: f32 = 0.0;
     let time_step = 0.05;
-    let color_step = 30.5;
 
     let mut light_dir = Vec3::new(0.0, 0.0, 1.0).normalize();
     let look_dir = Vec3::new(0.0, 0.0, 1.0).normalize();
@@ -89,13 +88,25 @@ fn main() -> Result<(), String> {
     let to = Vec3::new(0.0, 0.0, 0.0);
     let up = Vec3::Y;
 
+    let mut spin_light = true;
+    let mut light_spin_t = 0.0;
+
     let mut cam_angle_theta = 0.5;
     let mut cam_angle_phi = 0.0;
     let mut cam_distance = 5.0;
 
     let mut view_matrix = create_view_matrix(from, to, up);
-    let (w_f32, h_f32) = (draw_buffer.get_width() as f32, draw_buffer.get_height() as f32);
-    let viewport_matrix = create_view_port_matrix(0.0, 0.0, w_f32, h_f32, 1000.0);
+    let (w_f32, h_f32) = (
+        draw_buffer.get_width() as f32,
+        draw_buffer.get_height() as f32,
+    );
+    let viewport_matrix = create_view_port_matrix(
+        w_f32 * 0.125,
+        h_f32 * 0.125,
+        w_f32 / 1.25,
+        h_f32 / 1.25,
+        255.0,
+    );
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         let start = Instant::now();
@@ -106,9 +117,21 @@ fn main() -> Result<(), String> {
             height_scale = new_size.height as f32 / BUFFER_HEIGHT as f32;
         }
 
-        let passed_hue = (t * color_step) as u16 % 360_u16;
+        if window.is_key_pressed(Key::Space, minifb::KeyRepeat::No) {
+            spin_light = !spin_light;
+        }
 
-        let color = Color::from_hsv(passed_hue, 1.0, 1.0);
+        if spin_light {
+            let light_angle: f32 = light_spin_t
+                * if window.is_key_down(Key::LeftShift) {
+                    1.5
+                } else {
+                    0.33
+                }
+                + cam_angle_phi;
+            light_dir = Vec3::new(light_angle.sin(), 0.0, light_angle.cos()).normalize();
+            light_spin_t += time_step;
+        }
 
         if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
             let window_size = RectSize::from(window.get_size());
@@ -140,13 +163,13 @@ fn main() -> Result<(), String> {
         render_wavefront_mesh(
             &wavefront_obj,
             &mut draw_buffer,
-            look_dir,
+            light_dir,
             look_dir,
             None,
             window.is_key_down(Key::LeftShift),
             projection,
             view_matrix,
-            viewport_matrix
+            viewport_matrix,
         );
 
         if window.get_mouse_down(minifb::MouseButton::Left) {
