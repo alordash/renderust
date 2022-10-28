@@ -1,6 +1,6 @@
 #![feature(min_specialization)]
 
-use glam::Vec3;
+use glam::{Vec3, Mat4};
 use math::{geometry::{
     primitives::{point::Point2D, polygon::Polygon},
     rect_size::RectSize,
@@ -87,7 +87,7 @@ fn main() -> Result<(), String> {
 
     let mut cam_angle_theta = 0.0;
     let mut cam_angle_phi = 0.0;
-    let mut cam_distance = 10.0;
+    let mut cam_distance = 1.0;
 
     let (mut view_matrix, mut look_dir) =
         create_view_matrix_and_look_dir(from, to, up);
@@ -120,13 +120,16 @@ fn main() -> Result<(), String> {
             // )
             // .normalize();
             // from = light_dir;
-            (view_matrix, look_dir) = create_view_matrix_and_look_dir(from, to, up);
-            look_dir.x = -look_dir.x;
-            look_dir.y = -look_dir.y;
+            (view_matrix, _) = create_view_matrix_and_look_dir(from, to, up);
+            // look_dir.x = -look_dir.x;
+            // look_dir.y = -look_dir.y;
         }
         draw_buffer.get_z_buffer_mut().clean_with(&i32::MIN);
         draw_buffer.clean();
-        // let prev_z_buffer = draw_buffer.get_z_buffer().clone();
+        
+        let mut projection = Mat4::IDENTITY;
+        projection.col_mut(2)[3] = -1.0 / from.distance(to);
+
         render_wavefront_mesh(
             &wavefront_obj,
             &mut draw_buffer,
@@ -134,9 +137,9 @@ fn main() -> Result<(), String> {
             look_dir,
             None,
             window.is_key_down(Key::LeftShift),
+            projection,
             view_matrix,
         );
-        // *draw_buffer.get_z_buffer_mut() = prev_z_buffer;
 
         if window.get_mouse_down(minifb::MouseButton::Left) {
             if !is_mouse_pressed {
@@ -190,7 +193,12 @@ fn main() -> Result<(), String> {
         }
 
         if let Some((scroll_x, scroll_y)) = window.get_scroll_wheel() {
-            polygon_points_z_depth += (scroll_y * 10.0) as i32;
+            if window.is_key_down(Key::LeftShift) {
+                let diff = -scroll_y / 100.0;
+                cam_distance = (cam_distance + diff).max(0.85);
+            } else {
+                polygon_points_z_depth += (scroll_y * 10.0) as i32;
+            }
         }
 
         window
@@ -204,11 +212,12 @@ fn main() -> Result<(), String> {
         let end = Instant::now();
 
         window.set_title(&format!(
-            "{:.1?} FPS, depth: {}, θ: {}, φ: {}",
+            "{:.1?} FPS, depth: {}, θ: {}, φ: {}, r: {}",
             1.0 / (end - start).as_secs_f32(),
             polygon_points_z_depth,
             cam_angle_theta, 
-            cam_angle_phi
+            cam_angle_phi,
+            from.distance(to)
         ));
 
         t += time_step;
