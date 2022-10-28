@@ -52,6 +52,7 @@ pub fn render_wavefront_mesh(
     use_normal_map: bool,
     projection: Mat4,
     model_view_matrix: Mat4,
+    viewport_matrix: Mat4,
 ) {
     let RectSize { width, height } = canvas.get_size();
 
@@ -62,8 +63,10 @@ pub fn render_wavefront_mesh(
         let mut screen_coords = [Point2D::from(0, 0); 3];
 
         for j in 0..3_usize {
-            let vertex4 =
-                projection * Vec4::from((wavefront_obj.vertices[face[0][j] as usize], 1.0));
+            let vertex4 = viewport_matrix
+                * projection
+                * model_view_matrix
+                * Vec4::from((wavefront_obj.vertices[face[0][j] as usize], 1.0));
             let vertex = Vec3::from(vertex4.xyz()) / vertex4.w;
             // let mut vertex4 = Vec4::from((vertex, 1.0));
             // let mut transform_matrix = Mat4::from_diagonal(Vec4::new(1.0, 1.0, 1.0, 1.0));
@@ -71,13 +74,11 @@ pub fn render_wavefront_mesh(
             // vertex4 = transform_matrix * vertex4;
             // vertex = vertex4.xyz() / vertex4[3];
 
-            let x = ((vertex.x + 1.0) * w_f32 / 2.0) as i32;
-            let y = ((vertex.y + 1.0) * h_f32 / 2.0) as i32;
             let uvidx = face[1][j] as usize;
             let uv3d = wavefront_obj.vertex_textures[uvidx];
             screen_coords[j] = Point2D::new_full(
-                [x, y],
-                (1000.0 * vertex.z) as i32,
+                [vertex.x as i32, vertex.y as i32],
+                vertex.z as i32,
                 Vec2::new(uv3d.x, uv3d.y),
                 wavefront_obj.vertex_normals[face[0][j] as usize],
             );

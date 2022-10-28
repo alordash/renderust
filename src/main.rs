@@ -1,10 +1,13 @@
 #![feature(min_specialization)]
 
-use glam::{Vec3, Mat4};
-use math::{geometry::{
-    primitives::{point::Point2D, polygon::Polygon},
-    rect_size::RectSize,
-}, spherical_coordinate_system::spherical_to_cartesian};
+use glam::{Mat4, Vec3};
+use math::{
+    geometry::{
+        primitives::{point::Point2D, polygon::Polygon},
+        rect_size::RectSize,
+    },
+    spherical_coordinate_system::spherical_to_cartesian,
+};
 
 pub mod math;
 pub mod parsing;
@@ -21,7 +24,8 @@ use visual::{
     rendering::{
         polygon::polygon_rasterization::fill_polygon,
         triangle::triangle_rasterization::fill_triangle,
-        view_matrix::create_view_matrix_and_look_dir,
+        view_matrix::create_view_matrix,
+        viewport_matrix::create_view_port_matrix,
         wavefront_obj::wavefront_obj_rendering::{render_wavefront_grid, render_wavefront_mesh},
     },
 };
@@ -89,8 +93,9 @@ fn main() -> Result<(), String> {
     let mut cam_angle_phi = 0.0;
     let mut cam_distance = 1.0;
 
-    let (mut view_matrix, mut look_dir) =
-        create_view_matrix_and_look_dir(from, to, up);
+    let mut view_matrix = create_view_matrix(from, to, up);
+    let (w_f32, h_f32) = (draw_buffer.get_width() as f32, draw_buffer.get_height() as f32);
+    let viewport_matrix = create_view_port_matrix(0.0, 0.0, w_f32, h_f32, 1000.0);
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         let start = Instant::now();
@@ -109,10 +114,12 @@ fn main() -> Result<(), String> {
             let window_size = RectSize::from(window.get_size());
 
             cam_angle_theta = (y / window_size.height as f32) * std::f32::consts::PI;
-            cam_angle_phi = ((x - window_size.width as f32 / 2.0) / window_size.width as f32) * std::f32::consts::PI * 2.0;
+            cam_angle_phi = ((x - window_size.width as f32 / 2.0) / window_size.width as f32)
+                * std::f32::consts::PI
+                * 2.0;
 
             from = spherical_to_cartesian(cam_angle_theta, cam_angle_phi, cam_distance).into();
-            
+
             // light_dir = Vec3::new(
             //     (x - window_size.width as f32 / 2.0),
             //     0.0,
@@ -120,13 +127,13 @@ fn main() -> Result<(), String> {
             // )
             // .normalize();
             // from = light_dir;
-            (view_matrix, _) = create_view_matrix_and_look_dir(from, to, up);
+            view_matrix = create_view_matrix(from, to, up);
             // look_dir.x = -look_dir.x;
             // look_dir.y = -look_dir.y;
         }
         draw_buffer.get_z_buffer_mut().clean_with(&i32::MIN);
         draw_buffer.clean();
-        
+
         let mut projection = Mat4::IDENTITY;
         projection.col_mut(2)[3] = -1.0 / from.distance(to);
 
@@ -139,6 +146,7 @@ fn main() -> Result<(), String> {
             window.is_key_down(Key::LeftShift),
             projection,
             view_matrix,
+            viewport_matrix
         );
 
         if window.get_mouse_down(minifb::MouseButton::Left) {
@@ -215,7 +223,7 @@ fn main() -> Result<(), String> {
             "{:.1?} FPS, depth: {}, θ: {}, φ: {}, r: {}",
             1.0 / (end - start).as_secs_f32(),
             polygon_points_z_depth,
-            cam_angle_theta, 
+            cam_angle_theta,
             cam_angle_phi,
             from.distance(to)
         ));

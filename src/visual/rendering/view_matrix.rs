@@ -1,6 +1,6 @@
 use glam::{Mat4, Vec3};
 
-pub fn create_view_matrix_and_look_dir(from: Vec3, to: Vec3, up: Vec3) -> (Mat4, Vec3) {
+pub fn create_view_matrix(from: Vec3, to: Vec3, up: Vec3) -> Mat4 {
     let z = (from - to).normalize();
     let x = up.cross(z).normalize();
     let y = z.cross(x).normalize();
@@ -14,5 +14,5 @@ pub fn create_view_matrix_and_look_dir(from: Vec3, to: Vec3, up: Vec3) -> (Mat4,
         tr.col_mut(i)[3] = -to[i];
     }
 
-    (m_inv * tr, z)
+    m_inv * tr
 }
