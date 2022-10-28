@@ -1,10 +1,10 @@
 #![feature(min_specialization)]
 
 use glam::Vec3;
-use math::geometry::{
+use math::{geometry::{
     primitives::{point::Point2D, polygon::Polygon},
     rect_size::RectSize,
-};
+}, spherical_coordinate_system::spherical_to_cartesian};
 
 pub mod math;
 pub mod parsing;
@@ -21,6 +21,7 @@ use visual::{
     rendering::{
         polygon::polygon_rasterization::fill_polygon,
         triangle::triangle_rasterization::fill_triangle,
+        view_matrix::create_view_matrix_and_look_dir,
         wavefront_obj::wavefront_obj_rendering::{render_wavefront_grid, render_wavefront_mesh},
     },
 };
@@ -80,6 +81,17 @@ fn main() -> Result<(), String> {
 
     let mut points: Vec<Point2D> = Vec::new();
 
+    let mut from = Vec3::new(0.0, 0.0, 1.0);
+    let to = Vec3::new(0.0, 0.0, 0.0);
+    let up = Vec3::Y;
+
+    let mut cam_angle_theta = 0.0;
+    let mut cam_angle_phi = 0.0;
+    let mut cam_distance = 10.0;
+
+    let (mut view_matrix, mut look_dir) =
+        create_view_matrix_and_look_dir(from, to, up);
+
     while window.is_open() && !window.is_key_down(Key::Escape) {
         let start = Instant::now();
 
@@ -95,12 +107,22 @@ fn main() -> Result<(), String> {
 
         if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
             let window_size = RectSize::from(window.get_size());
-            light_dir = Vec3::new(
-                (x - window_size.width as f32 / 2.0),
-                0.0,
-                (y - window_size.height as f32 / 2.0),
-            )
-            .normalize();
+
+            cam_angle_theta = (y / window_size.height as f32) * std::f32::consts::PI;
+            cam_angle_phi = ((x - window_size.width as f32 / 2.0) / window_size.width as f32) * std::f32::consts::PI * 2.0;
+
+            from = spherical_to_cartesian(cam_angle_theta, cam_angle_phi, cam_distance).into();
+            
+            // light_dir = Vec3::new(
+            //     (x - window_size.width as f32 / 2.0),
+            //     0.0,
+            //     (y - window_size.height as f32 / 2.0),
+            // )
+            // .normalize();
+            // from = light_dir;
+            (view_matrix, look_dir) = create_view_matrix_and_look_dir(from, to, up);
+            look_dir.x = -look_dir.x;
+            look_dir.y = -look_dir.y;
         }
         draw_buffer.get_z_buffer_mut().clean_with(&i32::MIN);
         draw_buffer.clean();
@@ -108,11 +130,11 @@ fn main() -> Result<(), String> {
         render_wavefront_mesh(
             &wavefront_obj,
             &mut draw_buffer,
-            light_dir,
+            look_dir,
             look_dir,
             None,
             window.is_key_down(Key::LeftShift),
-            (polygon_points_z_depth.abs() as f32 / 1000.0).max(0.679)
+            view_matrix,
         );
         // *draw_buffer.get_z_buffer_mut() = prev_z_buffer;
 
@@ -182,9 +204,11 @@ fn main() -> Result<(), String> {
         let end = Instant::now();
 
         window.set_title(&format!(
-            "{:.1?} FPS, depth: {}",
+            "{:.1?} FPS, depth: {}, θ: {}, φ: {}",
             1.0 / (end - start).as_secs_f32(),
-            polygon_points_z_depth
+            polygon_points_z_depth,
+            cam_angle_theta, 
+            cam_angle_phi
         ));
 
         t += time_step;

@@ -13,3 +13,4 @@ pub mod triangle {
     pub mod triangle_rasterization;
 }
 pub mod interpolation_values;
+pub mod view_matrix;

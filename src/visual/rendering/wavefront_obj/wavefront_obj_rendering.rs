@@ -1,4 +1,4 @@
-use glam::{Mat4, Vec2, Vec3, Vec4, Vec4Swizzles};
+use glam::{Mat3, Mat4, Vec2, Vec3, Vec4, Vec4Swizzles};
 
 use crate::{
     math::geometry::{
@@ -50,7 +50,7 @@ pub fn render_wavefront_mesh(
     look_dir: Vec3,
     color: Option<&Color>,
     use_normal_map: bool,
-    camera_z_pos: f32,
+    view_matrix: Mat4,
 ) {
     let RectSize { width, height } = canvas.get_size();
 
@@ -61,12 +61,13 @@ pub fn render_wavefront_mesh(
         let mut screen_coords = [Point2D::from(0, 0); 3];
 
         for j in 0..3_usize {
-            let mut vertex = wavefront_obj.vertices[face[0][j] as usize];
-            let mut vertex4 = Vec4::from((vertex, 1.0));
-            let mut transform_matrix = Mat4::from_diagonal(Vec4::new(1.0, 1.0, 1.0, 1.0));
-            transform_matrix.col_mut(2)[3] = -1.0 / camera_z_pos;
-            vertex4 = transform_matrix * vertex4;
-            vertex = vertex4.xyz() / vertex4[3];
+            let vertex =
+                view_matrix * Vec4::from((wavefront_obj.vertices[face[0][j] as usize], 1.0));
+            // let mut vertex4 = Vec4::from((vertex, 1.0));
+            // let mut transform_matrix = Mat4::from_diagonal(Vec4::new(1.0, 1.0, 1.0, 1.0));
+            // transform_matrix.col_mut(2)[3] = -1.0 / camera_z_pos;
+            // vertex4 = transform_matrix * vertex4;
+            // vertex = vertex4.xyz() / vertex4[3];
 
             let x = ((vertex.x + 1.5) * w_f32 / 3.0).clamp(0.0, w_f32) as i32;
             let y = ((vertex.y + 1.5) * h_f32 / 3.0).clamp(0.0, h_f32) as i32;
