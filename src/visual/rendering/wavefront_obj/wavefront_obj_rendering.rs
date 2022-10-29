@@ -61,6 +61,7 @@ pub fn render_wavefront_mesh(
         let face = &wavefront_obj.faces[i];
         let mut screen_coords = [Point2D::from(0, 0); 3];
 
+        let mut skip = false;
         for j in 0..3_usize {
             let source_vertex = wavefront_obj.vertices[face[0][j] as usize];
             let vertex4 = transform_matrix * Vec4::from((source_vertex, 1.0));
@@ -79,6 +80,16 @@ pub fn render_wavefront_mesh(
                 Vec2::new(uv3d.x, uv3d.y),
                 normal,
             );
+            if !canvas.get_z_buffer().contains(
+                screen_coords[j].coords.x as usize,
+                screen_coords[j].coords.y as usize,
+            ) {
+                skip = true;
+                break;
+            }
+        }
+        if skip {
+            continue;
         }
 
         let triangle = Triangle::new(screen_coords);
