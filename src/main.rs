@@ -129,7 +129,7 @@ fn main() -> Result<(), String> {
             spin_light = !spin_light;
         }
 
-        let light_angle: f32 = light_spin_t + cam_angle_phi;
+        let light_angle: f32 = light_spin_t;
         light_dir = Vec3::new(light_angle.sin(), 0.0, light_angle.cos()).normalize();
 
         if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
