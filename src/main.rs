@@ -29,7 +29,7 @@ use visual::{
         wavefront_obj::wavefront_obj_rendering::{render_wavefront_grid, render_wavefront_mesh},
     },
 };
-use wavefront::wavefront_obj::WavefrontObj;
+use wavefront::{wavefront_obj::WavefrontObj, wavefront_obj_sources::WaveFrontObjSource};
 
 const BUFFER_WIDTH: usize = 1000;
 const BUFFER_HEIGHT: usize = 1000;
@@ -37,9 +37,17 @@ const BUFFER_HEIGHT: usize = 1000;
 const WINDOW_WIDTH: usize = 1000;
 const WINDOW_HEIGHT: usize = 1000;
 
-const WAVEFRONT_SOURCE_PATH: &'static str = "./resources/african_head.obj";
-const TEXTURE_SOURCE_PATH: &'static str = "./resources/african_head_diffuse.tga";
-const NORMAL_MAP_SOURCE_PATH: &'static str = "./resources/african_head_nm_tangent.tga";
+const AFRO_MODEL: WaveFrontObjSource = WaveFrontObjSource::new(
+    "./resources/african_head.obj",
+    "./resources/african_head_diffuse.tga",
+    "./resources/african_head_nm_tangent.tga",
+);
+
+const FLOOR_MODEL: WaveFrontObjSource = WaveFrontObjSource::new(
+    "./resources/floor.obj",
+    "./resources/floor_diffuse.tga",
+    "./resources/floor_nm_tangent.tga",
+);
 
 const POLYGON_SIZE: usize = 3;
 
@@ -72,15 +80,8 @@ fn main() -> Result<(), String> {
 
     let mut polygon_points_z_depth = 5000i32;
 
-    let wavefront_obj_file = File::open(WAVEFRONT_SOURCE_PATH)
-        .map_err(|e| format!("Error opening model file: {:?}", e))?;
-    let texture_file = File::open(TEXTURE_SOURCE_PATH)
-        .map_err(|e| format!("Error opening texture file: {:?}", e))?;
-    let normal_map_file = File::open(NORMAL_MAP_SOURCE_PATH)
-        .map_err(|e| format!("Error opening normal map file: {:?}", e))?;
-    let wavefront_obj =
-        WavefrontObj::from_file(&wavefront_obj_file, &texture_file, &normal_map_file)
-            .map_err(|e| format!("Error parsing file: {:?}", e))?;
+    let afro_obj = WavefrontObj::from_sources_struct(&AFRO_MODEL)?;
+    let floor_obj = WavefrontObj::from_sources_struct(&FLOOR_MODEL)?;
 
     let mut points: Vec<Point2D> = Vec::new();
 
@@ -123,7 +124,7 @@ fn main() -> Result<(), String> {
 
         let light_angle: f32 = light_spin_t + cam_angle_phi;
         light_dir = Vec3::new(light_angle.sin(), 0.0, light_angle.cos()).normalize();
-        
+
         if spin_light {
             light_spin_t += if window.is_key_down(Key::LeftShift) {
                 1.0
@@ -159,8 +160,21 @@ fn main() -> Result<(), String> {
         let mut projection = Mat4::IDENTITY;
         projection.col_mut(2)[3] = -1.0 / from.distance(to);
 
+
         render_wavefront_mesh(
-            &wavefront_obj,
+            &floor_obj,
+            &mut draw_buffer,
+            light_dir,
+            look_dir,
+            None,
+            window.is_key_down(Key::LeftShift),
+            projection,
+            view_matrix,
+            viewport_matrix,
+        );
+
+        render_wavefront_mesh(
+            &afro_obj,
             &mut draw_buffer,
             light_dir,
             look_dir,
@@ -209,7 +223,7 @@ fn main() -> Result<(), String> {
             fill_triangle(
                 &polygon,
                 &mut draw_buffer,
-                &wavefront_obj.texture,
+                &afro_obj.texture,
                 None,
                 light_dir,
                 look_dir,

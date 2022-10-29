@@ -1,12 +1,16 @@
 use std::{
     fs::File,
     io::{BufRead, BufReader},
+    path::Path,
 };
 
 use glam::{UVec3, Vec3};
 use image::{DynamicImage, GenericImage};
 
-use crate::{plane_buffer::plane_buffer::PlaneBuffer, wavefront::wavefront_obj::WavefrontObj};
+use crate::{
+    plane_buffer::plane_buffer::PlaneBuffer,
+    wavefront::{wavefront_obj::WavefrontObj, wavefront_obj_sources::WaveFrontObjSource},
+};
 
 use super::{
     math_vec_parsing::str_parse_vec3, wavefront_obj_faces_parsing::str_parse_wavefront_faces,
@@ -100,5 +104,30 @@ impl WavefrontObj {
         }
 
         Ok(wavefront_obj)
+    }
+
+    pub fn from_paths(
+        model_source_path: &Path,
+        texture_source_path: &Path,
+        normal_map_source_path: &Path,
+    ) -> Result<WavefrontObj, String> {
+        let wavefront_obj_file = File::open(model_source_path)
+            .map_err(|e| format!("Error opening model file: {:?}", e))?;
+        let texture_file = File::open(texture_source_path)
+            .map_err(|e| format!("Error opening texture file: {:?}", e))?;
+        let normal_map_file = File::open(normal_map_source_path)
+            .map_err(|e| format!("Error opening normal map file: {:?}", e))?;
+        WavefrontObj::from_file(&wavefront_obj_file, &texture_file, &normal_map_file)
+            .map_err(|e| format!("Error parsing file: {:?}", e))
+    }
+
+    pub fn from_sources_struct(
+        wavefront_obj_source: &WaveFrontObjSource,
+    ) -> Result<WavefrontObj, String> {
+        WavefrontObj::from_paths(
+            wavefront_obj_source.model_path.as_ref(),
+            wavefront_obj_source.texture_path.as_ref(),
+            wavefront_obj_source.normal_map_path.as_ref(),
+        )
     }
 }

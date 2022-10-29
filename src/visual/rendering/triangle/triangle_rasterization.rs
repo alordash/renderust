@@ -116,20 +116,24 @@ pub fn fill_triangle(
                 }
 
                 let (uvx, uvy) = (
-                    (uv.x * texture_width as f32) as u32,
-                    (uv.y * texture_height as f32) as u32,
+                    ((uv.x * texture_width as f32) as u32).min(texture_width - 1),
+                    ((uv.y * texture_height as f32) as u32).min(texture_height - 1),
                 );
 
                 if let Some(normal_map) = maybe_normal_map {
+                    let (nm_width, nm_height) = (
+                        normal_map.get_width() as u32,
+                        normal_map.get_height() as u32,
+                    );
                     let (nuvx, nuvy) = (
-                        (uv.x * normal_map.get_width() as f32) as u32,
-                        (uv.y * normal_map.get_height() as f32) as u32,
+                        ((uv.x * nm_width as f32) as u32).min(nm_width - 1),
+                        ((uv.y * nm_height as f32) as u32).min(nm_height - 1),
                     );
 
                     let mut AI = A.transpose();
                     *AI.col_mut(2) = normal;
                     AI = AI.inverse();
-                    
+
                     let i = AI * I;
                     let j = AI * J;
 
