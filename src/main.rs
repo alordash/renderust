@@ -49,6 +49,12 @@ const FLOOR_MODEL: WaveFrontObjSource = WaveFrontObjSource::new(
     "./resources/floor_nm_tangent.tga",
 );
 
+const DIABLO_MODEL: WaveFrontObjSource = WaveFrontObjSource::new(
+    "./resources/diablo3_pose.obj",
+    "./resources/diablo3_pose_diffuse.tga",
+    "./resources/diablo3_pose_nm_tangent.tga",
+);
+
 const POLYGON_SIZE: usize = 3;
 
 fn main() -> Result<(), String> {
@@ -82,6 +88,7 @@ fn main() -> Result<(), String> {
 
     let afro_obj = WavefrontObj::from_sources_struct(&AFRO_MODEL)?;
     let floor_obj = WavefrontObj::from_sources_struct(&FLOOR_MODEL)?;
+    let diablo_obj = WavefrontObj::from_sources_struct(&DIABLO_MODEL)?;
 
     let mut points: Vec<Point2D> = Vec::new();
 
@@ -161,20 +168,20 @@ fn main() -> Result<(), String> {
         projection.col_mut(2)[3] = -1.0 / from.distance(to);
 
 
-        render_wavefront_mesh(
-            &floor_obj,
-            &mut draw_buffer,
-            light_dir,
-            look_dir,
-            None,
-            window.is_key_down(Key::LeftShift),
-            projection,
-            view_matrix,
-            viewport_matrix,
-        );
+        // render_wavefront_mesh(
+        //     &floor_obj,
+        //     &mut draw_buffer,
+        //     light_dir,
+        //     look_dir,
+        //     None,
+        //     window.is_key_down(Key::LeftShift),
+        //     projection,
+        //     view_matrix,
+        //     viewport_matrix,
+        // );
 
         render_wavefront_mesh(
-            &afro_obj,
+            &diablo_obj,
             &mut draw_buffer,
             light_dir,
             look_dir,
