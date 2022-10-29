@@ -121,16 +121,15 @@ fn main() -> Result<(), String> {
             spin_light = !spin_light;
         }
 
+        let light_angle: f32 = light_spin_t + cam_angle_phi;
+        light_dir = Vec3::new(light_angle.sin(), 0.0, light_angle.cos()).normalize();
+        
         if spin_light {
-            let light_angle: f32 = light_spin_t
-                * if window.is_key_down(Key::LeftShift) {
-                    1.5
-                } else {
-                    0.33
-                }
-                + cam_angle_phi;
-            light_dir = Vec3::new(light_angle.sin(), 0.0, light_angle.cos()).normalize();
-            light_spin_t += time_step;
+            light_spin_t += if window.is_key_down(Key::LeftShift) {
+                1.0
+            } else {
+                0.5
+            } * time_step;
         }
 
         if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
