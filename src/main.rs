@@ -141,36 +141,14 @@ fn main() -> Result<(), String> {
                 * 2.0;
 
             from = spherical_to_cartesian_yzx(cam_angle_theta, cam_angle_phi, cam_distance).into();
-
-            // light_dir = Vec3::new(
-            //     (x - window_size.width as f32 / 2.0),
-            //     0.0,
-            //     (y - window_size.height as f32 / 2.0),
-            // )
-            // .normalize();
-            // from = light_dir;
+            
             view_matrix = create_view_matrix(from, to, up);
-            // look_dir.x = -look_dir.x;
-            // look_dir.y = -look_dir.y;
         }
         draw_buffer.get_z_buffer_mut().clean_with(&i32::MIN);
         draw_buffer.clean();
 
         let mut projection = Mat4::IDENTITY;
         projection.col_mut(2)[3] = -1.0 / from.distance(to);
-
-
-        // render_wavefront_mesh(
-        //     &floor_obj,
-        //     &mut draw_buffer,
-        //     light_dir,
-        //     look_dir,
-        //     None,
-        //     window.is_key_down(Key::LeftShift),
-        //     projection,
-        //     view_matrix,
-        //     viewport_matrix,
-        // );
 
         render_wavefront_mesh(
             &diablo_obj,
@@ -209,15 +187,6 @@ fn main() -> Result<(), String> {
             *points[2].get_color_mut() = Some(Color::from_rgb(0, 0, 255));
             let polygon = Polygon::<POLYGON_SIZE>::try_from(points.clone()).unwrap();
             points = points.into_iter().skip(POLYGON_SIZE).collect();
-            // fill_polygon(
-            //     &polygon,
-            //     &mut draw_buffer,
-            //     &wavefront_obj.texture,
-            //     None,
-            //     Vec3::new(1.0, 0.0, 0.0),
-            //     look_dir,
-            //     None,
-            // );
 
             fill_triangle(
                 &polygon,
