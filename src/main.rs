@@ -132,14 +132,6 @@ fn main() -> Result<(), String> {
         let light_angle: f32 = light_spin_t + cam_angle_phi;
         light_dir = Vec3::new(light_angle.sin(), 0.0, light_angle.cos()).normalize();
 
-        if spin_light {
-            light_spin_t += if window.is_key_down(Key::LeftShift) {
-                1.0
-            } else {
-                0.5
-            } * time_step;
-        }
-
         if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
             let window_size = RectSize::from(window.get_size());
 
@@ -261,17 +253,21 @@ fn main() -> Result<(), String> {
             .unwrap();
 
         let end = Instant::now();
+        let elapsed = (end - start).as_secs_f32();
 
         window.set_title(&format!(
             "{:.1?} FPS, depth: {}, θ: {}, φ: {}, r: {}",
-            1.0 / (end - start).as_secs_f32(),
+            1.0 / elapsed,
             polygon_points_z_depth,
             cam_angle_theta,
             cam_angle_phi,
             from.distance(to)
         ));
 
-        t += time_step;
+        t += elapsed;
+        if spin_light {
+            light_spin_t += elapsed;
+        }
     }
 
     Ok(())
