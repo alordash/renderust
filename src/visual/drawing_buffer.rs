@@ -4,7 +4,7 @@ use crate::plane_buffer::plane_buffer::{PlaneBuffer, PlaneBufferCreateOption};
 
 use super::color::color::Color;
 
-pub struct DrawingBuffer(PlaneBuffer<Color>, PlaneBuffer<i32>);
+pub struct DrawingBuffer(PlaneBuffer<Color>, PlaneBuffer<f32>);
 
 impl Deref for DrawingBuffer {
     type Target = PlaneBuffer<Color>;
@@ -27,15 +27,15 @@ impl DrawingBuffer {
     ) -> DrawingBuffer {
         DrawingBuffer(
             PlaneBuffer::new(width, height, create_option),
-            PlaneBuffer::new(width, height, PlaneBufferCreateOption::Fill(|_| i32::MIN)),
+            PlaneBuffer::new(width, height, PlaneBufferCreateOption::Fill(|_| f32::MIN)),
         )
     }
 
-    pub fn get_z_buffer(&self) -> &PlaneBuffer<i32> {
+    pub fn get_z_buffer(&self) -> &PlaneBuffer<f32> {
         &self.1
     }
 
-    pub fn get_z_buffer_mut(&mut self) -> &mut PlaneBuffer<i32> {
+    pub fn get_z_buffer_mut(&mut self) -> &mut PlaneBuffer<f32> {
         &mut self.1
     }
 }

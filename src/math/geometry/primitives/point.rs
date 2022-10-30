@@ -5,7 +5,7 @@ use glam::{Vec2, Vec3A, IVec2};
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 pub struct Point2D {
     pub coords: IVec2,
-    z_depth: i32,
+    z_depth: f32,
     uv: Vec2,
     normal: Vec3A,
 }
@@ -18,7 +18,7 @@ impl Point2D {
         }
     }
 
-    pub fn new_full(coords: [i32; 2], z_depth: i32, uv: Vec2, normal: Vec3A) -> Point2D {
+    pub fn new_full(coords: [i32; 2], z_depth: f32, uv: Vec2, normal: Vec3A) -> Point2D {
         Point2D {
             coords: IVec2::from_array(coords),
             z_depth,
@@ -31,7 +31,7 @@ impl Point2D {
         Point2D::new([x, y])
     }
 
-    pub fn get_z_depth(&self) -> &i32 {
+    pub fn get_z_depth(&self) -> &f32 {
         &self.z_depth
     }
 
@@ -43,7 +43,7 @@ impl Point2D {
         &self.normal
     }
 
-    pub fn get_z_depth_mut(&mut self) -> &mut i32 {
+    pub fn get_z_depth_mut(&mut self) -> &mut f32 {
         &mut self.z_depth
     }
 

@@ -8,7 +8,7 @@ use crate::{
 #[derive(Clone, Copy)]
 pub struct InterpolationValues {
     pub y: i32,
-    pub z_depth: i32,
+    pub z_depth: f32,
     pub uv: Vec2,
     pub normal: Vec3A,
 }
@@ -32,7 +32,7 @@ derive_mul_by!(
     y,
     i32,
     z_depth,
-    i32,
+    f32,
     uv,
     f32,
     normal,
@@ -44,7 +44,7 @@ derive_div_by!(
     y,
     i32,
     z_depth,
-    i32,
+    f32,
     uv,
     f32,
     normal,

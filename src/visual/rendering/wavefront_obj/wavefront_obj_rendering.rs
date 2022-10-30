@@ -75,7 +75,7 @@ pub fn render_wavefront_mesh(
             let uv3d = wavefront_obj.vertex_textures[uvidx];
             screen_coords[j] = Point2D::new_full(
                 [vertex.x as i32, vertex.y as i32],
-                vertex.z as i32,
+                vertex.z,
                 Vec2::new(uv3d.x, uv3d.y),
                 normal.into(),
             );

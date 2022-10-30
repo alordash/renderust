@@ -123,7 +123,7 @@ fn main() -> Result<(), String> {
         let mut projection = Mat4::IDENTITY;
         projection.col_mut(2)[3] = -1.0 / from.distance(to);
 
-        draw_buffer.get_z_buffer_mut().clean_with(&i32::MIN);
+        draw_buffer.get_z_buffer_mut().clean_with(&f32::MIN);
         draw_buffer.clean();
 
         render_wavefront_mesh(
