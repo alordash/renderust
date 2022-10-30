@@ -1,13 +1,13 @@
 use std::ops::{Deref, DerefMut};
 
-use glam::{Vec2, Vec3, IVec2};
+use glam::{Vec2, Vec3A, IVec2};
 
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 pub struct Point2D {
     pub coords: IVec2,
     z_depth: i32,
     uv: Vec2,
-    normal: Vec3,
+    normal: Vec3A,
 }
 
 impl Point2D {
@@ -18,7 +18,7 @@ impl Point2D {
         }
     }
 
-    pub fn new_full(coords: [i32; 2], z_depth: i32, uv: Vec2, normal: Vec3) -> Point2D {
+    pub fn new_full(coords: [i32; 2], z_depth: i32, uv: Vec2, normal: Vec3A) -> Point2D {
         Point2D {
             coords: IVec2::from_array(coords),
             z_depth,
@@ -39,7 +39,7 @@ impl Point2D {
         &self.uv
     }
 
-    pub fn get_normal(&self) -> &Vec3 {
+    pub fn get_normal(&self) -> &Vec3A {
         &self.normal
     }
 
@@ -51,7 +51,7 @@ impl Point2D {
         &mut self.uv
     }
 
-    pub fn get_normal_mut(&mut self) -> &mut Vec3 {
+    pub fn get_normal_mut(&mut self) -> &mut Vec3A {
         &mut self.normal
     }
 }

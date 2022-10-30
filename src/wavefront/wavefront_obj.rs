@@ -1,13 +1,13 @@
-use glam::{UVec3, Vec3};
+use glam::{UVec3, Vec3A};
 use image::DynamicImage;
 
 use crate::plane_buffer::plane_buffer::PlaneBuffer;
 
 pub struct WavefrontObj {
-    pub vertices: Vec<Vec3>,
-    pub vertex_textures: Vec<Vec3>,
-    pub vertex_normals: Vec<Vec3>,
+    pub vertices: Vec<Vec3A>,
+    pub vertex_textures: Vec<Vec3A>,
+    pub vertex_normals: Vec<Vec3A>,
     pub faces: Vec<Vec<UVec3>>,
     pub texture: DynamicImage,
-    pub normal_map: PlaneBuffer<Vec3>,
+    pub normal_map: PlaneBuffer<Vec3A>,
 }

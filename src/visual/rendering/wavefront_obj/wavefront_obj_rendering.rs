@@ -1,4 +1,4 @@
-use glam::{Mat4, Vec2, Vec3, Vec4, Vec4Swizzles};
+use glam::{Mat4, Vec2, Vec3A, Vec4, Vec4Swizzles};
 
 use crate::{
     math::geometry::{
@@ -45,8 +45,8 @@ pub fn render_wavefront_grid(
 pub fn render_wavefront_mesh(
     wavefront_obj: &WavefrontObj,
     canvas: &mut DrawingBuffer,
-    light_dir: Vec3,
-    look_dir: Vec3,
+    light_dir: Vec3A,
+    look_dir: Vec3A,
     projection: Mat4,
     model_view_matrix: Mat4,
     viewport_matrix: Mat4,
@@ -75,7 +75,7 @@ pub fn render_wavefront_mesh(
                 [vertex.x as i32, vertex.y as i32],
                 vertex.z as i32,
                 Vec2::new(uv3d.x, uv3d.y),
-                normal,
+                normal.into(),
             );
             if !canvas.get_z_buffer().contains(
                 screen_coords[j].coords.x as usize,

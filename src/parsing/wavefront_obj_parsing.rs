@@ -4,7 +4,7 @@ use std::{
     path::Path,
 };
 
-use glam::{UVec3, Vec3};
+use glam::{UVec3, Vec3A};
 use image::{DynamicImage, GenericImage};
 
 use crate::{
@@ -18,15 +18,15 @@ use super::{
 
 const LINE_ENDINGS: [&'static str; 2] = ["\r\n", "\n"];
 
-fn normal_map_vecs_from_rgb(normal_map_img: DynamicImage) -> PlaneBuffer<Vec3> {
-    let normals: Vec<Vec3> = normal_map_img
+fn normal_map_vecs_from_rgb(normal_map_img: DynamicImage) -> PlaneBuffer<Vec3A> {
+    let normals: Vec<Vec3A> = normal_map_img
         .to_rgb()
         .iter()
         .map(|c| (*c as f32 / 255.0) * 2.0 - 1.0)
         .collect::<Vec<f32>>()
         .chunks_exact(3)
-        .map(Vec3::from_slice)
-        .map(Vec3::normalize)
+        .map(Vec3A::from_slice)
+        .map(Vec3A::normalize)
         .collect();
 
     PlaneBuffer::new(

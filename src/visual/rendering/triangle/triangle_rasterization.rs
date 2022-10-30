@@ -1,4 +1,4 @@
-use glam::{Mat3, Vec3};
+use glam::{Mat3A, Vec3A};
 use image::{DynamicImage, GenericImage};
 
 use crate::{
@@ -14,9 +14,9 @@ pub fn fill_triangle(
     polygon: &Polygon<3>,
     canvas: &mut DrawingBuffer,
     texture: &DynamicImage,
-    normal_map: &PlaneBuffer<Vec3>,
-    light_dir: Vec3,
-    look_dir: Vec3,
+    normal_map: &PlaneBuffer<Vec3A>,
+    light_dir: Vec3A,
+    look_dir: Vec3A,
 ) {
     let points = polygon.get_points();
     let mut points_sorted_by_x = points.clone();
@@ -50,22 +50,22 @@ pub fn fill_triangle(
 
     let d_long_v = r_v - l_v;
 
-    let A = Mat3::from_cols(
-        Vec3::from((
+    let A = Mat3A::from_cols(
+        Vec3A::from((
             (m_p.coords - l_p.coords).as_vec2(),
             (m_p.get_z_depth() - l_p.get_z_depth()) as f32,
         )),
-        Vec3::from((
+        Vec3A::from((
             (r_p.coords - l_p.coords).as_vec2(),
             (r_p.get_z_depth() - l_p.get_z_depth()) as f32,
         )),
-        Vec3::ZERO,
+        Vec3A::ZERO,
     );
 
     let (l_uv, m_uv, r_uv) = (*l_p.get_uv(), *m_p.get_uv(), *r_p.get_uv());
 
-    let I = Vec3::new(m_uv.x - l_uv.x, r_uv.x - l_uv.x, 0.0);
-    let J = Vec3::new(m_uv.y - l_uv.y, r_uv.y - l_uv.y, 0.0);
+    let I = Vec3A::new(m_uv.x - l_uv.x, r_uv.x - l_uv.x, 0.0);
+    let J = Vec3A::new(m_uv.y - l_uv.y, r_uv.y - l_uv.y, 0.0);
 
     let mut filler = |short_calc: Interpolator<i32>,
                       v_start: InterpolationValues,
@@ -122,7 +122,7 @@ pub fn fill_triangle(
                 let i = AI * I;
                 let j = AI * J;
 
-                let B = Mat3::from_cols(i.normalize(), j.normalize(), normal);
+                let B = Mat3A::from_cols(i.normalize(), j.normalize(), normal);
 
                 let nm = normal_map[(nuvx as usize, nuvy as usize)];
                 normal = (B * nm).normalize();

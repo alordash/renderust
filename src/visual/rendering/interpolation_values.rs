@@ -1,4 +1,4 @@
-use glam::{Vec2, Vec3};
+use glam::{Vec2, Vec3A};
 
 use crate::{
     derive_div_by, derive_mul_by, derive_self_add, derive_self_sub,
@@ -10,7 +10,7 @@ pub struct InterpolationValues {
     pub y: i32,
     pub z_depth: i32,
     pub uv: Vec2,
-    pub normal: Vec3,
+    pub normal: Vec3A,
 }
 
 impl From<Point2D> for InterpolationValues {
