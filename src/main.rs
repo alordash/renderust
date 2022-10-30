@@ -63,7 +63,6 @@ fn main() -> Result<(), String> {
     )
     .expect("Unable to open Window");
 
-    let mut light_dir = Vec3::new(0.0, 0.0, 1.0).normalize();
     let look_dir = Vec3::new(0.0, 0.0, 1.0).normalize();
 
     let afro_obj = WavefrontObj::from_sources_struct(&AFRO_MODEL)?;
@@ -101,7 +100,7 @@ fn main() -> Result<(), String> {
             spin_light = !spin_light;
         }
 
-        light_dir = Vec3::new(light_spin_t.sin(), 0.0, light_spin_t.cos()).normalize();
+        let light_dir = Vec3::new(light_spin_t.sin(), 0.0, light_spin_t.cos()).normalize();
 
         if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Pass) {
             cam_angle_theta = (y / WINDOW_HEIGHT as f32) * std::f32::consts::PI;
