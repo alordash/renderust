@@ -115,7 +115,7 @@ fn main() -> Result<(), String> {
             ambient_occlusion = !ambient_occlusion;
         }
 
-        let light_dir = Vec3A::new(light_spin_t.sin(), 0.0, light_spin_t.cos());
+        let light_dir = Vec3A::new(light_spin_t.sin(), 1.0, light_spin_t.cos()).normalize();
 
         if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Pass) {
             cam_angle_theta = (y / WINDOW_HEIGHT as f32) * std::f32::consts::PI;
