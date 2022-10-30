@@ -147,7 +147,7 @@ fn main() -> Result<(), String> {
         );
 
         if ambient_occlusion {
-            render_ambient_occlusion(&mut draw_buffer, Z_BUFFER_SIZE);
+            render_ambient_occlusion(&mut draw_buffer, Z_BUFFER_SIZE, 10.0);
         }
 
         if let Some((_, scroll_y)) = window.get_scroll_wheel() {
