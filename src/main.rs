@@ -132,16 +132,14 @@ fn main() -> Result<(), String> {
         let light_angle: f32 = light_spin_t;
         light_dir = Vec3::new(light_angle.sin(), 0.0, light_angle.cos()).normalize();
 
-        if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Clamp) {
-            let window_size = RectSize::from(window.get_size());
-
-            cam_angle_theta = ((y / window_size.height as f32) * std::f32::consts::PI).max(0.00001);
-            cam_angle_phi = ((x - window_size.width as f32 / 2.0) / window_size.width as f32)
+        if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Pass) {
+            cam_angle_theta = ((y / WINDOW_HEIGHT as f32) * std::f32::consts::PI);
+            cam_angle_phi = ((x - WINDOW_WIDTH as f32 / 2.0) / WINDOW_WIDTH as f32)
                 * std::f32::consts::PI
                 * 2.0;
 
             from = spherical_to_cartesian_yzx(cam_angle_theta, cam_angle_phi, cam_distance).into();
-            
+
             view_matrix = create_view_matrix(from, to, up);
         }
         draw_buffer.get_z_buffer_mut().clean_with(&i32::MIN);
