@@ -16,7 +16,7 @@ pub fn fill_triangle(
     texture: &DynamicImage,
     normal_map: &PlaneBuffer<Vec3A>,
     light_dir: Vec3A,
-    look_dir: Vec3A,
+    use_normal_map: bool,
 ) {
     let points = polygon.get_points();
     let mut points_sorted_by_x = points.clone();
@@ -110,32 +110,41 @@ pub fn fill_triangle(
                     ((uv.x * texture_width as f32) as u32).min(texture_width - 1),
                     ((uv.y * texture_height as f32) as u32).min(texture_height - 1),
                 );
-                let (nuvx, nuvy) = (
-                    ((uv.x * nm_width as f32) as u32).min(nm_width - 1),
-                    ((uv.y * nm_height as f32) as u32).min(nm_height - 1),
-                );
 
-                let mut AI = A.transpose();
-                *AI.col_mut(2) = normal;
-                AI = AI.inverse();
+                if use_normal_map {
+                    let (nuvx, nuvy) = (
+                        ((uv.x * nm_width as f32) as u32).min(nm_width - 1),
+                        ((uv.y * nm_height as f32) as u32).min(nm_height - 1),
+                    );
 
-                let i = AI * I;
-                let j = AI * J;
+                    let mut AI = A.transpose();
+                    *AI.col_mut(2) = normal;
+                    AI = AI.inverse();
 
-                let B = Mat3A::from_cols(i.normalize(), j.normalize(), normal);
+                    let i = AI * I;
+                    let j = AI * J;
 
-                let nm = normal_map[(nuvx as usize, nuvy as usize)];
-                normal = (B * nm).normalize();
+                    let B = Mat3A::from_cols(i.normalize(), j.normalize(), normal);
 
-                let visibility = look_dir.dot(normal);
-                if visibility < 0.0 {
-                    continue;
+                    let nm = normal_map[(nuvx as usize, nuvy as usize)];
+                    normal = (B * nm).normalize();
                 }
 
-                let intensity = light_dir.dot(normal).max(0.0);
+                let mut intensity = light_dir.dot(normal).max(0.0);
+
+                intensity = if intensity < 0.33 {
+                    0.0
+                } else if intensity < 0.66 {
+                    0.33
+                } else if intensity < 1.0 {
+                    0.66
+                } else {
+                    1.0
+                };
+
                 let new_color = Color::from(texture.get_pixel(uvx, uvy)) * intensity;
                 *z_val = z_depth;
-                canvas[p] = new_color;
+                canvas[p] = Color::from_rgb(z_depth as u8, z_depth as u8, z_depth as u8);
             }
         }
     };

@@ -62,8 +62,6 @@ fn main() -> Result<(), String> {
     )
     .expect("Unable to open Window");
 
-    let look_dir = Vec3A::new(0.0, 0.0, 1.0).normalize();
-
     let afro_obj = WavefrontObj::from_sources_struct(&AFRO_MODEL)?;
     let floor_obj = WavefrontObj::from_sources_struct(&FLOOR_MODEL)?;
     let diablo_obj = WavefrontObj::from_sources_struct(&DIABLO_MODEL)?;
@@ -72,12 +70,16 @@ fn main() -> Result<(), String> {
     let to = Vec3A::new(0.0, 0.0, 0.0);
     let up = Vec3A::Y;
 
+    let mut use_normal_map = true;
+
     let mut spin_light = true;
     let mut light_spin_t = 0.0f32;
 
-    let mut cam_angle_theta = 0.5;
-    let mut cam_angle_phi = 0.0;
+    let mut cam_angle_theta;
+    let mut cam_angle_phi;
     let mut cam_distance = 5.0;
+
+    let model_matrix = Mat4::IDENTITY;
 
     let mut view_matrix = create_view_matrix(from, to, up);
     let (w_f32, h_f32) = (
@@ -97,6 +99,10 @@ fn main() -> Result<(), String> {
 
         if window.is_key_pressed(Key::Space, minifb::KeyRepeat::No) {
             spin_light = !spin_light;
+        }
+
+        if window.is_key_pressed(Key::LeftCtrl, minifb::KeyRepeat::No) {
+            use_normal_map = !use_normal_map;
         }
 
         let light_dir = Vec3A::new(light_spin_t.sin(), 0.0, light_spin_t.cos()).normalize();
@@ -122,10 +128,11 @@ fn main() -> Result<(), String> {
             &diablo_obj,
             &mut draw_buffer,
             light_dir,
-            look_dir,
+            viewport_matrix,
             projection,
             view_matrix,
-            viewport_matrix,
+            model_matrix,
+            use_normal_map,
         );
 
         if let Some((_, scroll_y)) = window.get_scroll_wheel() {
@@ -145,11 +152,10 @@ fn main() -> Result<(), String> {
         let elapsed = (end - start).as_secs_f32();
 
         window.set_title(&format!(
-            "{:.1?} FPS, θ: {}, φ: {}, r: {}",
+            "{:1.1?} FPS, [SPACE] light {}, [LCtrl] normal map: {}",
             1.0 / elapsed,
-            cam_angle_theta,
-            cam_angle_phi,
-            from.distance(to)
+            if spin_light { "spinning" } else { "fixed" },
+            use_normal_map
         ));
 
         if spin_light {

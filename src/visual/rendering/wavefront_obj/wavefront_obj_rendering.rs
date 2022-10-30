@@ -46,12 +46,13 @@ pub fn render_wavefront_mesh(
     wavefront_obj: &WavefrontObj,
     canvas: &mut DrawingBuffer,
     light_dir: Vec3A,
-    look_dir: Vec3A,
-    projection: Mat4,
-    model_view_matrix: Mat4,
     viewport_matrix: Mat4,
+    projection: Mat4,
+    view_matrix: Mat4,
+    model_matrix: Mat4,
+    use_normal_map: bool,
 ) {
-    let transform_matrix = viewport_matrix * projection * model_view_matrix;
+    let transform_matrix = viewport_matrix * projection * view_matrix * model_matrix;
     let inverse_transposed_transform_matrix = transform_matrix.transpose().inverse();
 
     for i in 0..wavefront_obj.faces.len() {
@@ -96,7 +97,7 @@ pub fn render_wavefront_mesh(
             &wavefront_obj.texture,
             &wavefront_obj.normal_map,
             light_dir,
-            look_dir,
+            use_normal_map,
         );
     }
 }
