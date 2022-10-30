@@ -133,20 +133,19 @@ pub fn fill_triangle(
 
                 let mut intensity = light_dir.dot(normal).max(0.0);
 
-                intensity = if intensity < 0.33 {
-                    0.0
-                } else if intensity < 0.66 {
-                    0.33
-                } else if intensity < 1.0 {
-                    0.66
-                } else {
-                    1.0
-                };
+                // intensity = if intensity < 0.33 {
+                //     0.0
+                // } else if intensity < 0.66 {
+                //     0.33
+                // } else if intensity < 1.0 {
+                //     0.66
+                // } else {
+                //     1.0
+                // };
 
                 let new_color = Color::from(texture.get_pixel(uvx, uvy)) * intensity;
                 *z_val = z_depth;
-                let shade = (z_depth * (u8::MAX) as f32 / z_buffer_size) as u8;
-                canvas[p] = Color::from_rgb(shade, shade, shade);
+                canvas[p] = new_color;
             }
         }
     };

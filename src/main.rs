@@ -13,10 +13,13 @@ use minifb::{Key, ScaleMode, Window, WindowOptions};
 use plane_buffer::plane_buffer::PlaneBufferCreateOption;
 use std::time::Instant;
 use visual::{
+    color::color::Color,
     drawing_buffer::DrawingBuffer,
     rendering::{
-        view_matrix::create_view_matrix, viewport_matrix::create_view_port_matrix,
-        wavefront_obj::wavefront_obj_rendering::render_wavefront_mesh,
+        ambient_occlusion::render_ambient_occlusion,
+        view_matrix::create_view_matrix,
+        viewport_matrix::create_view_port_matrix,
+        wavefront_obj::wavefront_obj_rendering::{render_wavefront_grid, render_wavefront_mesh},
     },
 };
 use wavefront::{wavefront_obj::WavefrontObj, wavefront_obj_sources::WaveFrontObjSource};
@@ -72,7 +75,8 @@ fn main() -> Result<(), String> {
     let to = Vec3A::new(0.0, 0.0, 0.0);
     let up = Vec3A::Y;
 
-    let mut use_normal_map = true;
+    let mut use_normal_map = false;
+    let mut ambient_occlusion = false;
 
     let mut spin_light = true;
     let mut light_spin_t = 0.0f32;
@@ -107,7 +111,11 @@ fn main() -> Result<(), String> {
             use_normal_map = !use_normal_map;
         }
 
-        let light_dir = Vec3A::new(light_spin_t.sin(), 0.0, light_spin_t.cos()).normalize();
+        if window.is_key_pressed(Key::A, minifb::KeyRepeat::No) {
+            ambient_occlusion = !ambient_occlusion;
+        }
+
+        let light_dir = Vec3A::new(0.0, 0.0, light_spin_t.cos());
 
         if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Pass) {
             cam_angle_theta = (y / WINDOW_HEIGHT as f32) * std::f32::consts::PI;
@@ -135,8 +143,12 @@ fn main() -> Result<(), String> {
             view_matrix,
             model_matrix,
             use_normal_map,
-            Z_BUFFER_SIZE
+            Z_BUFFER_SIZE,
         );
+
+        if ambient_occlusion {
+            render_ambient_occlusion(&mut draw_buffer, Z_BUFFER_SIZE);
+        }
 
         if let Some((_, scroll_y)) = window.get_scroll_wheel() {
             let diff = -scroll_y / 100.0;
@@ -155,10 +167,12 @@ fn main() -> Result<(), String> {
         let elapsed = (end - start).as_secs_f32();
 
         window.set_title(&format!(
-            "{:1.1?} FPS, [SPACE] light {}, [LCtrl] normal map: {}",
+            "{:1.1?} FPS, [SPACE] light {}, [LCtrl] normal map: {}, light: ({:.2}, {:.2})",
             1.0 / elapsed,
             if spin_light { "spinning" } else { "fixed" },
-            use_normal_map
+            use_normal_map,
+            light_dir.x,
+            light_dir.z
         ));
 
         if spin_light {
