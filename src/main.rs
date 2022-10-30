@@ -30,7 +30,7 @@ const BUFFER_HEIGHT: usize = 1000;
 const WINDOW_WIDTH: usize = 1000;
 const WINDOW_HEIGHT: usize = 1000;
 
-const Z_BUFFER_SIZE: f32 = 100_000.0;
+const Z_BUFFER_SIZE: f32 = 255.0;
 
 const AFRO_MODEL: WaveFrontObjSource = WaveFrontObjSource::new(
     "./resources/african_head.obj",
@@ -115,7 +115,7 @@ fn main() -> Result<(), String> {
             ambient_occlusion = !ambient_occlusion;
         }
 
-        let light_dir = Vec3A::new(0.0, 0.0, light_spin_t.cos());
+        let light_dir = Vec3A::new(light_spin_t.sin(), 0.0, light_spin_t.cos());
 
         if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Pass) {
             cam_angle_theta = (y / WINDOW_HEIGHT as f32) * std::f32::consts::PI;
