@@ -15,7 +15,6 @@ pub fn str_parse_vec3(string: &str) -> Result<Vec3, String> {
             }
             None => {
                 math_vec[i] = 0.0;
-                println!("Not enough items!");
             }
         }
     }
