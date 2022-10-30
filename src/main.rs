@@ -27,6 +27,8 @@ const BUFFER_HEIGHT: usize = 1000;
 const WINDOW_WIDTH: usize = 1000;
 const WINDOW_HEIGHT: usize = 1000;
 
+const Z_BUFFER_SIZE: f32 = 100_000.0;
+
 const AFRO_MODEL: WaveFrontObjSource = WaveFrontObjSource::new(
     "./resources/african_head.obj",
     "./resources/african_head_diffuse.tga",
@@ -91,7 +93,7 @@ fn main() -> Result<(), String> {
         h_f32 * 0.125,
         w_f32 / 1.25,
         h_f32 / 1.25,
-        255.0,
+        Z_BUFFER_SIZE,
     );
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
@@ -133,6 +135,7 @@ fn main() -> Result<(), String> {
             view_matrix,
             model_matrix,
             use_normal_map,
+            Z_BUFFER_SIZE
         );
 
         if let Some((_, scroll_y)) = window.get_scroll_wheel() {

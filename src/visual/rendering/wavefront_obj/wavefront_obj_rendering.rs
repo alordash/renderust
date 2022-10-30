@@ -51,6 +51,7 @@ pub fn render_wavefront_mesh(
     view_matrix: Mat4,
     model_matrix: Mat4,
     use_normal_map: bool,
+    z_buffer_depth: f32
 ) {
     let transform_matrix = viewport_matrix * projection * view_matrix * model_matrix;
     let inverse_transposed_transform_matrix = transform_matrix.transpose().inverse();
@@ -98,6 +99,7 @@ pub fn render_wavefront_mesh(
             &wavefront_obj.normal_map,
             light_dir,
             use_normal_map,
+            z_buffer_depth
         );
     }
 }

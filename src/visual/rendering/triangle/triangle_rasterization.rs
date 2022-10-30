@@ -17,6 +17,7 @@ pub fn fill_triangle(
     normal_map: &PlaneBuffer<Vec3A>,
     light_dir: Vec3A,
     use_normal_map: bool,
+    z_buffer_size: f32
 ) {
     let points = polygon.get_points();
     let mut points_sorted_by_x = points.clone();
@@ -144,7 +145,8 @@ pub fn fill_triangle(
 
                 let new_color = Color::from(texture.get_pixel(uvx, uvy)) * intensity;
                 *z_val = z_depth;
-                canvas[p] = Color::from_rgb(z_depth as u8, z_depth as u8, z_depth as u8);
+                let shade = (z_depth * (u8::MAX) as i32 / z_buffer_size as i32) as u8;
+                canvas[p] = Color::from_rgb(shade, shade, shade);
             }
         }
     };
