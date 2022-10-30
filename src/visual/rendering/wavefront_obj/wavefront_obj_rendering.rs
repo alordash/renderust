@@ -1,4 +1,4 @@
-use glam::{Mat3, Mat4, Vec2, Vec3, Vec4, Vec4Swizzles};
+use glam::{Mat4, Vec2, Vec3, Vec4, Vec4Swizzles};
 
 use crate::{
     math::geometry::{
@@ -9,8 +9,7 @@ use crate::{
         color::color::Color,
         drawing_buffer::DrawingBuffer,
         rendering::{
-            line::line_rasterization::draw_line, polygon::polygon_rasterization::fill_polygon,
-            triangle::triangle_rasterization::fill_triangle,
+            line::line_rasterization::draw_line, triangle::triangle_rasterization::fill_triangle,
         },
     },
     wavefront::wavefront_obj::WavefrontObj,
@@ -97,14 +96,9 @@ pub fn render_wavefront_mesh(
             &triangle,
             canvas,
             &wavefront_obj.texture,
-            if use_normal_map {
-                Some(&wavefront_obj.normal_map)
-            } else {
-                None
-            },
+            &wavefront_obj.normal_map,
             light_dir,
             look_dir,
-            color,
         );
     }
 }

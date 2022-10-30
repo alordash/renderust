@@ -14,10 +14,9 @@ pub fn fill_triangle(
     polygon: &Polygon<3>,
     canvas: &mut DrawingBuffer,
     texture: &DynamicImage,
-    maybe_normal_map: Option<&PlaneBuffer<Vec3>>,
+    normal_map: &PlaneBuffer<Vec3>,
     light_dir: Vec3,
     look_dir: Vec3,
-    color: Option<&Color>,
 ) {
     let points = polygon.get_points();
     let mut points_sorted_by_x = points.clone();
@@ -73,15 +72,7 @@ pub fn fill_triangle(
 
         for x in range {
             let mut v1 = short_calc.interpolate(x, d_interp, v_start);
-            v1.color = v_start.color.interpolate(
-                v_end.color,
-                (x - range_start) as i32,
-                (*short_calc.get_diff()) as i32,
-            );
             let mut v2 = long_calc.interpolate(x, d_long_v, l_v);
-            v2.color = l_v
-                .color
-                .interpolate(r_v.color, (x - l_p.x) as i32, d_x as i32);
 
             if v1.y > v2.y {
                 (v1, v2) = (v2, v1);
@@ -106,7 +97,6 @@ pub fn fill_triangle(
                     z_depth,
                     uv,
                     mut normal,
-                    has_color,
                     ..
                 } = local_v;
 
@@ -120,28 +110,26 @@ pub fn fill_triangle(
                     ((uv.y * texture_height as f32) as u32).min(texture_height - 1),
                 );
 
-                if let Some(normal_map) = maybe_normal_map {
-                    let (nm_width, nm_height) = (
-                        normal_map.get_width() as u32,
-                        normal_map.get_height() as u32,
-                    );
-                    let (nuvx, nuvy) = (
-                        ((uv.x * nm_width as f32) as u32).min(nm_width - 1),
-                        ((uv.y * nm_height as f32) as u32).min(nm_height - 1),
-                    );
+                let (nm_width, nm_height) = (
+                    normal_map.get_width() as u32,
+                    normal_map.get_height() as u32,
+                );
+                let (nuvx, nuvy) = (
+                    ((uv.x * nm_width as f32) as u32).min(nm_width - 1),
+                    ((uv.y * nm_height as f32) as u32).min(nm_height - 1),
+                );
 
-                    let mut AI = A.transpose();
-                    *AI.col_mut(2) = normal;
-                    AI = AI.inverse();
+                let mut AI = A.transpose();
+                *AI.col_mut(2) = normal;
+                AI = AI.inverse();
 
-                    let i = AI * I;
-                    let j = AI * J;
+                let i = AI * I;
+                let j = AI * J;
 
-                    let B = Mat3::from_cols(i.normalize(), j.normalize(), normal);
+                let B = Mat3::from_cols(i.normalize(), j.normalize(), normal);
 
-                    let nm = normal_map[(nuvx as usize, nuvy as usize)];
-                    normal = (B * nm).normalize();
-                }
+                let nm = normal_map[(nuvx as usize, nuvy as usize)];
+                normal = (B * nm).normalize();
 
                 let visibility = look_dir.dot(normal);
                 if visibility < 0.0 {
@@ -149,13 +137,7 @@ pub fn fill_triangle(
                 }
 
                 let intensity = light_dir.dot(normal).max(0.0);
-                let new_color = if has_color {
-                    v1.color.interpolate(v2.color, (y - y1) as i32, dy as i32)
-                } else {
-                    color
-                        .map(|c| *c)
-                        .unwrap_or(Color::from(texture.get_pixel(uvx, uvy)))
-                } * intensity;
+                let new_color = Color::from(texture.get_pixel(uvx, uvy)) * intensity;
                 *z_val = z_depth;
                 canvas[p] = new_color;
             }

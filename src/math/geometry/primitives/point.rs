@@ -2,15 +2,12 @@ use std::ops::{Deref, DerefMut};
 
 use glam::{Vec2, Vec3, IVec2};
 
-use crate::visual::color::color::Color;
-
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 pub struct Point2D {
     pub coords: IVec2,
     z_depth: i32,
     uv: Vec2,
     normal: Vec3,
-    color: Option<Color>,
 }
 
 impl Point2D {
@@ -27,7 +24,6 @@ impl Point2D {
             z_depth,
             uv,
             normal,
-            color: None,
         }
     }
 
@@ -47,10 +43,6 @@ impl Point2D {
         &self.normal
     }
 
-    pub fn get_color(&self) -> &Option<Color> {
-        &self.color
-    }
-
     pub fn get_z_depth_mut(&mut self) -> &mut i32 {
         &mut self.z_depth
     }
@@ -61,10 +53,6 @@ impl Point2D {
 
     pub fn get_normal_mut(&mut self) -> &mut Vec3 {
         &mut self.normal
-    }
-
-    pub fn get_color_mut(&mut self) -> &mut Option<Color> {
-        &mut self.color
     }
 }
 
