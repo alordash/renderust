@@ -2,7 +2,6 @@ use std::{mem::size_of, slice};
 
 use crate::math::geometry::rect_size::RectSize;
 
-#[non_exhaustive]
 pub enum PlaneBufferCreateOption<T> {
     Blank,
     Fill(fn(_: usize) -> T),
@@ -77,7 +76,6 @@ impl<T: Default + Copy> PlaneBuffer<T> {
                 PlaneBufferCreateOption::Blank => vec![T::default(); size],
                 PlaneBufferCreateOption::Fill(f) => (0..size).map(f).collect(),
                 PlaneBufferCreateOption::RawSource(source) => source,
-                _ => vec![T::default(); size],
             },
         }
     }

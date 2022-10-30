@@ -45,10 +45,8 @@ pub fn render_wavefront_grid(
 pub fn render_wavefront_mesh(
     wavefront_obj: &WavefrontObj,
     canvas: &mut DrawingBuffer,
-    mut light_dir: Vec3,
+    light_dir: Vec3,
     look_dir: Vec3,
-    color: Option<&Color>,
-    use_normal_map: bool,
     projection: Mat4,
     model_view_matrix: Mat4,
     viewport_matrix: Mat4,

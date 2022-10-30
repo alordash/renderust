@@ -1,4 +1,5 @@
 #![feature(min_specialization)]
+#![allow(non_snake_case)]
 
 use glam::{Mat4, Vec3};
 use math::spherical_coordinate_system::spherical_to_cartesian_yzx;
@@ -124,8 +125,6 @@ fn main() -> Result<(), String> {
             &mut draw_buffer,
             light_dir,
             look_dir,
-            None,
-            window.is_key_down(Key::LeftShift),
             projection,
             view_matrix,
             viewport_matrix,

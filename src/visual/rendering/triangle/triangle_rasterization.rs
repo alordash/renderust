@@ -1,4 +1,4 @@
-use glam::{Mat3, Vec3, Vec3Swizzles};
+use glam::{Mat3, Vec3};
 use image::{DynamicImage, GenericImage};
 
 use crate::{
@@ -23,6 +23,11 @@ pub fn fill_triangle(
     points_sorted_by_x.sort_unstable_by(|a, b| a.x.cmp(&b.x));
     let (texture_width, texture_height) = texture.dimensions();
 
+    let (nm_width, nm_height) = (
+        normal_map.get_width() as u32,
+        normal_map.get_height() as u32,
+    );
+
     let (l_p, m_p, r_p) = unsafe {
         (
             *points_sorted_by_x.get_unchecked(0),
@@ -44,9 +49,8 @@ pub fn fill_triangle(
     );
 
     let d_long_v = r_v - l_v;
-    let d_x = r_p.x - l_p.x;
 
-    let mut A = Mat3::from_cols(
+    let A = Mat3::from_cols(
         Vec3::from((
             (m_p.coords - l_p.coords).as_vec2(),
             (m_p.get_z_depth() - l_p.get_z_depth()) as f32,
@@ -68,7 +72,6 @@ pub fn fill_triangle(
                       v_end: InterpolationValues| {
         let d_interp = v_end - v_start;
         let range = short_calc.get_interpolation_range();
-        let range_start = range.start;
 
         for x in range {
             let mut v1 = short_calc.interpolate(x, d_interp, v_start);
@@ -79,7 +82,6 @@ pub fn fill_triangle(
             }
 
             let (y1, y2) = (v1.y, v2.y);
-            let dy = y2 - y1;
 
             let local_calc = Interpolator::new(y1, y2);
             let local_d_v = v2 - v1;
@@ -93,7 +95,6 @@ pub fn fill_triangle(
                 let local_v = local_calc.interpolate(y, local_d_v, v1);
 
                 let InterpolationValues {
-                    y,
                     z_depth,
                     uv,
                     mut normal,
@@ -108,11 +109,6 @@ pub fn fill_triangle(
                 let (uvx, uvy) = (
                     ((uv.x * texture_width as f32) as u32).min(texture_width - 1),
                     ((uv.y * texture_height as f32) as u32).min(texture_height - 1),
-                );
-
-                let (nm_width, nm_height) = (
-                    normal_map.get_width() as u32,
-                    normal_map.get_height() as u32,
                 );
                 let (nuvx, nuvy) = (
                     ((uv.x * nm_width as f32) as u32).min(nm_width - 1),
