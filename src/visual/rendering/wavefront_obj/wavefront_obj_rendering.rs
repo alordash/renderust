@@ -18,24 +18,34 @@ use crate::{
 pub fn render_wavefront_grid(
     wavefront_obj: &WavefrontObj,
     canvas: &mut DrawingBuffer,
+    viewport_matrix: Mat4,
+    projection: Mat4,
+    view_matrix: Mat4,
+    model_matrix: Mat4,
     color: Option<&Color>,
 ) {
-    let RectSize { width, height } = canvas.get_size();
-
-    let (w_f32, h_f32) = ((width - 1) as f32, (height - 1) as f32);
+    let transform_matrix = viewport_matrix * projection * view_matrix * model_matrix;
 
     for i in 0..wavefront_obj.faces.len() {
         let face = &wavefront_obj.faces[i];
         for j in 0..3_usize {
-            let v0 = wavefront_obj.vertices[face[0][j] as usize];
-            let v1 = wavefront_obj.vertices[face[0][(j + 1) % 3] as usize];
-            let x0 = ((v0.x + 1.0) * w_f32 / 2.0) as i32;
-            let y0 = ((v0.y + 1.0) * h_f32 / 2.0) as i32;
-            let x1 = ((v1.x + 1.0) * w_f32 / 2.0) as i32;
-            let y1 = ((v1.y + 1.0) * h_f32 / 2.0) as i32;
+            let first_source_vertex = wavefront_obj.vertices[face[0][j] as usize];
+            let first_vertex4 = transform_matrix * Vec4::from((first_source_vertex, 1.0));
+            let first_vertex = first_vertex4.xyz() / first_vertex4.w;
 
-            let begin = Point2D::from(x0, y0);
-            let end = Point2D::from(x1, y1);
+            let second_source_vertex = wavefront_obj.vertices[face[0][(j + 1) % 3] as usize];
+            let second_vertex4 = transform_matrix * Vec4::from((second_source_vertex, 1.0));
+            let second_vertex = second_vertex4.xyz() / second_vertex4.w;
+
+            let begin = Point2D::from(first_vertex.x as i32, first_vertex.y as i32);
+            let end = Point2D::from(second_vertex.x as i32, second_vertex.y as i32);
+
+            if !canvas.contains(begin.x as usize, begin.y as usize)
+                || !canvas.contains(end.x as usize, end.y as usize)
+            {
+                continue;
+            }
+
             let line = Line { begin, end };
             draw_line(&line, canvas, color);
         }
@@ -51,7 +61,7 @@ pub fn render_wavefront_mesh(
     view_matrix: Mat4,
     model_matrix: Mat4,
     use_normal_map: bool,
-    z_buffer_depth: f32
+    z_buffer_depth: f32,
 ) {
     let transform_matrix = viewport_matrix * projection * view_matrix * model_matrix;
     let inverse_transposed_transform_matrix = transform_matrix.transpose().inverse();
@@ -99,7 +109,7 @@ pub fn render_wavefront_mesh(
             &wavefront_obj.normal_map,
             light_dir,
             use_normal_map,
-            z_buffer_depth
+            z_buffer_depth,
         );
     }
 }
