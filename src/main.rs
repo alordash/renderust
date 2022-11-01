@@ -78,7 +78,7 @@ fn main() -> Result<(), String> {
     let mut use_normal_map = false;
     let mut ambient_occlusion = false;
 
-    let mut spin_light = true;
+    let mut spin_light = false;
     let mut light_spin_t = 0.0f32;
 
     let mut cam_angle_theta;
