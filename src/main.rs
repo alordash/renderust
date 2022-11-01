@@ -56,7 +56,7 @@ fn main() -> Result<(), String> {
         DrawingBuffer::new(BUFFER_WIDTH, BUFFER_HEIGHT, PlaneBufferCreateOption::Blank);
 
     let mut window = Window::new(
-        "Press ESC to exit",
+        "Renderust",
         WINDOW_WIDTH,
         WINDOW_HEIGHT,
         WindowOptions {
@@ -100,7 +100,9 @@ fn main() -> Result<(), String> {
         Z_BUFFER_SIZE,
     );
 
-    while window.is_open() && !window.is_key_down(Key::Escape) {
+    let mut t_delta = 0.0;
+
+    while window.is_open() {
         let start = Instant::now();
 
         if window.is_key_pressed(Key::Space, minifb::KeyRepeat::No) {
@@ -164,11 +166,11 @@ fn main() -> Result<(), String> {
             .unwrap();
 
         let end = Instant::now();
-        let elapsed = (end - start).as_secs_f32();
+        t_delta = (end - start).as_secs_f32();
 
         window.set_title(&format!(
             "{:1.1?} FPS, [SPACE] light {}, [LCtrl] normal map: {}, light: ({:.2}, {:.2})",
-            1.0 / elapsed,
+            1.0 / t_delta,
             if spin_light { "spinning" } else { "fixed" },
             use_normal_map,
             light_dir.x,
@@ -176,7 +178,7 @@ fn main() -> Result<(), String> {
         ));
 
         if spin_light {
-            light_spin_t += elapsed;
+            light_spin_t += t_delta;
         }
     }
 
