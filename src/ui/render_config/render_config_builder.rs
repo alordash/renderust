@@ -4,6 +4,11 @@ use crate::visual::rendering::view_matrix::create_view_matrix;
 
 use super::render_config::{CameraConfig, LookConfig, RenderConfig, TransformMatrixes};
 
+#[derive(Clone, Copy, Debug)]
+pub enum RenderConfigBuildingErrors {
+    TransformMatrixesNotDefined,
+}
+
 pub struct RenderConfigBuilder {
     look: Option<LookConfig>,
     camera: Option<CameraConfig>,
@@ -55,8 +60,8 @@ impl RenderConfigBuilder {
         self
     }
 
-    pub fn build(self) -> RenderConfig {
-        RenderConfig {
+    pub fn try_build(self) -> Result<RenderConfig, RenderConfigBuildingErrors> {
+        Ok(RenderConfig {
             look: self.look.unwrap_or(LookConfig {
                 from: Vec3A::Z * 5.0,
                 to: Vec3A::ZERO,
@@ -71,7 +76,9 @@ impl RenderConfigBuilder {
                 .light_dir
                 .unwrap_or(Vec3A::new(0.0, 1.0, 1.0).normalize()),
             spin_light: self.spin_light.unwrap_or(false),
-            transform_matrixes: self.transform_matrixes.unwrap(),
-        }
+            transform_matrixes: self
+                .transform_matrixes
+                .ok_or(RenderConfigBuildingErrors::TransformMatrixesNotDefined)?,
+        })
     }
 }

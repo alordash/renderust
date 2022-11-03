@@ -57,7 +57,8 @@ pub fn open_render_window(
             h_f32 / 1.25,
             z_buffer_size,
         ))
-        .build();
+        .try_build()
+        .unwrap();
 
     let mut window = Window::new(
         "Renderust",
