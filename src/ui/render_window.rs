@@ -21,7 +21,9 @@ use crate::{
     wavefront::wavefront_obj::WavefrontObj,
 };
 
-use super::render_config::render_config::{CameraConfig, LookConfig, RenderConfigBuilder};
+use super::render_config::render_config::{
+    AmbientOcclusionConfig, CameraConfig, LookConfig, RenderConfigBuilder,
+};
 
 pub fn open_render_window(
     buffer_width: usize,
@@ -52,7 +54,11 @@ pub fn open_render_window(
         })
         .light_dir(-Vec3A::Y)
         .spin_light(false)
-        .use_ambient_occlusion(false)
+        .ambient_occlusion(AmbientOcclusionConfig {
+            apply: false,
+            effect_radius: 10.0,
+            intensity: 0.5,
+        })
         .transform_matrixes(create_view_port_matrix(
             w_f32 * 0.125,
             h_f32 * 0.125,
@@ -90,7 +96,7 @@ pub fn open_render_window(
         }
 
         if window.is_key_pressed(Key::A, minifb::KeyRepeat::No) {
-            render_config.use_ambient_occlusion = !render_config.use_ambient_occlusion;
+            render_config.ambient_occlusion.apply = !render_config.ambient_occlusion.apply;
         }
 
         let light_dir = Vec3A::new(light_spin_t.sin(), 1.0, light_spin_t.cos()).normalize();
@@ -131,7 +137,7 @@ pub fn open_render_window(
             );
         }
 
-        if render_config.use_ambient_occlusion {
+        if render_config.ambient_occlusion.apply {
             render_ambient_occlusion(&mut draw_buffer, z_buffer_size, 10.0, 0.5);
         }
 

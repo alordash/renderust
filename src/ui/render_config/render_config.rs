@@ -8,7 +8,7 @@ pub struct RenderConfig {
     pub camera: CameraConfig,
     pub light_dir: Vec3A,
     pub spin_light: bool,
-    pub use_ambient_occlusion: bool,
+    pub ambient_occlusion: AmbientOcclusionConfig,
     #[builder(setter(custom))]
     pub transform_matrixes: TransformMatrixes,
 }
@@ -25,6 +25,13 @@ pub struct CameraConfig {
     pub yaw: f32,
     pub pitch: f32,
     pub distance: f32,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct AmbientOcclusionConfig {
+    pub apply: bool,
+    pub effect_radius: f32,
+    pub intensity: f32
 }
 
 #[derive(Clone, Copy, Debug)]
