@@ -1,5 +1,8 @@
 #![allow(non_snake_case)]
 
+#[macro_use]
+extern crate derive_builder;
+
 pub mod math;
 pub mod parsing;
 pub mod plane_buffer;
@@ -8,6 +11,7 @@ pub mod visual;
 pub mod wavefront;
 
 use ui::render_window::open_render_window;
+use visual::rendering::wavefront_obj::wavefront_render_model::WavefrontRenderModel;
 use wavefront::{wavefront_obj::WavefrontObj, wavefront_obj_sources::WaveFrontObjSource};
 
 const BUFFER_WIDTH: usize = 1000;
@@ -47,7 +51,7 @@ fn main() -> Result<(), String> {
         WINDOW_WIDTH,
         WINDOW_HEIGHT,
         Z_BUFFER_SIZE,
-        vec![diablo_obj],
+        vec![WavefrontRenderModel::from_wavefront_obj(diablo_obj)],
     );
 
     Ok(())

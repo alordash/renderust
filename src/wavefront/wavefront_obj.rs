@@ -3,6 +3,7 @@ use image::DynamicImage;
 
 use crate::plane_buffer::plane_buffer::PlaneBuffer;
 
+#[derive(Clone)]
 pub struct WavefrontObj {
     pub vertices: Vec<Vec3A>,
     pub vertex_textures: Vec<Vec3A>,

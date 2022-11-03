@@ -9,18 +9,19 @@ use crate::{
     visual::{
         drawing_buffer::DrawingBuffer,
         rendering::{
-            ambient_occlusion::render_ambient_occlusion, view_matrix::create_view_matrix,
+            ambient_occlusion::render_ambient_occlusion,
+            view_matrix::create_view_matrix,
             viewport_matrix::create_view_port_matrix,
-            wavefront_obj::wavefront_obj_rendering::render_wavefront_mesh,
+            wavefront_obj::{
+                wavefront_obj_rendering::render_wavefront_mesh,
+                wavefront_render_model::WavefrontRenderModel,
+            },
         },
     },
     wavefront::wavefront_obj::WavefrontObj,
 };
 
-use super::render_config::{
-    render_config::{CameraConfig, LookConfig},
-    render_config_builder::RenderConfigBuilder,
-};
+use super::render_config::render_config::{CameraConfig, LookConfig, RenderConfigBuilder};
 
 pub fn open_render_window(
     buffer_width: usize,
@@ -28,7 +29,7 @@ pub fn open_render_window(
     window_width: usize,
     window_height: usize,
     z_buffer_size: f32,
-    models: Vec<WavefrontObj>,
+    mut models: Vec<WavefrontRenderModel>,
 ) {
     let mut draw_buffer =
         DrawingBuffer::new(buffer_width, buffer_height, PlaneBufferCreateOption::Blank);
@@ -38,7 +39,7 @@ pub fn open_render_window(
         draw_buffer.get_height() as f32,
     );
 
-    let mut render_config = RenderConfigBuilder::new()
+    let mut render_config = RenderConfigBuilder::default()
         .look(LookConfig {
             from: Vec3A::Z,
             to: Vec3A::ZERO,
@@ -59,7 +60,7 @@ pub fn open_render_window(
             h_f32 / 1.25,
             z_buffer_size,
         ))
-        .try_build()
+        .build()
         .unwrap();
 
     let mut window = Window::new(
@@ -74,10 +75,6 @@ pub fn open_render_window(
     )
     .expect("Unable to open Window");
 
-    let model_matrix = Mat4::IDENTITY;
-
-    let mut use_normal_map = false;
-
     let mut light_spin_t = 0.0f32;
     let mut t_delta = 0.0;
 
@@ -89,7 +86,7 @@ pub fn open_render_window(
         }
 
         if window.is_key_pressed(Key::LeftCtrl, minifb::KeyRepeat::No) {
-            use_normal_map = !use_normal_map;
+            models[0].use_normal_map = !models[0].use_normal_map;
         }
 
         if window.is_key_pressed(Key::A, minifb::KeyRepeat::No) {
@@ -130,8 +127,6 @@ pub fn open_render_window(
                 render_config.transform_matrixes.viewport_matrix,
                 projection,
                 render_config.transform_matrixes.view_matrix,
-                model_matrix,
-                use_normal_map,
                 z_buffer_size,
             );
         }
@@ -164,7 +159,7 @@ pub fn open_render_window(
             } else {
                 "fixed"
             },
-            use_normal_map,
+            models[0].use_normal_map,
             light_dir.x,
             light_dir.z
         ));

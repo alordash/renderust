@@ -15,6 +15,8 @@ use crate::{
     wavefront::wavefront_obj::WavefrontObj,
 };
 
+use super::wavefront_render_model::WavefrontRenderModel;
+
 pub fn render_wavefront_grid(
     wavefront_obj: &WavefrontObj,
     canvas: &mut DrawingBuffer,
@@ -53,17 +55,16 @@ pub fn render_wavefront_grid(
 }
 
 pub fn render_wavefront_mesh(
-    wavefront_obj: &WavefrontObj,
+    model: &WavefrontRenderModel,
     canvas: &mut DrawingBuffer,
     light_dir: Vec3A,
     viewport_matrix: Mat4,
     projection: Mat4,
     view_matrix: Mat4,
-    model_matrix: Mat4,
-    use_normal_map: bool,
     z_buffer_depth: f32,
 ) {
-    let transform_matrix = viewport_matrix * projection * view_matrix * model_matrix;
+    let wavefront_obj = &model.obj;
+    let transform_matrix = viewport_matrix * projection * view_matrix * model.model_matrix;
     let inverse_transposed_transform_matrix = transform_matrix.transpose().inverse();
 
     for i in 0..wavefront_obj.faces.len() {
@@ -108,7 +109,7 @@ pub fn render_wavefront_mesh(
             &wavefront_obj.texture,
             &wavefront_obj.normal_map,
             light_dir,
-            use_normal_map,
+            model.use_normal_map,
             z_buffer_depth,
         );
     }

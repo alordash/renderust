@@ -7,6 +7,7 @@ pub mod polygon {
 }
 pub mod wavefront_obj {
     pub mod wavefront_obj_rendering;
+    pub mod wavefront_render_model;
 }
 pub mod triangle {
     pub mod triangle_rasterization;
