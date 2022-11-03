@@ -132,7 +132,7 @@ pub fn open_render_window(
         }
 
         if render_config.use_ambient_occlusion {
-            render_ambient_occlusion(&mut draw_buffer, z_buffer_size, 10.0);
+            render_ambient_occlusion(&mut draw_buffer, z_buffer_size, 10.0, 0.5);
         }
 
         if let Some((_, scroll_y)) = window.get_scroll_wheel() {

@@ -22,7 +22,7 @@ pub fn max_elevation_angle(
     from: Vec2,
     dir: Vec2,
     z_buffer_depth: f32,
-    effect_radius: f32
+    effect_radius: f32,
 ) -> f32 {
     let mut max_angle = 0f32;
     let mut t = 0.0;
@@ -47,13 +47,18 @@ pub fn max_elevation_angle(
         }
 
         let elevation = (cur_z - from_z) / z_buffer_depth;
-        max_angle = max_angle.max(elevation / distance.pow(2.0));
+        max_angle += elevation / distance.pow(2.0);
     }
 
     max_angle
 }
 
-pub fn render_ambient_occlusion(canvas: &mut DrawingBuffer, z_buffer_depth: f32, effect_radius: f32) {
+pub fn render_ambient_occlusion(
+    canvas: &mut DrawingBuffer,
+    z_buffer_depth: f32,
+    effect_radius: f32,
+    intensity: f32
+) {
     for x in 0..canvas.get_width() as i32 {
         for y in 0..canvas.get_height() as i32 {
             let z_buffer = canvas.get_z_buffer_mut();
@@ -71,8 +76,8 @@ pub fn render_ambient_occlusion(canvas: &mut DrawingBuffer, z_buffer_depth: f32,
                         Vec2::new(x as f32, y as f32),
                         *neighbour_dir,
                         z_buffer_depth,
-                        effect_radius
-                    );
+                        effect_radius,
+                    ) * intensity;
             }
 
             total /= std::f32::consts::FRAC_PI_2 * 8.0;
