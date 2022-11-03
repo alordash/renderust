@@ -50,6 +50,8 @@ pub fn open_render_window(
             distance: 5.0,
         })
         .light_dir(-Vec3A::Y)
+        .spin_light(false)
+        .use_ambient_occlusion(false)
         .transform_matrixes(create_view_port_matrix(
             w_f32 * 0.125,
             h_f32 * 0.125,
@@ -75,7 +77,6 @@ pub fn open_render_window(
     let model_matrix = Mat4::IDENTITY;
 
     let mut use_normal_map = false;
-    let mut ambient_occlusion = false;
 
     let mut light_spin_t = 0.0f32;
     let mut t_delta = 0.0;
@@ -92,7 +93,7 @@ pub fn open_render_window(
         }
 
         if window.is_key_pressed(Key::A, minifb::KeyRepeat::No) {
-            ambient_occlusion = !ambient_occlusion;
+            render_config.use_ambient_occlusion = !render_config.use_ambient_occlusion;
         }
 
         let light_dir = Vec3A::new(light_spin_t.sin(), 1.0, light_spin_t.cos()).normalize();
@@ -135,7 +136,7 @@ pub fn open_render_window(
             );
         }
 
-        if ambient_occlusion {
+        if render_config.use_ambient_occlusion {
             render_ambient_occlusion(&mut draw_buffer, z_buffer_size, 10.0);
         }
 

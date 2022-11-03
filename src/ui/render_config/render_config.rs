@@ -6,6 +6,7 @@ pub struct RenderConfig {
     pub camera: CameraConfig,
     pub light_dir: Vec3A,
     pub spin_light: bool,
+    pub use_ambient_occlusion: bool,
     pub transform_matrixes: TransformMatrixes,
 }
 

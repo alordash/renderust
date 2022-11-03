@@ -14,6 +14,7 @@ pub struct RenderConfigBuilder {
     camera: Option<CameraConfig>,
     light_dir: Option<Vec3A>,
     spin_light: Option<bool>,
+    use_ambient_occlusion: Option<bool>,
     transform_matrixes: Option<TransformMatrixes>,
 }
 
@@ -24,6 +25,7 @@ impl RenderConfigBuilder {
             camera: None,
             light_dir: None,
             spin_light: None,
+            use_ambient_occlusion: None,
             transform_matrixes: None,
         }
     }
@@ -45,6 +47,11 @@ impl RenderConfigBuilder {
 
     pub fn spin_light(mut self, spin_light: bool) -> RenderConfigBuilder {
         self.spin_light = Some(spin_light);
+        self
+    }
+
+    pub fn use_ambient_occlusion(mut self, use_ambient_occlusion: bool) -> RenderConfigBuilder {
+        self.use_ambient_occlusion = Some(use_ambient_occlusion);
         self
     }
 
@@ -76,6 +83,7 @@ impl RenderConfigBuilder {
                 .light_dir
                 .unwrap_or(Vec3A::new(0.0, 1.0, 1.0).normalize()),
             spin_light: self.spin_light.unwrap_or(false),
+            use_ambient_occlusion: self.use_ambient_occlusion.unwrap_or(false),
             transform_matrixes: self
                 .transform_matrixes
                 .ok_or(RenderConfigBuildingErrors::TransformMatrixesNotDefined)?,
