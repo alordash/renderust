@@ -1,4 +1,4 @@
-use glam::{IVec2, IVec3, Vec3A};
+use glam::{IVec2, IVec3};
 
 use crate::math::geometry::primitives::line::Line;
 

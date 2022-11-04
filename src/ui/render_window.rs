@@ -7,7 +7,6 @@ use crate::{
     math::spherical_coordinate_system::spherical_to_cartesian_yzx,
     plane_buffer::plane_buffer::PlaneBufferCreateOption,
     visual::{
-        color::color::Color,
         drawing_buffer::DrawingBuffer,
         rendering::{
             ambient_occlusion::render_ambient_occlusion,
@@ -18,14 +17,11 @@ use crate::{
             }, matrix::{viewport_matrix::create_view_port_matrix, view_matrix::create_view_matrix},
         },
     },
-    wavefront::wavefront_obj::WavefrontObj,
 };
 
 use super::render_config::render_config::{
     AmbientOcclusionConfig, CameraConfig, LookConfig, RenderConfigBuilder,
 };
-
-const INTENSITIES: [Vec3A; 3] = [Vec3A::X, Vec3A::Y, Vec3A::Z];
 
 pub fn open_render_window(
     buffer_width: usize,
@@ -33,7 +29,7 @@ pub fn open_render_window(
     window_width: usize,
     window_height: usize,
     z_buffer_size: f32,
-    mut models: Vec<WavefrontRenderModel>,
+    models: Vec<WavefrontRenderModel>,
 ) {
     let mut draw_buffer =
         DrawingBuffer::new(buffer_width, buffer_height, PlaneBufferCreateOption::Blank);
@@ -75,8 +71,6 @@ pub fn open_render_window(
         .build()
         .unwrap();
 
-    let mut intensity_idx = 0usize;
-
     let mut window = Window::new(
         "Renderust",
         window_width,
@@ -88,8 +82,6 @@ pub fn open_render_window(
         },
     )
     .expect("Unable to open Window");
-
-    let a = Vec3A::X.cross(Vec3A::X);
 
     let mut spin_light = false;
     let mut light_spin_t = 0.0f32;
