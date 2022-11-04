@@ -1,4 +1,4 @@
-use glam::{IVec2, Mat4, Vec2, Vec3A, Vec4, Vec4Swizzles};
+use glam::{IVec2, Mat4, Vec2, Vec3A, Vec3Swizzles, Vec4, Vec4Swizzles};
 
 use crate::{
     math::geometry::{primitives::line::Line, rect_size::RectSize},
@@ -6,7 +6,8 @@ use crate::{
         color::color::Color,
         drawing_buffer::DrawingBuffer,
         rendering::{
-            light_source::LightSource, line::line_rasterization::draw_line,
+            light_source::{LightSource, LightSourceKind},
+            line::line_rasterization::draw_line,
             triangle::triangle_rasterization::fill_triangle,
         },
         vertex::Vertex,
@@ -56,7 +57,7 @@ pub fn render_wavefront_grid(
 pub fn render_wavefront_mesh(
     model: &WavefrontRenderModel,
     canvas: &mut DrawingBuffer,
-    lights: &Vec<LightSource>,
+    mut lights: Vec<LightSource>,
     viewport_matrix: Mat4,
     projection: Mat4,
     view_matrix: Mat4,
@@ -65,6 +66,16 @@ pub fn render_wavefront_mesh(
     let wavefront_obj = &model.obj;
     let transform_matrix = viewport_matrix * projection * view_matrix * model.model_matrix;
     let inverse_transposed_transform_matrix = transform_matrix.transpose().inverse();
+
+    for light in lights.iter_mut() {
+        match light.kind {
+            LightSourceKind::Point(p) => {
+                let new_pos = transform_matrix * Vec4::from((p, 1.0));
+                light.kind = LightSourceKind::Point(Vec3A::from(new_pos.xyz()) / new_pos.w);
+            }
+            _ => (),
+        };
+    }
 
     for i in 0..wavefront_obj.faces.len() {
         let face = &wavefront_obj.faces[i];
@@ -103,7 +114,7 @@ pub fn render_wavefront_mesh(
             canvas,
             &wavefront_obj.texture,
             &wavefront_obj.normal_map,
-            lights,
+            &lights,
             model.use_normal_map,
             z_buffer_depth,
         );

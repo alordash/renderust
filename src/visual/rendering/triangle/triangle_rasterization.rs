@@ -10,7 +10,8 @@ use crate::{
         rendering::{
             interpolation_values::InterpolationValues,
             light_source::{LightSource, LightSourceKind},
-        }, vertex::Vertex,
+        },
+        vertex::Vertex,
     },
 };
 
@@ -54,16 +55,14 @@ pub fn fill_triangle(
 
     let d_long_v = r_v - l_v;
 
-    let A = Mat3A::from_cols(
-        m_p.pos - l_p.pos,
-        r_p.pos - l_p.pos,
-        Vec3A::ZERO,
-    );
+    let A = Mat3A::from_cols(m_p.pos - l_p.pos, r_p.pos - l_p.pos, Vec3A::ZERO);
 
     let (l_uv, m_uv, r_uv) = (l_p.uv, m_p.uv, r_p.uv);
 
     let I = Vec3A::new(m_uv.x - l_uv.x, r_uv.x - l_uv.x, 0.0);
     let J = Vec3A::new(m_uv.y - l_uv.y, r_uv.y - l_uv.y, 0.0);
+
+    // println!("{:?}", lights);
 
     let mut filler = |short_calc: Interpolator<i32>,
                       v_start: InterpolationValues,
@@ -133,9 +132,14 @@ pub fn fill_triangle(
                 for light in lights.iter() {
                     match light.kind {
                         LightSourceKind::Linear(dir) => {
-                            intensities += light.spectrum * dir.dot(normal).max(0.0).powf(light.concentration)
+                            intensities +=
+                                light.spectrum * dir.dot(normal).max(0.0).powf(light.concentration)
                         }
-                        LightSourceKind::Point(point) => {}
+                        LightSourceKind::Point(point) => {
+                            let dir = (point - Vec3A::new(x as f32, y as f32, z_depth)).normalize();
+                            intensities +=
+                                light.spectrum * dir.dot(normal).max(0.0).powf(light.concentration);
+                        }
                         LightSourceKind::Ambient => intensities += light.spectrum,
                     }
                 }
