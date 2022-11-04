@@ -13,6 +13,9 @@ pub mod triangle {
     pub mod triangle_rasterization;
 }
 pub mod interpolation_values;
-pub mod view_matrix;
-pub mod viewport_matrix;
+pub mod matrix {
+    pub mod view_matrix;
+    pub mod viewport_matrix;
+}
 pub mod ambient_occlusion;
+pub mod light_source;

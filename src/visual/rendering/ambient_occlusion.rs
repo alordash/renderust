@@ -1,10 +1,6 @@
 use glam::Vec2;
-use num::traits::Pow;
 
-use crate::{
-    math::geometry::primitives::point::Point2D, plane_buffer::plane_buffer::PlaneBuffer,
-    visual::drawing_buffer::DrawingBuffer,
-};
+use crate::{plane_buffer::plane_buffer::PlaneBuffer, visual::drawing_buffer::DrawingBuffer};
 
 const NEIGHBOURS_DIRECTIONS: [Vec2; 8] = [
     Vec2::new(1.0, 0.0),
@@ -26,16 +22,15 @@ pub fn max_elevation_angle(
 ) -> f32 {
     let mut max_angle = 0f32;
     let mut t = 0.0;
-    let from_coord = Point2D::new([from.x as i32, from.y as i32]);
-    let from_z = z_buffer[from_coord];
+    let from_z = z_buffer[(from.x as usize, from.y as usize)];
     while t < effect_radius {
         let cur = from + dir * t;
-        let cur_coord = Point2D::new([cur.x as i32, cur.y as i32]);
+        let pos = (cur.x as usize, cur.y as usize);
 
-        if !z_buffer.contains(cur_coord.x as usize, cur_coord.y as usize) {
+        if !z_buffer.contains(pos.0, pos.1) {
             return max_angle;
         }
-        let cur_z = z_buffer[cur_coord];
+        let cur_z = z_buffer[pos];
         if cur_z < 0.0 {
             return max_angle;
         }
@@ -47,7 +42,7 @@ pub fn max_elevation_angle(
         }
 
         let elevation = (cur_z - from_z) / z_buffer_depth;
-        max_angle += elevation / distance.pow(2.0);
+        max_angle += elevation / distance.powf(2.0);
     }
 
     max_angle
@@ -57,13 +52,13 @@ pub fn render_ambient_occlusion(
     canvas: &mut DrawingBuffer,
     z_buffer_depth: f32,
     effect_radius: f32,
-    intensity: f32
+    intensity: f32,
 ) {
     for x in 0..canvas.get_width() as i32 {
         for y in 0..canvas.get_height() as i32 {
             let z_buffer = canvas.get_z_buffer_mut();
-            let p = Point2D::new([x, y]);
-            let cur_z = z_buffer[p];
+            let pos = (x as usize, y as usize);
+            let cur_z = z_buffer[pos];
             if cur_z < 0.0 {
                 continue;
             }
@@ -83,7 +78,7 @@ pub fn render_ambient_occlusion(
             total /= std::f32::consts::FRAC_PI_2 * 8.0;
             total = total.powf(200.0);
 
-            canvas[p] = canvas[p] * total.clamp(0.0, 1.0);
+            canvas[pos] = canvas[pos] * total.clamp(0.0, 1.0);
         }
     }
 }

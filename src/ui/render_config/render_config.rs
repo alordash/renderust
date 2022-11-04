@@ -1,16 +1,16 @@
 use glam::{Mat4, Vec3A};
 
-use crate::visual::rendering::view_matrix::create_view_matrix;
+use crate::visual::rendering::{light_source::LightSource, wavefront_obj::wavefront_render_model::WavefrontRenderModel, matrix::view_matrix::create_view_matrix};
 
-#[derive(Clone, Copy, Debug, Builder)]
+#[derive(Clone, Debug, Builder)]
 pub struct RenderConfig {
     pub look: LookConfig,
     pub camera: CameraConfig,
-    pub light_dir: Vec3A,
-    pub spin_light: bool,
+    pub lights: Vec<LightSource>,
     pub ambient_occlusion: AmbientOcclusionConfig,
     #[builder(setter(custom))]
     pub transform_matrixes: TransformMatrixes,
+    pub models: Vec<WavefrontRenderModel>
 }
 
 #[derive(Clone, Copy, Debug)]

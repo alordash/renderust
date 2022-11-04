@@ -1,9 +1,9 @@
 use glam::{Mat4, Vec3A};
 
 pub fn create_view_matrix(from: Vec3A, to: Vec3A, up: Vec3A) -> Mat4 {
-    let z = (from - to).normalize();
-    let x = up.cross(z).normalize();
-    let y = z.cross(x).normalize();
+    let z = (from - to).normalize_or_zero();
+    let x = up.cross(z).normalize_or_zero();
+    let y = z.cross(x).normalize_or_zero();
 
     let mut m_inv = Mat4::IDENTITY;
     let mut tr = Mat4::IDENTITY;

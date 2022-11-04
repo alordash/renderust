@@ -1,8 +1,10 @@
-use crate::math::geometry::primitives::{point::Point2D, line::Line};
+use glam::{IVec2, IVec3, Vec3A};
+
+use crate::math::geometry::primitives::line::Line;
 
 pub struct LineIterator {
-    pub begin: Point2D,
-    pub end: Point2D,
+    pub begin: IVec3,
+    pub end: IVec3,
     pub angle_bigger_45_deg: bool,
     pub dx: i32,
     pub dy_error: i32,
@@ -18,14 +20,14 @@ impl LineIterator {
 }
 
 impl Iterator for LineIterator {
-    type Item = Point2D;
+    type Item = IVec2;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.x < self.end.x {
             let result = if self.angle_bigger_45_deg {
-                Point2D::from(self.y, self.x)
+                IVec2::new(self.y, self.x)
             } else {
-                Point2D::from(self.x, self.y)
+                IVec2::new(self.x, self.y)
             };
 
             self.y_error += self.dy_error;
@@ -48,14 +50,14 @@ impl Iterator for LineIterator {
 }
 
 impl IntoIterator for Line {
-    type Item = Point2D;
+    type Item = IVec2;
     type IntoIter = LineIterator;
     fn into_iter(self) -> Self::IntoIter {
         let mut p1 = self.begin;
         let mut p2 = self.end;
 
-        let mut dx = p2.x - p1.x;
-        let mut dy = p2.y - p1.y;
+        let mut dx = (p2.x - p1.x) as i32;
+        let mut dy = (p2.y - p1.y) as i32;
         let mut angle_bigger_45_deg = false;
 
         if dy.abs() > dx.abs() {
@@ -68,21 +70,21 @@ impl IntoIterator for Line {
             (p1, p2) = (p2, p1);
         }
 
-        dx = p2.x - p1.x;
-        dy = p2.y - p1.y;
+        dx = (p2.x - p1.x) as i32;
+        dy = (p2.y - p1.y) as i32;
 
-        let dy_error = dy.abs() * 2;
+        let dy_error = dy.abs() as i32 * 2;
         let y_error = 0;
-        let y = p1.y;
+        let y = p1.y as i32;
 
         LineIterator {
             angle_bigger_45_deg,
-            begin: p1,
-            end: p2,
+            begin: IVec3::new(p1.x as i32, p1.y as i32, p1.z as i32),
+            end: IVec3::new(p2.x as i32, p2.y as i32, p2.z as i32),
             dx,
             dy_error,
             y_error,
-            x: p1.x,
+            x: p1.x as i32,
             y,
         }
     }

@@ -1,5 +1,6 @@
 use std::ops::Mul;
 
+use glam::Vec3A;
 use image::Rgba;
 use num::{Num, NumCast};
 use rand::prelude::*;
@@ -70,6 +71,13 @@ impl Color {
         color.invert();
         color
     }
+
+    pub fn apply_intensity(self, intensities: Vec3A) -> Color {
+        let r = (self.r as f32 * intensities.x) as u8;
+        let g = (self.g as f32 * intensities.y) as u8;
+        let b = (self.b as f32 * intensities.z) as u8;
+        Color::from_rgb_with_alpha(r, g, b, self.alpha)
+    }
 }
 
 impl From<Rgba<u8>> for Color {
@@ -85,12 +93,7 @@ impl<T: Num + Copy + NumCast> Mul<T> for Color {
         let r = <u8 as NumCast>::from(T::from(self.r).unwrap() * rhs).unwrap();
         let g = <u8 as NumCast>::from(T::from(self.g).unwrap() * rhs).unwrap();
         let b = <u8 as NumCast>::from(T::from(self.b).unwrap() * rhs).unwrap();
-        Color {
-            r,
-            g,
-            b,
-            alpha: self.alpha,
-        }
+        Color::from_rgb_with_alpha(r, g, b, self.alpha)
     }
 }
 

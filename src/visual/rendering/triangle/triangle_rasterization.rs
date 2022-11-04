@@ -1,27 +1,30 @@
 use glam::{Mat3A, Vec3A};
-use image::{DynamicImage, GenericImage, GenericImageView};
+use image::{DynamicImage, GenericImageView};
 
 use crate::{
     math::{geometry::primitives::polygon::Polygon, interpolation::Interpolator},
     plane_buffer::plane_buffer::PlaneBuffer,
     visual::{
-        color::color::Color, drawing_buffer::DrawingBuffer,
-        rendering::interpolation_values::InterpolationValues,
+        color::color::Color,
+        drawing_buffer::DrawingBuffer,
+        rendering::{
+            interpolation_values::InterpolationValues,
+            light_source::{LightSource, LightSourceKind},
+        }, vertex::Vertex,
     },
 };
 
 pub fn fill_triangle(
-    polygon: &Polygon<3>,
+    vertices: &[Vertex; 3],
     canvas: &mut DrawingBuffer,
     texture: &DynamicImage,
     normal_map: &PlaneBuffer<Vec3A>,
-    light_dir: Vec3A,
+    lights: &Vec<LightSource>,
     use_normal_map: bool,
     z_buffer_size: f32,
 ) {
-    let points = polygon.get_points();
-    let mut points_sorted_by_x = points.clone();
-    points_sorted_by_x.sort_unstable_by(|a, b| a.x.cmp(&b.x));
+    let mut vertices_sorted_by_x = vertices.clone();
+    vertices_sorted_by_x.sort_unstable_by(|a, b| a.x.partial_cmp(&b.x).unwrap());
     let (texture_width, texture_height) = texture.dimensions();
 
     let (nm_width, nm_height) = (
@@ -31,9 +34,9 @@ pub fn fill_triangle(
 
     let (l_p, m_p, r_p) = unsafe {
         (
-            *points_sorted_by_x.get_unchecked(0),
-            *points_sorted_by_x.get_unchecked(1),
-            *points_sorted_by_x.get_unchecked(2),
+            *vertices_sorted_by_x.get_unchecked(0),
+            *vertices_sorted_by_x.get_unchecked(1),
+            *vertices_sorted_by_x.get_unchecked(2),
         )
     };
 
@@ -44,26 +47,20 @@ pub fn fill_triangle(
     );
 
     let (l_calc, long_calc, r_calc) = (
-        Interpolator::from((l_p.x, m_p.x)),
-        Interpolator::from((l_p.x, r_p.x)),
-        Interpolator::from((m_p.x, r_p.x)),
+        Interpolator::from((l_p.x as i32, m_p.x as i32)),
+        Interpolator::from((l_p.x as i32, r_p.x as i32)),
+        Interpolator::from((m_p.x as i32, r_p.x as i32)),
     );
 
     let d_long_v = r_v - l_v;
 
     let A = Mat3A::from_cols(
-        Vec3A::from((
-            (m_p.coords - l_p.coords).as_vec2(),
-            (m_p.get_z_depth() - l_p.get_z_depth()) as f32,
-        )),
-        Vec3A::from((
-            (r_p.coords - l_p.coords).as_vec2(),
-            (r_p.get_z_depth() - l_p.get_z_depth()) as f32,
-        )),
+        m_p.pos - l_p.pos,
+        r_p.pos - l_p.pos,
         Vec3A::ZERO,
     );
 
-    let (l_uv, m_uv, r_uv) = (*l_p.get_uv(), *m_p.get_uv(), *r_p.get_uv());
+    let (l_uv, m_uv, r_uv) = (l_p.uv, m_p.uv, r_p.uv);
 
     let I = Vec3A::new(m_uv.x - l_uv.x, r_uv.x - l_uv.x, 0.0);
     let J = Vec3A::new(m_uv.y - l_uv.y, r_uv.y - l_uv.y, 0.0);
@@ -82,7 +79,7 @@ pub fn fill_triangle(
                 (v1, v2) = (v2, v1);
             }
 
-            let (y1, y2) = (v1.y, v2.y);
+            let (y1, y2) = (v1.y as i32, v2.y as i32);
 
             let local_calc = Interpolator::new(y1, y2);
             let local_d_v = v2 - v1;
@@ -131,19 +128,20 @@ pub fn fill_triangle(
                     normal = (B * nm).normalize();
                 }
 
-                let mut intensity = light_dir.dot(normal).max(0.0);
+                let mut intensities = Vec3A::ZERO;
 
-                // intensity = if intensity < 0.33 {
-                //     0.0
-                // } else if intensity < 0.66 {
-                //     0.33
-                // } else if intensity < 1.0 {
-                //     0.66
-                // } else {
-                //     1.0
-                // };
+                for light in lights.iter() {
+                    match light.kind {
+                        LightSourceKind::Linear(dir) => {
+                            intensities += light.spectrum * dir.dot(normal).max(0.0).powf(light.concentration)
+                        }
+                        LightSourceKind::Point(point) => {}
+                        LightSourceKind::Ambient => intensities += light.spectrum,
+                    }
+                }
 
-                let new_color = Color::from(texture.get_pixel(uvx, uvy)) * intensity;
+                let new_color =
+                    Color::from(texture.get_pixel(uvx, uvy)).apply_intensity(intensities);
                 *z_val = z_depth;
                 canvas[p] = new_color;
             }

@@ -2,7 +2,7 @@ use glam::Mat4;
 
 use crate::wavefront::wavefront_obj::WavefrontObj;
 
-#[derive(Clone, Builder)]
+#[derive(Clone, Debug, Builder)]
 pub struct WavefrontRenderModel {
     pub obj: WavefrontObj,
     pub use_normal_map: bool,

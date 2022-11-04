@@ -7,15 +7,15 @@ use crate::{
     math::spherical_coordinate_system::spherical_to_cartesian_yzx,
     plane_buffer::plane_buffer::PlaneBufferCreateOption,
     visual::{
+        color::color::Color,
         drawing_buffer::DrawingBuffer,
         rendering::{
             ambient_occlusion::render_ambient_occlusion,
-            view_matrix::create_view_matrix,
-            viewport_matrix::create_view_port_matrix,
+            light_source::{LightSource, LightSourceKind},
             wavefront_obj::{
                 wavefront_obj_rendering::render_wavefront_mesh,
                 wavefront_render_model::WavefrontRenderModel,
-            },
+            }, matrix::{viewport_matrix::create_view_port_matrix, view_matrix::create_view_matrix},
         },
     },
     wavefront::wavefront_obj::WavefrontObj,
@@ -24,6 +24,8 @@ use crate::{
 use super::render_config::render_config::{
     AmbientOcclusionConfig, CameraConfig, LookConfig, RenderConfigBuilder,
 };
+
+const INTENSITIES: [Vec3A; 3] = [Vec3A::X, Vec3A::Y, Vec3A::Z];
 
 pub fn open_render_window(
     buffer_width: usize,
@@ -52,8 +54,10 @@ pub fn open_render_window(
             pitch: 0.0,
             distance: 5.0,
         })
-        .light_dir(-Vec3A::Y)
-        .spin_light(false)
+        .lights(vec![
+            LightSource::new(LightSourceKind::Linear(Vec3A::X), Vec3A::ONE * 50.0, 20.0),
+            LightSource::new(LightSourceKind::Ambient, Vec3A::ONE * 0.5, 1.0), // LightSource::new(LightSourceKind::Linear(Vec3A::Z), INTENSITIES[2]),
+        ])
         .ambient_occlusion(AmbientOcclusionConfig {
             apply: false,
             effect_radius: 10.0,
@@ -66,8 +70,11 @@ pub fn open_render_window(
             h_f32 / 1.25,
             z_buffer_size,
         ))
+        .models(models)
         .build()
         .unwrap();
+
+    let mut intensity_idx = 0usize;
 
     let mut window = Window::new(
         "Renderust",
@@ -81,6 +88,9 @@ pub fn open_render_window(
     )
     .expect("Unable to open Window");
 
+    let a = Vec3A::X.cross(Vec3A::X);
+
+    let mut spin_light = false;
     let mut light_spin_t = 0.0f32;
     let mut t_delta = 0.0;
 
@@ -88,18 +98,24 @@ pub fn open_render_window(
         let start = Instant::now();
 
         if window.is_key_pressed(Key::Space, minifb::KeyRepeat::No) {
-            render_config.spin_light = !render_config.spin_light;
+            spin_light = !spin_light;
         }
 
         if window.is_key_pressed(Key::LeftCtrl, minifb::KeyRepeat::No) {
-            models[0].use_normal_map = !models[0].use_normal_map;
+            render_config.models[0].use_normal_map = !render_config.models[0].use_normal_map;
         }
 
         if window.is_key_pressed(Key::A, minifb::KeyRepeat::No) {
             render_config.ambient_occlusion.apply = !render_config.ambient_occlusion.apply;
         }
 
-        let light_dir = Vec3A::new(light_spin_t.sin(), 1.0, light_spin_t.cos()).normalize();
+        render_config.lights[0].kind = LightSourceKind::Linear(
+            Vec3A::new(light_spin_t.sin(), 1.0, light_spin_t.cos()).normalize(),
+        );
+
+        // render_config.lights[1].kind = LightSourceKind::Linear(
+        //     Vec3A::new(light_spin_t.cos(), 1.0, light_spin_t.sin()).normalize(),
+        // );
 
         if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Pass) {
             let CameraConfig {
@@ -125,11 +141,11 @@ pub fn open_render_window(
         draw_buffer.get_z_buffer_mut().clean_with(&f32::MIN);
         draw_buffer.clean();
 
-        for model in models.iter() {
+        for model in render_config.models.iter() {
             render_wavefront_mesh(
                 &model,
                 &mut draw_buffer,
-                light_dir,
+                &render_config.lights,
                 render_config.transform_matrixes.viewport_matrix,
                 projection,
                 render_config.transform_matrixes.view_matrix,
@@ -158,19 +174,13 @@ pub fn open_render_window(
         t_delta = (end - start).as_secs_f32();
 
         window.set_title(&format!(
-            "{:1.1?} FPS, [SPACE] light {}, [LCtrl] normal map: {}, light: ({:.2}, {:.2})",
+            "{:1.1?} FPS, [SPACE] light {}, [LCtrl] normal map: {}",
             1.0 / t_delta,
-            if render_config.spin_light {
-                "spinning"
-            } else {
-                "fixed"
-            },
-            models[0].use_normal_map,
-            light_dir.x,
-            light_dir.z
+            if spin_light { "spinning" } else { "fixed" },
+            render_config.models[0].use_normal_map,
         ));
 
-        if render_config.spin_light {
+        if spin_light {
             light_spin_t += t_delta;
         }
     }

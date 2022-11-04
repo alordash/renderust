@@ -1,9 +1,9 @@
-use super::point::Point2D;
+use glam::Vec3A;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Line {
-    pub begin: Point2D,
-    pub end: Point2D,
+    pub begin: Vec3A,
+    pub end: Vec3A,
 }
 
 impl Line {
@@ -19,10 +19,7 @@ impl Line {
         }
     }
 
-    pub fn new(begin_x: i32, begin_y: i32, end_x: i32, end_y: i32) -> Line {
-        Line {
-            begin: Point2D::from(begin_x, begin_y),
-            end: Point2D::from(end_x, end_y)
-        }
+    pub fn new(begin: Vec3A, end: Vec3A) -> Line {
+        Line { begin, end }
     }
 }

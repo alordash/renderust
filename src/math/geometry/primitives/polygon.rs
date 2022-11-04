@@ -1,16 +1,18 @@
-use super::{line::Line, point::Point2D};
+use glam::Vec3A;
+
+use super::line::Line;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Polygon<const N: usize> {
-    points: [Point2D; N],
+    points: [Vec3A; N],
 }
 
 impl<const N: usize> Polygon<N> {
-    pub fn new(points: [Point2D; N]) -> Polygon<N> {
+    pub fn new(points: [Vec3A; N]) -> Polygon<N> {
         Polygon { points }
     }
 
-    pub fn get_points(&self) -> &[Point2D; N] {
+    pub fn get_points(&self) -> &[Vec3A; N] {
         &self.points
     }
 
@@ -33,9 +35,9 @@ impl<const N: usize> Polygon<N> {
     }
 }
 
-impl<const N: usize> TryFrom<Vec<Point2D>> for Polygon<N> {
+impl<const N: usize> TryFrom<Vec<Vec3A>> for Polygon<N> {
     type Error = String;
-    fn try_from(points_vec: Vec<Point2D>) -> Result<Self, Self::Error> {
+    fn try_from(points_vec: Vec<Vec3A>) -> Result<Self, Self::Error> {
         let points = points_vec
             .into_iter()
             .take(N)
