@@ -70,8 +70,10 @@ pub fn render_wavefront_mesh(
     for light in lights.iter_mut() {
         match light.kind {
             LightSourceKind::Point(p) => {
-                let new_pos = transform_matrix * Vec4::from((p, 1.0));
-                light.kind = LightSourceKind::Point(Vec3A::from(new_pos.xyz()) / new_pos.w);
+                let new_pos = view_matrix * Vec4::from((p, 1.0));
+                let new_pos = Vec3A::from(new_pos.xyz());
+                light.kind = LightSourceKind::Point(new_pos);
+                println!("{}", new_pos);
             }
             _ => (),
         };
@@ -95,11 +97,11 @@ pub fn render_wavefront_mesh(
 
             let uvidx = face[1][j] as usize;
             let uv3d = wavefront_obj.vertex_textures[uvidx];
-            screen_vertices[j] = Vertex::new(vertex, Vec2::new(uv3d.x, uv3d.y), normal);
+            screen_vertices[j] = Vertex::new(vertex, source_vertex, Vec2::new(uv3d.x, uv3d.y), normal);
 
             if !canvas.get_z_buffer().contains(
-                screen_vertices[j].pos.x as usize,
-                screen_vertices[j].pos.y as usize,
+                screen_vertices[j].screen_pos.x as usize,
+                screen_vertices[j].screen_pos.y as usize,
             ) {
                 skip = true;
                 break;

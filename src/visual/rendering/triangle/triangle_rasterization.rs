@@ -55,14 +55,16 @@ pub fn fill_triangle(
 
     let d_long_v = r_v - l_v;
 
-    let A = Mat3A::from_cols(m_p.pos - l_p.pos, r_p.pos - l_p.pos, Vec3A::ZERO);
+    let A = Mat3A::from_cols(
+        m_p.screen_pos - l_p.screen_pos,
+        r_p.screen_pos - l_p.screen_pos,
+        Vec3A::ZERO,
+    );
 
     let (l_uv, m_uv, r_uv) = (l_p.uv, m_p.uv, r_p.uv);
 
     let I = Vec3A::new(m_uv.x - l_uv.x, r_uv.x - l_uv.x, 0.0);
     let J = Vec3A::new(m_uv.y - l_uv.y, r_uv.y - l_uv.y, 0.0);
-
-    // println!("{:?}", lights);
 
     let mut filler = |short_calc: Interpolator<i32>,
                       v_start: InterpolationValues,
@@ -95,6 +97,7 @@ pub fn fill_triangle(
                     z_depth,
                     uv,
                     mut normal,
+                    real_pos,
                     ..
                 } = local_v;
 
@@ -136,7 +139,7 @@ pub fn fill_triangle(
                                 light.spectrum * dir.dot(normal).max(0.0).powf(light.concentration)
                         }
                         LightSourceKind::Point(point) => {
-                            let dir = (point - Vec3A::new(x as f32, y as f32, z_depth)).normalize();
+                            let dir = (point - real_pos).normalize();
                             intensities +=
                                 light.spectrum * dir.dot(normal).max(0.0).powf(light.concentration);
                         }
@@ -154,4 +157,22 @@ pub fn fill_triangle(
 
     filler(l_calc, l_v, m_v);
     filler(r_calc, m_v, r_v);
+
+    for light in lights.iter() {
+        match light.kind {
+            LightSourceKind::Point(pos) => {
+                for x in (pos.x as i32 - 5)..=(pos.x as i32 + 5) {
+                    for y in (pos.y as i32 - 5)..=(pos.y as i32 + 5) {
+                        if !canvas.contains(x as usize, y as usize) {
+                            continue;
+                        }
+
+                        canvas[(x as usize, y as usize)] =
+                            Color::from_rgb(255, 255, 255).apply_intensity(light.spectrum);
+                    }
+                }
+            }
+            _ => (),
+        };
+    }
 }

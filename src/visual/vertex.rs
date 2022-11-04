@@ -4,26 +4,27 @@ use glam::{Vec2, Vec3A};
 
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 pub struct Vertex {
-    pub pos: Vec3A,
+    pub screen_pos: Vec3A,
+    pub real_pos: Vec3A,
     pub uv: Vec2,
     pub normal: Vec3A,
 }
 
 impl Vertex {
-    pub fn new(pos: Vec3A, uv: Vec2, normal: Vec3A) -> Vertex {
-        Vertex { pos, uv, normal }
+    pub fn new(screen_pos: Vec3A, real_pos: Vec3A, uv: Vec2, normal: Vec3A) -> Vertex {
+        Vertex { screen_pos, real_pos, uv, normal }
     }
 }
 
 impl Deref for Vertex {
     type Target = Vec3A;
     fn deref(&self) -> &Self::Target {
-        &self.pos
+        &self.screen_pos
     }
 }
 
 impl DerefMut for Vertex {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.pos
+        &mut self.screen_pos
     }
 }

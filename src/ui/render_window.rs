@@ -56,7 +56,8 @@ pub fn open_render_window(
         })
         .lights(vec![
             // LightSource::new(LightSourceKind::Linear(Vec3A::X), Vec3A::ONE * 0.5, 1.0),
-            LightSource::new(LightSourceKind::Point(Vec3A::Z * 0.1), Vec3A::ONE * 20.0, 20.0), // LightSource::new(LightSourceKind::Linear(Vec3A::Z), INTENSITIES[2]),
+            LightSource::new(LightSourceKind::Point(Vec3A::Z * 0.1), Vec3A::ONE * 10.0, 10.0),
+            LightSource::new(LightSourceKind::Ambient, Vec3A::ONE * 0.33, 1.0),
         ])
         .ambient_occlusion(AmbientOcclusionConfig {
             apply: false,
@@ -114,7 +115,7 @@ pub fn open_render_window(
         // );
 
         render_config.lights[0].kind = LightSourceKind::Point(
-            Vec3A::new(0.0, 0.0, light_spin_t.sin() * 2.0),
+            Vec3A::new(0.0, 0.0, light_spin_t.sin()),
         );
 
         if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Pass) {
