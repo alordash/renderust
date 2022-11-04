@@ -5,7 +5,7 @@ use std::{
 };
 
 use glam::{UVec3, Vec3A};
-use image::{DynamicImage, GenericImage};
+use image::{DynamicImage, GenericImage, GenericImageView};
 
 use crate::{
     plane_buffer::plane_buffer::PlaneBuffer,
@@ -20,7 +20,7 @@ const LINE_ENDINGS: [&'static str; 2] = ["\r\n", "\n"];
 
 fn normal_map_vecs_from_rgb(normal_map_img: DynamicImage) -> PlaneBuffer<Vec3A> {
     let normals: Vec<Vec3A> = normal_map_img
-        .to_rgb()
+        .to_rgb8()
         .iter()
         .map(|c| (*c as f32 / 255.0) * 2.0 - 1.0)
         .collect::<Vec<f32>>()
@@ -44,11 +44,11 @@ impl WavefrontObj {
     ) -> Result<WavefrontObj, String> {
         let mut line = String::new();
         let texture_reader = BufReader::new(texture_source);
-        let texture = image::load(texture_reader, image::ImageFormat::TGA)
+        let texture = image::load(texture_reader, image::ImageFormat::Tga)
             .unwrap()
             .flipv();
         let normal_map_reader = BufReader::new(normal_map_source);
-        let normal_map_img = image::load(normal_map_reader, image::ImageFormat::TGA).unwrap();
+        let normal_map_img = image::load(normal_map_reader, image::ImageFormat::Tga).unwrap();
         let normal_map = normal_map_vecs_from_rgb(normal_map_img);
         let mut wavefront_obj = WavefrontObj {
             vertices: Default::default(),

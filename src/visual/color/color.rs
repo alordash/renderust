@@ -74,7 +74,7 @@ impl Color {
 
 impl From<Rgba<u8>> for Color {
     fn from(rgba: Rgba<u8>) -> Self {
-        let (r, g, b, alpha) = (rgba.data[0], rgba.data[1], rgba.data[2], rgba.data[3]);
+        let (r, g, b, alpha) = (rgba.0[0], rgba.0[1], rgba.0[2], rgba.0[3]);
         Color { b, g, r, alpha }
     }
 }

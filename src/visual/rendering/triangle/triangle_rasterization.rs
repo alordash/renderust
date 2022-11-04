@@ -1,5 +1,5 @@
 use glam::{Mat3A, Vec3A};
-use image::{DynamicImage, GenericImage};
+use image::{DynamicImage, GenericImage, GenericImageView};
 
 use crate::{
     math::{geometry::primitives::polygon::Polygon, interpolation::Interpolator},
