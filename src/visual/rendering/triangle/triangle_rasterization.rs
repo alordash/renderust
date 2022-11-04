@@ -2,7 +2,7 @@ use glam::{Mat3A, Vec3A};
 use image::{DynamicImage, GenericImageView};
 
 use crate::{
-    math::{geometry::primitives::polygon::Polygon, interpolation::Interpolator},
+    math::interpolation::Interpolator,
     plane_buffer::plane_buffer::PlaneBuffer,
     visual::{
         color::color::Color,
@@ -97,7 +97,6 @@ pub fn fill_triangle(
                     z_depth,
                     uv,
                     mut normal,
-                    real_pos,
                     ..
                 } = local_v;
 
@@ -138,11 +137,6 @@ pub fn fill_triangle(
                             intensities +=
                                 light.spectrum * dir.dot(normal).max(0.0).powf(light.concentration)
                         }
-                        LightSourceKind::Point(point) => {
-                            let dir = (point - real_pos).normalize();
-                            intensities +=
-                                light.spectrum * dir.dot(normal).max(0.0).powf(light.concentration);
-                        }
                         LightSourceKind::Ambient => intensities += light.spectrum,
                     }
                 }
@@ -157,22 +151,4 @@ pub fn fill_triangle(
 
     filler(l_calc, l_v, m_v);
     filler(r_calc, m_v, r_v);
-
-    for light in lights.iter() {
-        match light.kind {
-            LightSourceKind::Point(pos) => {
-                for x in (pos.x as i32 - 5)..=(pos.x as i32 + 5) {
-                    for y in (pos.y as i32 - 5)..=(pos.y as i32 + 5) {
-                        if !canvas.contains(x as usize, y as usize) {
-                            continue;
-                        }
-
-                        canvas[(x as usize, y as usize)] =
-                            Color::from_rgb(255, 255, 255).apply_intensity(light.spectrum);
-                    }
-                }
-            }
-            _ => (),
-        };
-    }
 }

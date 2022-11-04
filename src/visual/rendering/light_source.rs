@@ -3,7 +3,6 @@ use glam::Vec3A;
 #[derive(Clone, Copy, Debug)]
 pub enum LightSourceKind {
     Linear(Vec3A),
-    Point(Vec3A),
     Ambient,
 }
 
