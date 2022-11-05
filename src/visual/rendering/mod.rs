@@ -16,6 +16,7 @@ pub mod interpolation_values;
 pub mod matrix {
     pub mod view_matrix;
     pub mod viewport_matrix;
+    pub mod projection_matrix;
 }
 pub mod ambient_occlusion;
 pub mod light_source;

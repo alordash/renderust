@@ -12,7 +12,10 @@ use crate::{
         rendering::{
             ambient_occlusion::render_ambient_occlusion,
             light_source::{LightSource, LightSourceKind},
-            matrix::{view_matrix::create_view_matrix, viewport_matrix::create_view_port_matrix},
+            matrix::{
+                projection_matrix::create_projection_matrix, view_matrix::create_view_matrix,
+                viewport_matrix::create_view_port_matrix,
+            },
             wavefront_obj::{
                 wavefront_obj_rendering::render_wavefront_mesh,
                 wavefront_render_model::WavefrontRenderModel,
@@ -156,9 +159,8 @@ pub fn open_render_window(
             }
         }
 
-        render_config.transform_matrixes.projection = Mat4::IDENTITY;
-        render_config.transform_matrixes.projection.col_mut(2)[3] =
-            -1.0 / render_config.look.from.distance(render_config.look.to);
+        render_config.transform_matrixes.projection =
+            create_projection_matrix(render_config.look.from.distance(render_config.look.to));
 
         draw_buffer.get_z_buffer_mut().clean_with(&f32::MIN);
         draw_buffer.clean();
