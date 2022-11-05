@@ -34,6 +34,9 @@ use super::render_config::render_config::{
     AmbientOcclusionConfig, CameraConfig, LookConfig, RenderConfigBuilder,
 };
 
+const MOVE_SPEED: f32 = 2.0;
+const ROTATION_SPEED: f32 = 2.0;
+
 pub fn open_render_window(
     buffer_width: usize,
     buffer_height: usize,
@@ -83,8 +86,6 @@ pub fn open_render_window(
             .unwrap(),
     );
 
-    let mut offset = Vec4::new(0.0, 0.0, 0.0, 1.0);
-
     let mut window = Window::new(
         "Renderust",
         window_width,
@@ -102,7 +103,7 @@ pub fn open_render_window(
     let mouse_down_pos: RefCell<Option<Vec2>> = RefCell::new(None);
 
     let mut light_spin_t = 0.0f32;
-    let mut t_delta;
+    let mut t_delta = RefCell::new(0.0);
 
     let mut input_bindings = [
         InputBinding::Keyboard(KeyboardBinding::new(
@@ -135,6 +136,9 @@ pub fn open_render_window(
             let mut render_config = RefCell::borrow_mut(&render_config);
             let diff = -y / 100.0;
             render_config.camera.distance = (render_config.camera.distance + diff).max(0.85);
+
+            render_config.transform_matrixes.projection =
+                create_projection_matrix(render_config.camera.distance);
         })),
         InputBinding::MousePressed(MousePressedBinding::new(
             minifb::MouseButton::Left,
@@ -174,9 +178,13 @@ pub fn open_render_window(
                             yaw,
                             distance,
                         } = &mut (render_config.camera);
-                        *pitch =
-                            *pitch + (2.0 * diff.y / buffer_height as f32) * std::f32::consts::PI;
-                        *yaw = *yaw + (diff.x / buffer_width as f32) * std::f32::consts::PI * 2.0;
+                        *pitch = *pitch
+                            + (ROTATION_SPEED * diff.y / buffer_height as f32)
+                                * std::f32::consts::PI;
+                        *yaw = *yaw
+                            + (ROTATION_SPEED * diff.x / buffer_width as f32)
+                                * std::f32::consts::PI
+                                * 2.0;
                         (*pitch, *yaw, *distance)
                     };
                     {
@@ -187,6 +195,72 @@ pub fn open_render_window(
                         render_config.transform_matrixes.view_matrix =
                             create_view_matrix(*from, *to, *up);
                     }
+                }
+            },
+        )),
+        InputBinding::Keyboard(KeyboardBinding::new(
+            Key::W,
+            KeyBindingKind::KeyDown,
+            || {
+                let t_delta = RefCell::borrow(&t_delta);
+                let mut render_config = RefCell::borrow_mut(&render_config);
+                for model in render_config.models.iter_mut() {
+                    *model.model_matrix.col_mut(3) += Vec4::Z * MOVE_SPEED * *t_delta;
+                }
+            },
+        )),
+        InputBinding::Keyboard(KeyboardBinding::new(
+            Key::A,
+            KeyBindingKind::KeyDown,
+            || {
+                let t_delta = RefCell::borrow(&t_delta);
+                let mut render_config = RefCell::borrow_mut(&render_config);
+                for model in render_config.models.iter_mut() {
+                    *model.model_matrix.col_mut(3) -= Vec4::X * MOVE_SPEED * *t_delta;
+                }
+            },
+        )),
+        InputBinding::Keyboard(KeyboardBinding::new(
+            Key::S,
+            KeyBindingKind::KeyDown,
+            || {
+                let t_delta = RefCell::borrow(&t_delta);
+                let mut render_config = RefCell::borrow_mut(&render_config);
+                for model in render_config.models.iter_mut() {
+                    *model.model_matrix.col_mut(3) -= Vec4::Z * MOVE_SPEED * *t_delta;
+                }
+            },
+        )),
+        InputBinding::Keyboard(KeyboardBinding::new(
+            Key::D,
+            KeyBindingKind::KeyDown,
+            || {
+                let t_delta = RefCell::borrow(&t_delta);
+                let mut render_config = RefCell::borrow_mut(&render_config);
+                for model in render_config.models.iter_mut() {
+                    *model.model_matrix.col_mut(3) += Vec4::X * MOVE_SPEED * *t_delta;
+                }
+            },
+        )),
+        InputBinding::Keyboard(KeyboardBinding::new(
+            Key::LeftShift,
+            KeyBindingKind::KeyDown,
+            || {
+                let t_delta = RefCell::borrow(&t_delta);
+                let mut render_config = RefCell::borrow_mut(&render_config);
+                for model in render_config.models.iter_mut() {
+                    *model.model_matrix.col_mut(3) -= Vec4::Y * MOVE_SPEED * *t_delta;
+                }
+            },
+        )),
+        InputBinding::Keyboard(KeyboardBinding::new(
+            Key::Space,
+            KeyBindingKind::KeyDown,
+            || {
+                let t_delta = RefCell::borrow(&t_delta);
+                let mut render_config = RefCell::borrow_mut(&render_config);
+                for model in render_config.models.iter_mut() {
+                    *model.model_matrix.col_mut(3) += Vec4::Y * MOVE_SPEED * *t_delta;
                 }
             },
         )),
@@ -205,15 +279,8 @@ pub fn open_render_window(
             Vec3A::new(light_spin_t.sin(), 1.0, light_spin_t.cos()).normalize(),
         );
 
-        render_config.transform_matrixes.projection =
-            create_projection_matrix(render_config.look.from.distance(render_config.look.to));
-
         draw_buffer.get_z_buffer_mut().clean_with(&f32::MIN);
         draw_buffer.clean();
-
-        for model in render_config.models.iter_mut() {
-            *model.model_matrix.col_mut(3) = offset;
-        }
 
         for model in render_config.models.iter() {
             render_wavefront_mesh(
@@ -245,18 +312,19 @@ pub fn open_render_window(
             .unwrap();
 
         let end = Instant::now();
-        t_delta = (end - start).as_secs_f32();
+        let mut t_delta = RefCell::borrow_mut(&t_delta);
+        *t_delta = (end - start).as_secs_f32();
 
         window.set_title(&format!(
             "Renderust {:1.1?} FPS, [SPACE] light {}, yaw: {:1.2}, pitch: {:1.2}",
-            1.0 / t_delta,
+            1.0 / *t_delta,
             if *spin_light { "spinning" } else { "fixed" },
             render_config.camera.yaw,
             render_config.camera.pitch,
         ));
 
         if *spin_light {
-            light_spin_t += t_delta;
+            light_spin_t += *t_delta;
         }
     }
 }
