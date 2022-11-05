@@ -3,7 +3,7 @@ use minifb::Window;
 use super::{
     keyboard_binding::{KeyBindingKind, KeyboardBinding},
     mouse_position_binding::MousePositionBinding,
-    mouse_pressed_binding::MousePressedBinding,
+    mouse_pressed_binding::{MousePressMode, MousePressedBinding},
     mouse_scroll_binding::MouseScrollBinding,
 };
 
@@ -19,8 +19,13 @@ impl<'a> InputBinding<'a> {
         for input_binding in input_bindings.iter_mut() {
             match input_binding {
                 InputBinding::MousePressed(mouse_pressed) => {
-                    if window.get_mouse_down(mouse_pressed.button) {
-                        (mouse_pressed.callback)();
+                    let should_be_down = match mouse_pressed.press_mode {
+                        MousePressMode::Down => true,
+                        MousePressMode::Up => false,
+                    };
+                    if window.get_mouse_down(mouse_pressed.button) == should_be_down {
+                        let (x, y) = window.get_mouse_pos(minifb::MouseMode::Pass).unwrap();
+                        (mouse_pressed.callback)(x, y);
                     }
                 }
                 InputBinding::MousePosition(mouse_position) => {

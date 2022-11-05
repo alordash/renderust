@@ -1,6 +1,6 @@
 use std::{cell::RefCell, time::Instant};
 
-use glam::{Mat4, Vec3A};
+use glam::{Vec2, Vec3A, Vec4};
 use minifb::{Key, ScaleMode, Window, WindowOptions};
 
 use crate::{
@@ -10,6 +10,7 @@ use crate::{
         input_binding::InputBinding,
         keyboard_binding::{KeyBindingKind, KeyboardBinding},
         mouse_position_binding::MousePositionBinding,
+        mouse_pressed_binding::{MousePressMode, MousePressedBinding},
         mouse_scroll_binding::MouseScrollBinding,
     },
     visual::{
@@ -57,8 +58,8 @@ pub fn open_render_window(
                 up: Vec3A::Y,
             })
             .camera(CameraConfig {
-                yaw: 0.0,
                 pitch: 0.0,
+                yaw: 0.0,
                 distance: 5.0,
             })
             .lights(vec![
@@ -82,6 +83,8 @@ pub fn open_render_window(
             .unwrap(),
     );
 
+    let mut offset = Vec4::new(0.0, 0.0, 0.0, 1.0);
+
     let mut window = Window::new(
         "Renderust",
         window_width,
@@ -95,9 +98,11 @@ pub fn open_render_window(
     .expect("Unable to open Window");
 
     let spin_light = RefCell::new(false);
+    let mouse_pressed = RefCell::new(false);
+    let mouse_down_pos: RefCell<Option<Vec2>> = RefCell::new(None);
 
     let mut light_spin_t = 0.0f32;
-    let mut t_delta = 0.0;
+    let mut t_delta;
 
     let mut input_bindings = [
         InputBinding::Keyboard(KeyboardBinding::new(
@@ -126,37 +131,61 @@ pub fn open_render_window(
                 render_config.ambient_occlusion.apply = !render_config.ambient_occlusion.apply;
             },
         )),
-        InputBinding::MousePosition(MousePositionBinding::new(
-            minifb::MouseMode::Pass,
-            |x, y| {
-                let mut render_config = RefCell::borrow_mut(&render_config);
-                let (yaw, pitch, distance) = {
-                    let CameraConfig {
-                        yaw,
-                        pitch,
-                        distance,
-                    } = &mut (render_config.camera);
-                    *yaw = (y / window_height as f32) * std::f32::consts::PI;
-                    *pitch = ((x - window_width as f32 / 2.0) / buffer_width as f32)
-                        * std::f32::consts::PI
-                        * 2.0;
-                    (*yaw, *pitch, *distance)
-                };
-                {
-                    let LookConfig { from, to, up } = &mut (render_config.look);
-
-                    *from = spherical_to_cartesian_yzx(yaw, pitch, distance).into();
-
-                    render_config.transform_matrixes.view_matrix =
-                        create_view_matrix(*from, *to, *up);
-                }
-            },
-        )),
         InputBinding::MouseScroll(MouseScrollBinding::new(|_, y| {
             let mut render_config = RefCell::borrow_mut(&render_config);
             let diff = -y / 100.0;
             render_config.camera.distance = (render_config.camera.distance + diff).max(0.85);
         })),
+        InputBinding::MousePressed(MousePressedBinding::new(
+            minifb::MouseButton::Left,
+            MousePressMode::Down,
+            |x, y| {
+                let mut mouse_down_pos = RefCell::borrow_mut(&mouse_down_pos);
+                let mut mouse_pressed = RefCell::borrow_mut(&mouse_pressed);
+                if !*mouse_pressed {
+                    let pos = Vec2::new(x, y);
+                    *mouse_down_pos = Some(pos);
+                }
+                *mouse_pressed = true;
+            },
+        )),
+        InputBinding::MousePressed(MousePressedBinding::new(
+            minifb::MouseButton::Left,
+            MousePressMode::Up,
+            |_, _| {
+                *RefCell::borrow_mut(&mouse_pressed) = false;
+            },
+        )),
+        InputBinding::MousePosition(MousePositionBinding::new(
+            minifb::MouseMode::Pass,
+            |x, y| {
+                let mut render_config = RefCell::borrow_mut(&render_config);
+                if *RefCell::borrow_mut(&mouse_pressed) {
+                    let mouse_pos = RefCell::borrow_mut(&mouse_down_pos).unwrap();
+                    let diff = Vec2::new(x, y) - mouse_pos;
+                    *RefCell::borrow_mut(&mouse_down_pos) = Some(Vec2::new(x, y));
+                    let (yaw, pitch, distance) = {
+                        let CameraConfig {
+                            pitch,
+                            yaw,
+                            distance,
+                        } = &mut (render_config.camera);
+                        *pitch =
+                            *pitch + (2.0 * diff.y / buffer_height as f32) * std::f32::consts::PI;
+                        *yaw = *yaw + (diff.x / buffer_width as f32) * std::f32::consts::PI * 2.0;
+                        (*pitch, *yaw, *distance)
+                    };
+                    {
+                        let LookConfig { from, to, up } = &mut (render_config.look);
+
+                        *from = spherical_to_cartesian_yzx(yaw, pitch, distance).into();
+
+                        render_config.transform_matrixes.view_matrix =
+                            create_view_matrix(*from, *to, *up);
+                    }
+                }
+            },
+        )),
     ];
 
     while window.is_open() {
@@ -177,6 +206,10 @@ pub fn open_render_window(
 
         draw_buffer.get_z_buffer_mut().clean_with(&f32::MIN);
         draw_buffer.clean();
+
+        for model in render_config.models.iter_mut() {
+            *model.model_matrix.col_mut(3) = offset;
+        }
 
         for model in render_config.models.iter() {
             render_wavefront_mesh(
@@ -211,9 +244,11 @@ pub fn open_render_window(
         t_delta = (end - start).as_secs_f32();
 
         window.set_title(&format!(
-            "Renderust {:1.1?} FPS, [SPACE] light {}",
+            "Renderust {:1.1?} FPS, [SPACE] light {}, yaw: {:1.2}, pitch: {:1.2}",
             1.0 / t_delta,
-            if *spin_light { "spinning" } else { "fixed" }
+            if *spin_light { "spinning" } else { "fixed" },
+            render_config.camera.yaw,
+            render_config.camera.pitch,
         ));
 
         if *spin_light {

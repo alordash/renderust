@@ -22,8 +22,8 @@ pub struct LookConfig {
 
 #[derive(Clone, Copy, Debug)]
 pub struct CameraConfig {
-    pub yaw: f32,
     pub pitch: f32,
+    pub yaw: f32,
     pub distance: f32,
 }
 
