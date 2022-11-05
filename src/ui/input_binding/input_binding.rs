@@ -1,14 +1,16 @@
-use minifb::{Key, KeyRepeat, Window};
+use minifb::Window;
 
 use super::{
     keyboard_binding::{KeyBindingKind, KeyboardBinding},
     mouse_position_binding::MousePositionBinding,
     mouse_pressed_binding::MousePressedBinding,
+    mouse_scroll_binding::MouseScrollBinding,
 };
 
 pub enum InputBinding<'a> {
     MousePressed(MousePressedBinding<'a>),
     MousePosition(MousePositionBinding<'a>),
+    MouseScroll(MouseScrollBinding<'a>),
     Keyboard(KeyboardBinding<'a>),
 }
 
@@ -24,6 +26,11 @@ impl<'a> InputBinding<'a> {
                 InputBinding::MousePosition(mouse_position) => {
                     if let Some((x, y)) = window.get_mouse_pos(mouse_position.mode) {
                         (mouse_position.callback)(x, y);
+                    }
+                }
+                InputBinding::MouseScroll(mouse_scroll) => {
+                    if let Some((x, y)) = window.get_scroll_wheel() {
+                        (mouse_scroll.callback)(x, y);
                     }
                 }
                 InputBinding::Keyboard(keyboard) => match keyboard.kind {

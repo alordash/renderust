@@ -9,6 +9,8 @@ use crate::{
     ui::input_binding::{
         input_binding::InputBinding,
         keyboard_binding::{KeyBindingKind, KeyboardBinding},
+        mouse_position_binding::MousePositionBinding,
+        mouse_scroll_binding::MouseScrollBinding,
     },
     visual::{
         drawing_buffer::DrawingBuffer,
@@ -125,6 +127,37 @@ pub fn open_render_window(
                 render_config.ambient_occlusion.apply = !render_config.ambient_occlusion.apply;
             },
         )),
+        InputBinding::MousePosition(MousePositionBinding::new(
+            minifb::MouseMode::Pass,
+            |x, y| {
+                let mut render_config = RefCell::borrow_mut(&render_config);
+                let (yaw, pitch, distance) = {
+                    let CameraConfig {
+                        yaw,
+                        pitch,
+                        distance,
+                    } = &mut (render_config.camera);
+                    *yaw = (y / window_height as f32) * std::f32::consts::PI;
+                    *pitch = ((x - window_width as f32 / 2.0) / buffer_width as f32)
+                        * std::f32::consts::PI
+                        * 2.0;
+                    (*yaw, *pitch, *distance)
+                };
+                {
+                    let LookConfig { from, to, up } = &mut (render_config.look);
+
+                    *from = spherical_to_cartesian_yzx(yaw, pitch, distance).into();
+
+                    render_config.transform_matrixes.view_matrix =
+                        create_view_matrix(*from, *to, *up);
+                }
+            },
+        )),
+        InputBinding::MouseScroll(MouseScrollBinding::new(|x, y| {
+            let mut render_config = RefCell::borrow_mut(&render_config);
+            let diff = -y / 100.0;
+            render_config.camera.distance = (render_config.camera.distance + diff).max(0.85);
+        })),
     ];
 
     while window.is_open() {
@@ -139,28 +172,6 @@ pub fn open_render_window(
         render_config.lights[0].kind = LightSourceKind::Linear(
             Vec3A::new(light_spin_t.sin(), 1.0, light_spin_t.cos()).normalize(),
         );
-
-        if let Some((x, y)) = window.get_mouse_pos(minifb::MouseMode::Pass) {
-            let (yaw, pitch, distance) = {
-                let CameraConfig {
-                    yaw,
-                    pitch,
-                    distance,
-                } = &mut (render_config.camera);
-                *yaw = (y / window_height as f32) * std::f32::consts::PI;
-                *pitch = ((x - window_width as f32 / 2.0) / buffer_width as f32)
-                    * std::f32::consts::PI
-                    * 2.0;
-                (*yaw, *pitch, *distance)
-            };
-            {
-                let LookConfig { from, to, up } = &mut (render_config.look);
-
-                *from = spherical_to_cartesian_yzx(yaw, pitch, distance).into();
-
-                render_config.transform_matrixes.view_matrix = create_view_matrix(*from, *to, *up);
-            }
-        }
 
         render_config.transform_matrixes.projection =
             create_projection_matrix(render_config.look.from.distance(render_config.look.to));
@@ -187,11 +198,6 @@ pub fn open_render_window(
                 render_config.ambient_occlusion.effect_radius,
                 render_config.ambient_occlusion.intensity,
             );
-        }
-
-        if let Some((_, scroll_y)) = window.get_scroll_wheel() {
-            let diff = -scroll_y / 100.0;
-            render_config.camera.distance = (render_config.camera.distance + diff).max(0.85);
         }
 
         window
