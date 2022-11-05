@@ -176,7 +176,12 @@ pub fn open_render_window(
         }
 
         if render_config.ambient_occlusion.apply {
-            render_ambient_occlusion(&mut draw_buffer, z_buffer_size, 10.0, 0.5);
+            render_ambient_occlusion(
+                &mut draw_buffer,
+                z_buffer_size,
+                render_config.ambient_occlusion.effect_radius,
+                render_config.ambient_occlusion.intensity,
+            );
         }
 
         if let Some((_, scroll_y)) = window.get_scroll_wheel() {
