@@ -53,12 +53,12 @@ pub fn open_render_window(
     let render_config = RefCell::new(
         RenderConfigBuilder::default()
             .look(LookConfig {
-                from: Vec3A::Z,
+                from: 5.0 * Vec3A::Z,
                 to: Vec3A::ZERO,
                 up: Vec3A::Y,
             })
             .camera(CameraConfig {
-                pitch: 0.0,
+                pitch: std::f32::consts::FRAC_PI_2,
                 yaw: 0.0,
                 distance: 5.0,
             })
@@ -106,14 +106,6 @@ pub fn open_render_window(
 
     let mut input_bindings = [
         InputBinding::Keyboard(KeyboardBinding::new(
-            Key::Space,
-            KeyBindingKind::KeyPressed(minifb::KeyRepeat::No),
-            || {
-                let mut spin_light = RefCell::borrow_mut(&spin_light);
-                *spin_light = !*spin_light;
-            },
-        )),
-        InputBinding::Keyboard(KeyboardBinding::new(
             Key::Key1,
             KeyBindingKind::KeyPressed(minifb::KeyRepeat::No),
             || {
@@ -131,6 +123,14 @@ pub fn open_render_window(
                 render_config.ambient_occlusion.apply = !render_config.ambient_occlusion.apply;
             },
         )),
+        InputBinding::Keyboard(KeyboardBinding::new(
+            Key::Key3,
+            KeyBindingKind::KeyPressed(minifb::KeyRepeat::No),
+            || {
+                let mut spin_light = RefCell::borrow_mut(&spin_light);
+                *spin_light = !*spin_light;
+            },
+        )),
         InputBinding::MouseScroll(MouseScrollBinding::new(|_, y| {
             let mut render_config = RefCell::borrow_mut(&render_config);
             let diff = -y / 100.0;
@@ -144,7 +144,11 @@ pub fn open_render_window(
                 let mut mouse_pressed = RefCell::borrow_mut(&mouse_pressed);
                 if !*mouse_pressed {
                     let pos = Vec2::new(x, y);
-                    *mouse_down_pos = Some(pos);
+                    if mouse_down_pos.is_none() {
+                        *mouse_down_pos = Some(pos);
+                    } else {
+                        *mouse_down_pos = Some(pos);
+                    }
                 }
                 *mouse_pressed = true;
             },

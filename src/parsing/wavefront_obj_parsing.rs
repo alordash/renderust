@@ -5,7 +5,7 @@ use std::{
 };
 
 use glam::{UVec3, Vec3A};
-use image::{DynamicImage, GenericImage, GenericImageView};
+use image::{DynamicImage, GenericImageView};
 
 use crate::{
     plane_buffer::plane_buffer::PlaneBuffer,
