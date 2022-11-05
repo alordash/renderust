@@ -51,7 +51,7 @@ fn main() -> Result<(), String> {
         WINDOW_WIDTH,
         WINDOW_HEIGHT,
         Z_BUFFER_SIZE,
-        vec![WavefrontRenderModel::from_wavefront_obj(diablo_obj)],
+        vec![diablo_obj.into()],
     );
 
     Ok(())

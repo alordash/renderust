@@ -9,8 +9,8 @@ pub struct WavefrontRenderModel {
     pub model_matrix: Mat4,
 }
 
-impl WavefrontRenderModel {
-    pub fn from_wavefront_obj(wavefront_obj: WavefrontObj) -> WavefrontRenderModel {
+impl From<WavefrontObj> for WavefrontRenderModel {
+    fn from(wavefront_obj: WavefrontObj) -> Self {
         WavefrontRenderModelBuilder::default()
             .obj(wavefront_obj)
             .use_normal_map(false)
