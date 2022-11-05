@@ -1,27 +1,16 @@
 use std::{cell::RefCell, time::Instant};
 
-use glam::{Vec2, Vec3A, Vec4};
-use minifb::{Key, ScaleMode, Window, WindowOptions};
+use glam::{Vec2, Vec3A};
+use minifb::{ScaleMode, Window, WindowOptions};
 
 use crate::{
-    math::spherical_coordinate_system::spherical_to_cartesian_yzx,
     plane_buffer::plane_buffer::PlaneBufferCreateOption,
-    ui::input_binding::{
-        input_binding::InputBinding,
-        keyboard_binding::{KeyBindingKind, KeyboardBinding},
-        mouse_position_binding::MousePositionBinding,
-        mouse_pressed_binding::{MousePressMode, MousePressedBinding},
-        mouse_scroll_binding::MouseScrollBinding,
-    },
     visual::{
         drawing_buffer::DrawingBuffer,
         rendering::{
             ambient_occlusion::render_ambient_occlusion,
             light_source::{LightSource, LightSourceKind},
-            matrix::{
-                projection_matrix::create_projection_matrix, view_matrix::create_view_matrix,
-                viewport_matrix::create_view_port_matrix,
-            },
+            matrix::viewport_matrix::create_view_port_matrix,
             wavefront_obj::{
                 wavefront_obj_rendering::render_wavefront_mesh,
                 wavefront_render_model::WavefrontRenderModel,
@@ -30,12 +19,15 @@ use crate::{
     },
 };
 
-use super::render_config::render_config::{
-    AmbientOcclusionConfig, CameraConfig, LookConfig, RenderConfigBuilder,
+use super::{
+    render_config::render_config::{
+        AmbientOcclusionConfig, CameraConfig, LookConfig, RenderConfigBuilder,
+    },
+    scene_control::{
+        render_config_control::handle_render_config_controls,
+        scene_camera_control::handle_camera_controls,
+    },
 };
-
-const MOVE_SPEED: f32 = 2.0;
-const ROTATION_SPEED: f32 = 2.0;
 
 pub fn open_render_window(
     buffer_width: usize,
@@ -53,38 +45,36 @@ pub fn open_render_window(
         draw_buffer.get_height() as f32,
     );
 
-    let render_config = RefCell::new(
-        RenderConfigBuilder::default()
-            .look(LookConfig {
-                from: 5.0 * Vec3A::Z,
-                to: Vec3A::ZERO,
-                up: Vec3A::Y,
-            })
-            .camera(CameraConfig {
-                pitch: std::f32::consts::FRAC_PI_2,
-                yaw: 0.0,
-                distance: 5.0,
-            })
-            .lights(vec![
-                LightSource::new(LightSourceKind::Linear(Vec3A::Z), Vec3A::ONE * 10.0, 10.0),
-                LightSource::new(LightSourceKind::Ambient, Vec3A::ONE * 0.33, 1.0),
-            ])
-            .ambient_occlusion(AmbientOcclusionConfig {
-                apply: false,
-                effect_radius: 10.0,
-                intensity: 0.5,
-            })
-            .transform_matrixes(create_view_port_matrix(
-                w_f32 * 0.125,
-                h_f32 * 0.125,
-                w_f32 / 1.25,
-                h_f32 / 1.25,
-                z_buffer_size,
-            ))
-            .models(models)
-            .build()
-            .unwrap(),
-    );
+    let mut render_config = RenderConfigBuilder::default()
+        .look(LookConfig {
+            from: 5.0 * Vec3A::Z,
+            to: Vec3A::ZERO,
+            up: Vec3A::Y,
+        })
+        .camera(CameraConfig {
+            pitch: std::f32::consts::FRAC_PI_2,
+            yaw: 0.0,
+            distance: 5.0,
+        })
+        .lights(vec![
+            LightSource::new(LightSourceKind::Linear(Vec3A::Z), Vec3A::ONE * 10.0, 10.0),
+            LightSource::new(LightSourceKind::Ambient, Vec3A::ONE * 0.33, 1.0),
+        ])
+        .ambient_occlusion(AmbientOcclusionConfig {
+            apply: false,
+            effect_radius: 10.0,
+            intensity: 0.5,
+        })
+        .transform_matrixes(create_view_port_matrix(
+            w_f32 * 0.125,
+            h_f32 * 0.125,
+            w_f32 / 1.25,
+            h_f32 / 1.25,
+            z_buffer_size,
+        ))
+        .models(models)
+        .build()
+        .unwrap();
 
     let mut window = Window::new(
         "Renderust",
@@ -98,182 +88,24 @@ pub fn open_render_window(
     )
     .expect("Unable to open Window");
 
-    let spin_light = RefCell::new(false);
-    let mouse_pressed = RefCell::new(false);
-    let mouse_down_pos: RefCell<Option<Vec2>> = RefCell::new(None);
+    let mut spin_light = false;
+    let mut mouse_pressed = false;
+    let mut mouse_down_pos = Vec2::ZERO;
 
     let mut light_spin_t = 0.0f32;
-    let mut t_delta = RefCell::new(0.0);
-
-    let mut input_bindings = [
-        InputBinding::Keyboard(KeyboardBinding::new(
-            Key::Key1,
-            KeyBindingKind::KeyPressed(minifb::KeyRepeat::No),
-            || {
-                let mut render_config = RefCell::borrow_mut(&render_config);
-                for model in render_config.models.iter_mut() {
-                    model.use_normal_map = !model.use_normal_map;
-                }
-            },
-        )),
-        InputBinding::Keyboard(KeyboardBinding::new(
-            Key::Key2,
-            KeyBindingKind::KeyPressed(minifb::KeyRepeat::No),
-            || {
-                let mut render_config = RefCell::borrow_mut(&render_config);
-                render_config.ambient_occlusion.apply = !render_config.ambient_occlusion.apply;
-            },
-        )),
-        InputBinding::Keyboard(KeyboardBinding::new(
-            Key::Key3,
-            KeyBindingKind::KeyPressed(minifb::KeyRepeat::No),
-            || {
-                let mut spin_light = RefCell::borrow_mut(&spin_light);
-                *spin_light = !*spin_light;
-            },
-        )),
-        InputBinding::MouseScroll(MouseScrollBinding::new(|_, y| {
-            let mut render_config = RefCell::borrow_mut(&render_config);
-            let diff = -y / 100.0;
-            render_config.camera.distance = (render_config.camera.distance + diff).max(0.85);
-
-            render_config.transform_matrixes.projection =
-                create_projection_matrix(render_config.camera.distance);
-        })),
-        InputBinding::MousePressed(MousePressedBinding::new(
-            minifb::MouseButton::Left,
-            MousePressMode::Down,
-            |x, y| {
-                let mut mouse_down_pos = RefCell::borrow_mut(&mouse_down_pos);
-                let mut mouse_pressed = RefCell::borrow_mut(&mouse_pressed);
-                if !*mouse_pressed {
-                    let pos = Vec2::new(x, y);
-                    if mouse_down_pos.is_none() {
-                        *mouse_down_pos = Some(pos);
-                    } else {
-                        *mouse_down_pos = Some(pos);
-                    }
-                }
-                *mouse_pressed = true;
-            },
-        )),
-        InputBinding::MousePressed(MousePressedBinding::new(
-            minifb::MouseButton::Left,
-            MousePressMode::Up,
-            |_, _| {
-                *RefCell::borrow_mut(&mouse_pressed) = false;
-            },
-        )),
-        InputBinding::MousePosition(MousePositionBinding::new(
-            minifb::MouseMode::Pass,
-            |x, y| {
-                let mut render_config = RefCell::borrow_mut(&render_config);
-                if *RefCell::borrow_mut(&mouse_pressed) {
-                    let mouse_pos = RefCell::borrow_mut(&mouse_down_pos).unwrap();
-                    let diff = Vec2::new(x, y) - mouse_pos;
-                    *RefCell::borrow_mut(&mouse_down_pos) = Some(Vec2::new(x, y));
-                    let (yaw, pitch, distance) = {
-                        let CameraConfig {
-                            pitch,
-                            yaw,
-                            distance,
-                        } = &mut (render_config.camera);
-                        *pitch = *pitch
-                            + (ROTATION_SPEED * diff.y / buffer_height as f32)
-                                * std::f32::consts::PI;
-                        *yaw = *yaw
-                            + (ROTATION_SPEED * diff.x / buffer_width as f32)
-                                * std::f32::consts::PI
-                                * 2.0;
-                        (*pitch, *yaw, *distance)
-                    };
-                    {
-                        let LookConfig { from, to, up } = &mut (render_config.look);
-
-                        *from = spherical_to_cartesian_yzx(yaw, pitch, distance).into();
-
-                        render_config.transform_matrixes.view_matrix =
-                            create_view_matrix(*from, *to, *up);
-                    }
-                }
-            },
-        )),
-        InputBinding::Keyboard(KeyboardBinding::new(
-            Key::W,
-            KeyBindingKind::KeyDown,
-            || {
-                let t_delta = RefCell::borrow(&t_delta);
-                let mut render_config = RefCell::borrow_mut(&render_config);
-                for model in render_config.models.iter_mut() {
-                    *model.model_matrix.col_mut(3) += Vec4::Z * MOVE_SPEED * *t_delta;
-                }
-            },
-        )),
-        InputBinding::Keyboard(KeyboardBinding::new(
-            Key::A,
-            KeyBindingKind::KeyDown,
-            || {
-                let t_delta = RefCell::borrow(&t_delta);
-                let mut render_config = RefCell::borrow_mut(&render_config);
-                for model in render_config.models.iter_mut() {
-                    *model.model_matrix.col_mut(3) -= Vec4::X * MOVE_SPEED * *t_delta;
-                }
-            },
-        )),
-        InputBinding::Keyboard(KeyboardBinding::new(
-            Key::S,
-            KeyBindingKind::KeyDown,
-            || {
-                let t_delta = RefCell::borrow(&t_delta);
-                let mut render_config = RefCell::borrow_mut(&render_config);
-                for model in render_config.models.iter_mut() {
-                    *model.model_matrix.col_mut(3) -= Vec4::Z * MOVE_SPEED * *t_delta;
-                }
-            },
-        )),
-        InputBinding::Keyboard(KeyboardBinding::new(
-            Key::D,
-            KeyBindingKind::KeyDown,
-            || {
-                let t_delta = RefCell::borrow(&t_delta);
-                let mut render_config = RefCell::borrow_mut(&render_config);
-                for model in render_config.models.iter_mut() {
-                    *model.model_matrix.col_mut(3) += Vec4::X * MOVE_SPEED * *t_delta;
-                }
-            },
-        )),
-        InputBinding::Keyboard(KeyboardBinding::new(
-            Key::LeftShift,
-            KeyBindingKind::KeyDown,
-            || {
-                let t_delta = RefCell::borrow(&t_delta);
-                let mut render_config = RefCell::borrow_mut(&render_config);
-                for model in render_config.models.iter_mut() {
-                    *model.model_matrix.col_mut(3) -= Vec4::Y * MOVE_SPEED * *t_delta;
-                }
-            },
-        )),
-        InputBinding::Keyboard(KeyboardBinding::new(
-            Key::Space,
-            KeyBindingKind::KeyDown,
-            || {
-                let t_delta = RefCell::borrow(&t_delta);
-                let mut render_config = RefCell::borrow_mut(&render_config);
-                for model in render_config.models.iter_mut() {
-                    *model.model_matrix.col_mut(3) += Vec4::Y * MOVE_SPEED * *t_delta;
-                }
-            },
-        )),
-    ];
+    let mut t_delta = 0.0;
 
     while window.is_open() {
         let start = Instant::now();
 
-        InputBinding::handle_inputs(&window, &mut input_bindings);
-
-        let mut render_config = RefCell::borrow_mut(&render_config);
-
-        let spin_light = RefCell::borrow(&spin_light);
+        handle_render_config_controls(&window, &mut render_config);
+        handle_camera_controls(
+            &window,
+            &mut render_config,
+            &mut mouse_down_pos,
+            &mut mouse_pressed,
+            t_delta,
+        );
 
         render_config.lights[0].kind = LightSourceKind::Linear(
             Vec3A::new(light_spin_t.sin(), 1.0, light_spin_t.cos()).normalize(),
@@ -312,19 +144,19 @@ pub fn open_render_window(
             .unwrap();
 
         let end = Instant::now();
-        let mut t_delta = RefCell::borrow_mut(&t_delta);
-        *t_delta = (end - start).as_secs_f32();
+
+        t_delta = (end - start).as_secs_f32();
 
         window.set_title(&format!(
             "Renderust {:1.1?} FPS, [SPACE] light {}, yaw: {:1.2}, pitch: {:1.2}",
-            1.0 / *t_delta,
-            if *spin_light { "spinning" } else { "fixed" },
+            1.0 / t_delta,
+            if spin_light { "spinning" } else { "fixed" },
             render_config.camera.yaw,
             render_config.camera.pitch,
         ));
 
-        if *spin_light {
-            light_spin_t += *t_delta;
+        if spin_light {
+            light_spin_t += t_delta;
         }
     }
 }
