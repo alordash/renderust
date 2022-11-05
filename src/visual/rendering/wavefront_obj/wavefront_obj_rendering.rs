@@ -64,7 +64,7 @@ pub fn render_wavefront_mesh(
     z_buffer_depth: f32,
 ) {
     let wavefront_obj = &model.obj;
-    let transform_matrix = viewport_matrix * projection * view_matrix * model.model_matrix;
+    let transform_matrix = viewport_matrix * projection * model.model_matrix * view_matrix;
     let inverse_transposed_transform_matrix = transform_matrix.transpose().inverse();
 
     for i in 0..wavefront_obj.faces.len() {
