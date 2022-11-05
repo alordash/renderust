@@ -62,7 +62,6 @@ pub fn open_render_window(
                 distance: 5.0,
             })
             .lights(vec![
-                // LightSource::new(LightSourceKind::Linear(Vec3A::X), Vec3A::ONE * 0.5, 1.0),
                 LightSource::new(LightSourceKind::Linear(Vec3A::Z), Vec3A::ONE * 10.0, 10.0),
                 LightSource::new(LightSourceKind::Ambient, Vec3A::ONE * 0.33, 1.0),
             ])
@@ -153,7 +152,7 @@ pub fn open_render_window(
                 }
             },
         )),
-        InputBinding::MouseScroll(MouseScrollBinding::new(|x, y| {
+        InputBinding::MouseScroll(MouseScrollBinding::new(|_, y| {
             let mut render_config = RefCell::borrow_mut(&render_config);
             let diff = -y / 100.0;
             render_config.camera.distance = (render_config.camera.distance + diff).max(0.85);
