@@ -6,7 +6,10 @@ use minifb::{Key, ScaleMode, Window, WindowOptions};
 use crate::{
     math::spherical_coordinate_system::spherical_to_cartesian_yzx,
     plane_buffer::plane_buffer::PlaneBufferCreateOption,
-    ui::input_binding::{InputBinding, InputBindingKind},
+    ui::input_binding::{
+        input_binding::InputBinding,
+        keyboard_binding::{KeyBindingKind, KeyboardBinding},
+    },
     visual::{
         drawing_buffer::DrawingBuffer,
         rendering::{
@@ -96,32 +99,32 @@ pub fn open_render_window(
     let mut t_delta = 0.0;
 
     let mut input_bindings = [
-        InputBinding::new(
+        InputBinding::Keyboard(KeyboardBinding::new(
             Key::Space,
-            InputBindingKind::KeyPressed(minifb::KeyRepeat::No),
+            KeyBindingKind::KeyPressed(minifb::KeyRepeat::No),
             || {
                 let mut spin_light = RefCell::borrow_mut(&spin_light);
                 *spin_light = !*spin_light;
             },
-        ),
-        InputBinding::new(
+        )),
+        InputBinding::Keyboard(KeyboardBinding::new(
             Key::Key1,
-            InputBindingKind::KeyPressed(minifb::KeyRepeat::No),
+            KeyBindingKind::KeyPressed(minifb::KeyRepeat::No),
             || {
                 let mut render_config = RefCell::borrow_mut(&render_config);
                 for model in render_config.models.iter_mut() {
                     model.use_normal_map = !model.use_normal_map;
                 }
             },
-        ),
-        InputBinding::new(
+        )),
+        InputBinding::Keyboard(KeyboardBinding::new(
             Key::Key2,
-            InputBindingKind::KeyPressed(minifb::KeyRepeat::No),
+            KeyBindingKind::KeyPressed(minifb::KeyRepeat::No),
             || {
                 let mut render_config = RefCell::borrow_mut(&render_config);
                 render_config.ambient_occlusion.apply = !render_config.ambient_occlusion.apply;
             },
-        ),
+        )),
     ];
 
     while window.is_open() {
