@@ -1,13 +1,12 @@
 use glam::{Mat4, Vec2, Vec3A, Vec4, Vec4Swizzles};
 
 use crate::{
-    math::geometry::{primitives::line::Line},
+    math::geometry::primitives::line::Line,
     visual::{
         color::color::Color,
         drawing_buffer::DrawingBuffer,
         rendering::{
-            light_source::{LightSource},
-            line::line_rasterization::draw_line,
+            light_source::LightSource, line::line_rasterization::draw_line,
             triangle::triangle_rasterization::fill_triangle,
         },
         vertex::Vertex,
@@ -102,7 +101,7 @@ pub fn render_wavefront_mesh(
             &screen_vertices,
             canvas,
             &wavefront_obj.texture,
-            &wavefront_obj.normal_map,
+            wavefront_obj.normal_map.as_ref(),
             &lights,
             model.use_normal_map,
         );

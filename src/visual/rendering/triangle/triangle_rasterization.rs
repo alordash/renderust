@@ -19,7 +19,7 @@ pub fn fill_triangle(
     vertices: &[Vertex; 3],
     canvas: &mut DrawingBuffer,
     texture: &DynamicImage,
-    normal_map: &PlaneBuffer<Vec3A>,
+    normal_map: Option<&PlaneBuffer<Vec3A>>,
     lights: &Vec<LightSource>,
     use_normal_map: bool,
 ) {
@@ -28,8 +28,8 @@ pub fn fill_triangle(
     let (texture_width, texture_height) = texture.dimensions();
 
     let (nm_width, nm_height) = (
-        normal_map.get_width() as u32,
-        normal_map.get_height() as u32,
+        normal_map.map(PlaneBuffer::get_width).map(|w| w as u32),
+        normal_map.map(PlaneBuffer::get_height).map(|h| h as u32),
     );
 
     let (l_p, m_p, r_p) = unsafe {
@@ -110,6 +110,8 @@ pub fn fill_triangle(
                 );
 
                 if use_normal_map {
+                    let normal_map = normal_map.unwrap();
+                    let (nm_width, nm_height) = (nm_width.unwrap(), nm_height.unwrap());
                     let (nuvx, nuvy) = (
                         ((uv.x * nm_width as f32) as u32).min(nm_width - 1),
                         ((uv.y * nm_height as f32) as u32).min(nm_height - 1),

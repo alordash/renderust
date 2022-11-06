@@ -12,7 +12,7 @@ pub mod wavefront;
 
 use ui::render_window::render_window::open_render_window;
 use visual::rendering::wavefront_obj::wavefront_render_model::WavefrontRenderModel;
-use wavefront::{wavefront_obj::WavefrontObj, wavefront_obj_sources::WaveFrontObjSource};
+use wavefront::{wavefront_obj::WavefrontObj, wavefront_obj_source::WaveFrontObjSource};
 
 const BUFFER_WIDTH: usize = 1000;
 const BUFFER_HEIGHT: usize = 1000;
@@ -25,19 +25,19 @@ const Z_BUFFER_SIZE: f32 = 255.0;
 const AFRO_MODEL: WaveFrontObjSource = WaveFrontObjSource::new(
     "./resources/african_head.obj",
     "./resources/african_head_diffuse.tga",
-    "./resources/african_head_nm_tangent.tga",
+    Some("./resources/african_head_nm_tangent.tga"),
 );
 
 const FLOOR_MODEL: WaveFrontObjSource = WaveFrontObjSource::new(
     "./resources/floor.obj",
     "./resources/floor_diffuse.tga",
-    "./resources/floor_nm_tangent.tga",
+    Some("./resources/floor_nm_tangent.tga"),
 );
 
 const DIABLO_MODEL: WaveFrontObjSource = WaveFrontObjSource::new(
     "./resources/diablo3_pose.obj",
     "./resources/diablo3_pose_diffuse.tga",
-    "./resources/diablo3_pose_nm_tangent.tga",
+    Some("./resources/diablo3_pose_nm_tangent.tga"),
 );
 
 fn main() -> Result<(), String> {

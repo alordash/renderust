@@ -10,5 +10,5 @@ pub struct WavefrontObj {
     pub vertex_normals: Vec<Vec3A>,
     pub faces: Vec<Vec<UVec3>>,
     pub texture: DynamicImage,
-    pub normal_map: PlaneBuffer<Vec3A>,
+    pub normal_map: Option<PlaneBuffer<Vec3A>>,
 }

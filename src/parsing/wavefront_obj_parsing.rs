@@ -9,7 +9,7 @@ use image::{DynamicImage, GenericImageView};
 
 use crate::{
     plane_buffer::plane_buffer::PlaneBuffer,
-    wavefront::{wavefront_obj::WavefrontObj, wavefront_obj_sources::WaveFrontObjSource},
+    wavefront::{wavefront_obj::WavefrontObj, wavefront_obj_source::WaveFrontObjSource},
 };
 
 use super::{
@@ -40,16 +40,19 @@ impl WavefrontObj {
     pub fn from_file(
         model_source: &File,
         texture_source: &File,
-        normal_map_source: &File,
+        normal_map_source: Option<&File>,
     ) -> Result<WavefrontObj, String> {
         let mut line = String::new();
         let texture_reader = BufReader::new(texture_source);
         let texture = image::load(texture_reader, image::ImageFormat::Tga)
             .unwrap()
             .flipv();
-        let normal_map_reader = BufReader::new(normal_map_source);
-        let normal_map_img = image::load(normal_map_reader, image::ImageFormat::Tga).unwrap();
-        let normal_map = normal_map_vecs_from_rgb(normal_map_img);
+
+        let normal_map = normal_map_source
+            .map(BufReader::new)
+            .map(|reader| image::load(reader, image::ImageFormat::Tga).unwrap())
+            .map(normal_map_vecs_from_rgb);
+
         let mut wavefront_obj = WavefrontObj {
             vertices: Default::default(),
             vertex_textures: Default::default(),
@@ -109,15 +112,19 @@ impl WavefrontObj {
     pub fn from_paths(
         model_source_path: &Path,
         texture_source_path: &Path,
-        normal_map_source_path: &Path,
+        normal_map_source_path: Option<&Path>,
     ) -> Result<WavefrontObj, String> {
         let wavefront_obj_file = File::open(model_source_path)
             .map_err(|e| format!("Error opening model file: {:?}", e))?;
         let texture_file = File::open(texture_source_path)
             .map_err(|e| format!("Error opening texture file: {:?}", e))?;
-        let normal_map_file = File::open(normal_map_source_path)
-            .map_err(|e| format!("Error opening normal map file: {:?}", e))?;
-        WavefrontObj::from_file(&wavefront_obj_file, &texture_file, &normal_map_file)
+
+        let normal_map_file = normal_map_source_path
+            .map(File::open)
+            .map(|f| f.map_err(|e| format!("Error opening normal map file: {:?}", e)))
+            .map(Result::unwrap);
+
+        WavefrontObj::from_file(&wavefront_obj_file, &texture_file, normal_map_file.as_ref())
             .map_err(|e| format!("Error parsing file: {:?}", e))
     }
 
@@ -127,7 +134,7 @@ impl WavefrontObj {
         WavefrontObj::from_paths(
             wavefront_obj_source.model_path.as_ref(),
             wavefront_obj_source.texture_path.as_ref(),
-            wavefront_obj_source.normal_map_path.as_ref(),
+            wavefront_obj_source.normal_map_path.map(|s| s.as_ref()),
         )
     }
 }
