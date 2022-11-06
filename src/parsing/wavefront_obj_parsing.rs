@@ -41,6 +41,7 @@ impl WavefrontObj {
         model_source: &File,
         texture_source: &File,
         normal_map_source: Option<&File>,
+        spec_map_source: Option<&File>,
     ) -> Result<WavefrontObj, String> {
         let mut line = String::new();
         let texture_reader = BufReader::new(texture_source);
@@ -53,6 +54,10 @@ impl WavefrontObj {
             .map(|reader| image::load(reader, image::ImageFormat::Tga).unwrap())
             .map(normal_map_vecs_from_rgb);
 
+        let spec_map = spec_map_source
+            .map(BufReader::new)
+            .map(|reader| image::load(reader, image::ImageFormat::Tga).unwrap().flipv());
+
         let mut wavefront_obj = WavefrontObj {
             vertices: Default::default(),
             vertex_textures: Default::default(),
@@ -60,6 +65,7 @@ impl WavefrontObj {
             faces: Default::default(),
             texture,
             normal_map,
+            spec_map,
         };
         let mut buff_reader = BufReader::new(model_source);
 
@@ -113,6 +119,7 @@ impl WavefrontObj {
         model_source_path: &Path,
         texture_source_path: &Path,
         normal_map_source_path: Option<&Path>,
+        spec_map_source_path: Option<&Path>,
     ) -> Result<WavefrontObj, String> {
         let wavefront_obj_file = File::open(model_source_path)
             .map_err(|e| format!("Error opening model file: {:?}", e))?;
@@ -124,8 +131,18 @@ impl WavefrontObj {
             .map(|f| f.map_err(|e| format!("Error opening normal map file: {:?}", e)))
             .map(Result::unwrap);
 
-        WavefrontObj::from_file(&wavefront_obj_file, &texture_file, normal_map_file.as_ref())
-            .map_err(|e| format!("Error parsing file: {:?}", e))
+        let spec_map_file = spec_map_source_path
+            .map(File::open)
+            .map(|f| f.map_err(|e| format!("Error opening spec map file: {:?}", e)))
+            .map(Result::unwrap);
+
+        WavefrontObj::from_file(
+            &wavefront_obj_file,
+            &texture_file,
+            normal_map_file.as_ref(),
+            spec_map_file.as_ref(),
+        )
+        .map_err(|e| format!("Error parsing file: {:?}", e))
     }
 
     pub fn from_sources_struct(
@@ -135,6 +152,7 @@ impl WavefrontObj {
             wavefront_obj_source.model_path.as_ref(),
             wavefront_obj_source.texture_path.as_ref(),
             wavefront_obj_source.normal_map_path.map(|s| s.as_ref()),
+            wavefront_obj_source.spec_map_path.map(|s| s.as_ref()),
         )
     }
 }

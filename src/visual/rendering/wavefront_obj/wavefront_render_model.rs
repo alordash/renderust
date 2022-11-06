@@ -6,6 +6,7 @@ use crate::wavefront::wavefront_obj::WavefrontObj;
 pub struct WavefrontRenderModel {
     pub obj: WavefrontObj,
     pub use_normal_map: bool,
+    pub use_spec_map: bool,
     pub model_matrix: Mat4,
 }
 
@@ -14,6 +15,7 @@ impl From<WavefrontObj> for WavefrontRenderModel {
         WavefrontRenderModelBuilder::default()
             .obj(wavefront_obj)
             .use_normal_map(false)
+            .use_spec_map(false)
             .model_matrix(Mat4::IDENTITY)
             .build()
             .unwrap()

@@ -26,18 +26,21 @@ const AFRO_MODEL: WaveFrontObjSource = WaveFrontObjSource::new(
     "./resources/african_head.obj",
     "./resources/african_head_diffuse.tga",
     Some("./resources/african_head_nm_tangent.tga"),
+    None
 );
 
 const FLOOR_MODEL: WaveFrontObjSource = WaveFrontObjSource::new(
     "./resources/floor.obj",
     "./resources/floor_diffuse.tga",
     Some("./resources/floor_nm_tangent.tga"),
+    None
 );
 
 const DIABLO_MODEL: WaveFrontObjSource = WaveFrontObjSource::new(
     "./resources/diablo3_pose.obj",
     "./resources/diablo3_pose_diffuse.tga",
     Some("./resources/diablo3_pose_nm_tangent.tga"),
+    Some("./resources/diablo3_pose_spec.tga")
 );
 
 fn main() -> Result<(), String> {

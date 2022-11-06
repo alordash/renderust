@@ -1,5 +1,5 @@
 use glam::{Mat3A, Vec3A};
-use image::{DynamicImage, GenericImageView};
+use image::{DynamicImage, GenericImageView, Pixel};
 
 use crate::{
     math::interpolation::Interpolator,
@@ -19,9 +19,9 @@ pub fn fill_triangle(
     vertices: &[Vertex; 3],
     canvas: &mut DrawingBuffer,
     texture: &DynamicImage,
-    normal_map: Option<&PlaneBuffer<Vec3A>>,
     lights: &Vec<LightSource>,
-    use_normal_map: bool,
+    normal_map: Option<&PlaneBuffer<Vec3A>>,
+    spec_map: Option<&DynamicImage>,
 ) {
     let mut vertices_sorted_by_x = vertices.clone();
     vertices_sorted_by_x.sort_unstable_by(|a, b| a.x.partial_cmp(&b.x).unwrap());
@@ -30,6 +30,11 @@ pub fn fill_triangle(
     let (nm_width, nm_height) = (
         normal_map.map(PlaneBuffer::get_width).map(|w| w as u32),
         normal_map.map(PlaneBuffer::get_height).map(|h| h as u32),
+    );
+
+    let (sp_width, sp_height) = (
+        spec_map.map(GenericImageView::width),
+        spec_map.map(GenericImageView::height),
     );
 
     let (l_p, m_p, r_p) = unsafe {
@@ -109,8 +114,7 @@ pub fn fill_triangle(
                     ((uv.y * texture_height as f32) as u32).min(texture_height - 1),
                 );
 
-                if use_normal_map {
-                    let normal_map = normal_map.unwrap();
+                if let Some(normal_map) = normal_map {
                     let (nm_width, nm_height) = (nm_width.unwrap(), nm_height.unwrap());
                     let (nuvx, nuvy) = (
                         ((uv.x * nm_width as f32) as u32).min(nm_width - 1),
@@ -130,6 +134,31 @@ pub fn fill_triangle(
                     normal = (B * nm).normalize();
                 }
 
+                let mut spec = Vec3A::ZERO;
+
+                if let Some(spec_map) = spec_map {
+                    let (sp_width, sp_height) = (sp_width.unwrap(), sp_height.unwrap());
+                    let (spuvx, spuvy) = (
+                        ((uv.x * sp_width as f32) as u32).min(sp_width - 1),
+                        ((uv.y * sp_height as f32) as u32).min(sp_height - 1),
+                    );
+
+                    let mut reflection = Vec3A::ZERO;
+                    for light in lights {
+                        match light.kind {
+                            LightSourceKind::Linear(dir) => {
+                                reflection += normal * (normal.dot(dir) * 2.0 - dir)
+                            }
+                            LightSourceKind::Ambient => (),
+                        }
+                    }
+
+                    let spec_coeff = 25 + spec_map.get_pixel(spuvx, spuvy).0[2] as i32;
+
+                    let reflected = (reflection.normalize().z).max(0.0).powi(spec_coeff);
+                    spec = Vec3A::new(reflected, reflected, reflected);
+                }
+
                 let mut intensities = Vec3A::ZERO;
 
                 for light in lights.iter() {
@@ -141,6 +170,8 @@ pub fn fill_triangle(
                         LightSourceKind::Ambient => intensities += light.spectrum,
                     }
                 }
+
+                intensities += spec;
 
                 let new_color =
                     Color::from(texture.get_pixel(uvx, uvy)).apply_intensity(intensities);

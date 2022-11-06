@@ -101,9 +101,17 @@ pub fn render_wavefront_mesh(
             &screen_vertices,
             canvas,
             &wavefront_obj.texture,
-            wavefront_obj.normal_map.as_ref(),
             &lights,
-            model.use_normal_map,
+            if model.use_normal_map {
+                wavefront_obj.normal_map.as_ref()
+            } else {
+                None
+            },
+            if model.use_spec_map {
+                wavefront_obj.spec_map.as_ref()
+            } else {
+                None
+            },
         );
     }
 }
