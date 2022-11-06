@@ -160,9 +160,8 @@ pub fn fill_triangle(
                     }
 
                     let spec_coeff = (255.0 - spec_map.get_pixel(spuvx, spuvy).0[2] as f32) / 32.0;
-                    // let spec_coeff = 25 + spec_map.get_pixel(spuvx, spuvy).0[2] as i32;
 
-                    let reflected = (reflection.normalize().z).max(0.0).powf(spec_coeff);
+                    let reflected = (reflection.normalize().z + 0.05).max(0.0).powf(spec_coeff);
                     spec = Vec3A::new(reflected, reflected, reflected);
                 }
 
@@ -191,7 +190,7 @@ pub fn fill_triangle(
                     }
                 }
 
-                intensities += 0.75 * spec;
+                intensities += 0.95 * spec;
 
                 intensities += glow;
 
