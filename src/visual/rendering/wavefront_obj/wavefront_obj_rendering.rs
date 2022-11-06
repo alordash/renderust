@@ -61,7 +61,6 @@ pub fn render_wavefront_mesh(
     viewport_matrix: Mat4,
     projection: Mat4,
     view_matrix: Mat4,
-    z_buffer_depth: f32,
 ) {
     let wavefront_obj = &model.obj;
     let transform_matrix = viewport_matrix * projection * model.model_matrix * view_matrix;
@@ -106,7 +105,6 @@ pub fn render_wavefront_mesh(
             &wavefront_obj.normal_map,
             &lights,
             model.use_normal_map,
-            z_buffer_depth,
         );
     }
 }

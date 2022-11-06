@@ -22,7 +22,6 @@ pub fn fill_triangle(
     normal_map: &PlaneBuffer<Vec3A>,
     lights: &Vec<LightSource>,
     use_normal_map: bool,
-    z_buffer_size: f32,
 ) {
     let mut vertices_sorted_by_x = vertices.clone();
     vertices_sorted_by_x.sort_unstable_by(|a, b| a.x.partial_cmp(&b.x).unwrap());

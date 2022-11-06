@@ -1,7 +1,7 @@
-use std::{cell::RefCell, time::Instant};
+use std::time::Instant;
 
 use glam::{Vec2, Vec3A};
-use minifb::{ScaleMode, Window, WindowOptions};
+use minifb::{Key, KeyRepeat, ScaleMode, Window, WindowOptions};
 
 use crate::{
     plane_buffer::plane_buffer::PlaneBufferCreateOption,
@@ -57,8 +57,8 @@ pub fn open_render_window(
             distance: 5.0,
         })
         .lights(vec![
-            LightSource::new(LightSourceKind::Linear(Vec3A::Z), Vec3A::ONE * 10.0, 10.0),
-            LightSource::new(LightSourceKind::Ambient, Vec3A::ONE * 0.33, 1.0),
+            LightSource::new(LightSourceKind::Linear(Vec3A::Z), Vec3A::ONE * 1.0, 2.0),
+            LightSource::new(LightSourceKind::Ambient, Vec3A::ONE * 0.15, 1.0),
         ])
         .ambient_occlusion(AmbientOcclusionConfig {
             apply: false,
@@ -98,6 +98,10 @@ pub fn open_render_window(
     while window.is_open() {
         let start = Instant::now();
 
+        if window.is_key_pressed(Key::Key3, KeyRepeat::No) {
+            spin_light = !spin_light;
+        }
+
         handle_render_config_controls(&window, &mut render_config);
         handle_camera_controls(
             &window,
@@ -122,7 +126,6 @@ pub fn open_render_window(
                 render_config.transform_matrixes.viewport_matrix,
                 render_config.transform_matrixes.projection,
                 render_config.transform_matrixes.view_matrix,
-                z_buffer_size,
             );
         }
 
