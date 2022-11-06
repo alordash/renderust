@@ -1,5 +1,5 @@
 use glam::{Mat3A, Vec3A};
-use image::{DynamicImage, GenericImageView, Pixel};
+use image::{DynamicImage, GenericImageView};
 
 use crate::{
     math::interpolation::Interpolator,
@@ -22,6 +22,7 @@ pub fn fill_triangle(
     lights: &Vec<LightSource>,
     normal_map: Option<&PlaneBuffer<Vec3A>>,
     spec_map: Option<&DynamicImage>,
+    glow_map: Option<&DynamicImage>,
 ) {
     let mut vertices_sorted_by_x = vertices.clone();
     vertices_sorted_by_x.sort_unstable_by(|a, b| a.x.partial_cmp(&b.x).unwrap());
@@ -35,6 +36,11 @@ pub fn fill_triangle(
     let (sp_width, sp_height) = (
         spec_map.map(GenericImageView::width),
         spec_map.map(GenericImageView::height),
+    );
+
+    let (gw_width, gw_height) = (
+        glow_map.map(GenericImageView::width),
+        glow_map.map(GenericImageView::height),
     );
 
     let (l_p, m_p, r_p) = unsafe {
@@ -159,6 +165,18 @@ pub fn fill_triangle(
                     spec = Vec3A::new(reflected, reflected, reflected);
                 }
 
+                let mut glow = Color::from_rgb(0, 0, 0);
+
+                if let Some(glow_map) = glow_map {
+                    let (gw_width, gw_height) = (gw_width.unwrap(), gw_height.unwrap());
+                    let (gwuvx, gwuvy) = (
+                        ((uv.x * gw_width as f32) as u32).min(gw_width - 1),
+                        ((uv.y * gw_height as f32) as u32).min(gw_height - 1),
+                    );
+
+                    glow = Color::from(glow_map.get_pixel(gwuvx, gwuvy));
+                }
+
                 let mut intensities = Vec3A::ZERO;
 
                 for light in lights.iter() {
@@ -174,7 +192,7 @@ pub fn fill_triangle(
                 intensities += spec;
 
                 let new_color =
-                    Color::from(texture.get_pixel(uvx, uvy)).apply_intensity(intensities);
+                    Color::from(texture.get_pixel(uvx, uvy)).apply_intensity(intensities) + glow;
                 *z_val = z_depth;
                 canvas[p] = new_color;
             }

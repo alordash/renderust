@@ -112,6 +112,11 @@ pub fn render_wavefront_mesh(
             } else {
                 None
             },
+            if model.use_glow_map {
+                wavefront_obj.glow_map.as_ref()
+            } else {
+                None
+            },
         );
     }
 }

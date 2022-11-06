@@ -58,7 +58,6 @@ pub fn open_render_window(
         })
         .lights(vec![
             LightSource::new(LightSourceKind::Linear(Vec3A::Z), Vec3A::ONE * 0.5, 1.0),
-            LightSource::new(LightSourceKind::Linear(Vec3A::Z), Vec3A::ONE * 0.2, 1.0),
             LightSource::new(LightSourceKind::Ambient, Vec3A::ONE * 0.05, 1.0),
         ])
         .ambient_occlusion(AmbientOcclusionConfig {
@@ -113,7 +112,7 @@ pub fn open_render_window(
         );
 
         render_config.lights[0].kind = LightSourceKind::Linear(
-            Vec3A::new(light_spin_t.sin(), 1000.0, light_spin_t.cos()).normalize(),
+            Vec3A::new(light_spin_t.sin(), 1.0, light_spin_t.cos()).normalize(),
         );
 
         draw_buffer.get_z_buffer_mut().clean_with(&f32::MIN);
