@@ -1,8 +1,11 @@
-use glam::{Mat3A, Vec3A};
+use glam::{Mat3A, Vec3A, Vec4, Vec4Swizzles};
 use image::{DynamicImage, GenericImageView};
 
 use crate::{
-    math::interpolation::Interpolator,
+    math::{
+        geometry::apply_transform_matrix::vertex_apply_transform_matrix,
+        interpolation::Interpolator,
+    },
     plane_buffer::plane_buffer::PlaneBuffer,
     visual::{
         color::color::Color,
@@ -15,11 +18,11 @@ use crate::{
     },
 };
 
-pub fn fill_triangle(
+pub fn render_triangle_mesh(
     vertices: &[Vertex; 3],
     canvas: &mut DrawingBuffer,
     texture: &DynamicImage,
-    lights: &Vec<LightSource>,
+    lights: &mut Vec<LightSource>,
     normal_map: Option<&PlaneBuffer<Vec3A>>,
     spec_map: Option<&DynamicImage>,
     glow_map: Option<&DynamicImage>,
@@ -150,10 +153,10 @@ pub fn fill_triangle(
                     );
 
                     let mut reflection = Vec3A::ZERO;
-                    for light in lights {
-                        match light.kind {
-                            LightSourceKind::Linear(dir) => {
-                                reflection += normal * (normal.dot(dir) * 2.0) - dir
+                    for light in lights.iter() {
+                        match &light.kind {
+                            LightSourceKind::Linear { dir, .. } => {
+                                reflection += normal * (normal.dot(*dir) * 2.0) - *dir
                             }
                             LightSourceKind::Ambient => (),
                         }
@@ -180,9 +183,42 @@ pub fn fill_triangle(
 
                 let mut intensities = Vec3A::ZERO;
 
-                for light in lights.iter() {
-                    match light.kind {
-                        LightSourceKind::Linear(dir) => {
+                let mut self_shadow = 1.0;
+
+                for light in lights.iter_mut() {
+                    match &mut light.kind {
+                        LightSourceKind::Linear {
+                            dir,
+                            shadow_buffer,
+                            transform_matrix,
+                        } => {
+                            if let Some(shadow_buffer) = shadow_buffer {
+                                let transform_matrix = transform_matrix.unwrap();
+                                let shadow_coord = vertex_apply_transform_matrix(
+                                    Vec3A::new(x as f32, y as f32, z_depth),
+                                    transform_matrix,
+                                );
+                                let shadow_2d_coord =
+                                    (shadow_coord.x as usize, shadow_coord.y as usize);
+                                let shadowed =
+                                    (shadow_coord.z + 4.0) < shadow_buffer[shadow_2d_coord];
+                                // shadow_buffer[shadow_2d_coord] = if shadowed {
+                                //     f32::MAX
+                                // } else {
+                                //     shadow_buffer[shadow_2d_coord]
+                                // };
+                                self_shadow = 0.3 + 0.7 * (if shadowed { 0.0 } else { 1.0 });
+                                // self_shadow = if shadow_buffer[shadow_2d_coord] < z_depth {
+
+                                // }
+                                // self_shadow = 0.3
+                                //     + 0.7
+                                //         * (if shadow_buffer[local_2d_coord] < z_depth {
+                                //             1.0
+                                //         } else {
+                                //             0.0
+                                //         });
+                            }
                             intensities +=
                                 light.spectrum * dir.dot(normal).max(0.0).powf(light.concentration)
                         }
@@ -193,6 +229,8 @@ pub fn fill_triangle(
                 intensities += 0.95 * spec;
 
                 intensities += glow;
+
+                intensities *= self_shadow;
 
                 let new_color =
                     Color::from(texture.get_pixel(uvx, uvy)).apply_intensity(intensities);

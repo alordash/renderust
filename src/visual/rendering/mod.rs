@@ -5,9 +5,12 @@ pub mod line {
 pub mod wavefront_obj {
     pub mod wavefront_obj_rendering;
     pub mod wavefront_render_model;
+    pub mod wavefront_obj_depth;
+    pub mod wavefront_obj_processing;
 }
 pub mod triangle {
     pub mod triangle_rasterization;
+    pub mod triangle_depth;
 }
 pub mod interpolation_values;
 pub mod matrix {

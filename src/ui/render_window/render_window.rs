@@ -1,17 +1,19 @@
 use std::time::Instant;
 
-use glam::{Vec2, Vec3A};
+use glam::{Mat4, Vec2, Vec3A};
 use minifb::{Key, KeyRepeat, ScaleMode, Window, WindowOptions};
 
 use crate::{
-    plane_buffer::plane_buffer::PlaneBufferCreateOption,
+    plane_buffer::plane_buffer::{PlaneBuffer, PlaneBufferCreateOption},
     visual::{
+        color::color::Color,
         drawing_buffer::DrawingBuffer,
         rendering::{
             ambient_occlusion::render_ambient_occlusion,
             light_source::{LightSource, LightSourceKind},
-            matrix::viewport_matrix::create_view_port_matrix,
+            matrix::{view_matrix::create_view_matrix, viewport_matrix::create_view_port_matrix},
             wavefront_obj::{
+                wavefront_obj_depth::render_wavefront_depth,
                 wavefront_obj_rendering::render_wavefront_mesh,
                 wavefront_render_model::WavefrontRenderModel,
             },
@@ -21,7 +23,7 @@ use crate::{
 
 use super::{
     render_config::render_config::{
-        AmbientOcclusionConfig, CameraConfig, LookConfig, RenderConfigBuilder,
+        AmbientOcclusionConfig, CameraConfig, LookConfig, RenderConfigBuilder, TransformMatrixes,
     },
     scene_control::{
         render_config_control::handle_render_config_controls,
@@ -57,7 +59,15 @@ pub fn open_render_window(
             distance: 5.0,
         })
         .lights(vec![
-            LightSource::new(LightSourceKind::Linear(Vec3A::Z), Vec3A::ONE * 0.85, 1.0),
+            LightSource::new(
+                LightSourceKind::Linear {
+                    dir: Vec3A::Z,
+                    shadow_buffer: None,
+                    transform_matrix: None,
+                },
+                Vec3A::ONE * 0.85,
+                1.0,
+            ),
             LightSource::new(LightSourceKind::Ambient, Vec3A::ONE * 0.25, 1.0),
         ])
         .ambient_occlusion(AmbientOcclusionConfig {
@@ -111,22 +121,101 @@ pub fn open_render_window(
             t_delta,
         );
 
-        render_config.lights[0].kind = LightSourceKind::Linear(
-            Vec3A::new(light_spin_t.sin(), 1.0, light_spin_t.cos()).normalize(),
-        );
+        match &mut render_config.lights[0].kind {
+            LightSourceKind::Linear { dir, .. } => {
+                *dir = Vec3A::new(light_spin_t.sin(), 0.0, light_spin_t.cos()).normalize();
+            }
+            _ => (),
+        }
 
         draw_buffer.get_z_buffer_mut().clean_with(&f32::MIN);
         draw_buffer.clean();
 
         for model in render_config.models.iter() {
+            let TransformMatrixes {
+                view_matrix,
+                projection,
+                viewport_matrix,
+            } = render_config.transform_matrixes;
+
+            let lights = &mut render_config.lights;
+            let mut light_matrix = Mat4::IDENTITY;
+            match &mut lights[0].kind {
+                LightSourceKind::Linear {
+                    dir,
+                    shadow_buffer: local_z_buffer,
+                    transform_matrix,
+                } => {
+                    let LookConfig { to, up, .. } = render_config.look;
+                    let light_view_matrix = create_view_matrix(*dir, to, up);
+                    if local_z_buffer.is_none() {
+                        *local_z_buffer = Some(PlaneBuffer::<f32>::new(
+                            draw_buffer.get_z_buffer().get_width(),
+                            draw_buffer.get_z_buffer().get_height(),
+                            PlaneBufferCreateOption::Fill(|_| f32::MIN),
+                        ));
+                    }
+                    let z_buffer = local_z_buffer.as_mut().unwrap();
+                    render_wavefront_depth(
+                        &model,
+                        z_buffer,
+                        viewport_matrix,
+                        projection,
+                        light_view_matrix,
+                    );
+
+                    light_matrix =
+                        viewport_matrix * projection * model.model_matrix * light_view_matrix;
+
+                    let cam_matrix =
+                        viewport_matrix * projection * model.model_matrix * view_matrix;
+
+                    let cam_to_matrix = light_matrix * (cam_matrix.inverse());
+                    *transform_matrix = Some(cam_to_matrix);
+                }
+                _ => (),
+            }
+
             render_wavefront_mesh(
                 &model,
                 &mut draw_buffer,
-                render_config.lights.clone(),
+                lights,
                 render_config.transform_matrixes.viewport_matrix,
                 render_config.transform_matrixes.projection,
                 render_config.transform_matrixes.view_matrix,
             );
+
+            match &mut lights[0].kind {
+                LightSourceKind::Linear {
+                    dir,
+                    shadow_buffer: local_z_buffer,
+                    transform_matrix,
+                } => {
+                    let LookConfig { to, up, .. } = render_config.look;
+
+                    if local_z_buffer.is_none() {
+                        *local_z_buffer = Some(PlaneBuffer::<f32>::new(
+                            draw_buffer.get_z_buffer().get_width(),
+                            draw_buffer.get_z_buffer().get_height(),
+                            PlaneBufferCreateOption::Fill(|_| f32::MIN),
+                        ));
+                    }
+                    let z_buffer = local_z_buffer.as_mut().unwrap();
+                    for x in 0..draw_buffer.get_width() {
+                        for y in 0..draw_buffer.get_height() {
+                            let val = z_buffer[(x, y)];
+                            if val < -1000.0 {
+                                continue;
+                            }
+                            let shade = val as u8;
+                            // draw_buffer[(x, y)] = Color::from_rgb(shade, shade, shade);
+                        }
+                    }
+
+                    z_buffer.clean_with(&f32::MIN);
+                }
+                _ => (),
+            }
         }
 
         if render_config.ambient_occlusion.apply {
@@ -136,6 +225,20 @@ pub fn open_render_window(
                 render_config.ambient_occlusion.effect_radius,
                 render_config.ambient_occlusion.intensity,
             );
+        }
+
+        if window.is_key_pressed(Key::X, KeyRepeat::No) {
+            match &mut render_config.lights[0].kind {
+                LightSourceKind::Linear {
+                    shadow_buffer: local_z_buffer,
+                    ..
+                } => {
+                    if let Some(ref mut z_buffer) = local_z_buffer {
+                        z_buffer.clean_with(&f32::MIN);
+                    }
+                }
+                _ => (),
+            }
         }
 
         window
@@ -155,7 +258,7 @@ pub fn open_render_window(
             1.0 / t_delta,
             if spin_light { "spinning" } else { "fixed" },
             render_config.camera.yaw,
-            render_config.camera.pitch,
+            render_config.camera.pitch
         ));
 
         if spin_light {

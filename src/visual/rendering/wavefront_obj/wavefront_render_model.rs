@@ -8,6 +8,7 @@ pub struct WavefrontRenderModel {
     pub use_normal_map: bool,
     pub use_spec_map: bool,
     pub use_glow_map: bool,
+    pub use_self_shadowing: bool,
     pub model_matrix: Mat4,
 }
 
@@ -18,6 +19,7 @@ impl From<WavefrontObj> for WavefrontRenderModel {
             .use_normal_map(false)
             .use_spec_map(false)
             .use_glow_map(false)
+            .use_self_shadowing(false)
             .model_matrix(Mat4::IDENTITY)
             .build()
             .unwrap()
