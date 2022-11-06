@@ -57,8 +57,8 @@ pub fn open_render_window(
             distance: 5.0,
         })
         .lights(vec![
-            LightSource::new(LightSourceKind::Linear(Vec3A::Z), Vec3A::ONE * 0.5, 1.0),
-            LightSource::new(LightSourceKind::Ambient, Vec3A::ONE * 0.05, 1.0),
+            LightSource::new(LightSourceKind::Linear(Vec3A::Z), Vec3A::ONE * 0.85, 1.0),
+            LightSource::new(LightSourceKind::Ambient, Vec3A::ONE * 0.25, 1.0),
         ])
         .ambient_occlusion(AmbientOcclusionConfig {
             apply: false,

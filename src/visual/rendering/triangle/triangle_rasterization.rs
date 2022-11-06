@@ -1,4 +1,4 @@
-use glam::{Mat3A, Vec3A};
+use glam::{Mat3A, Vec3A, IVec4};
 use image::{DynamicImage, GenericImageView};
 
 use crate::{
@@ -153,19 +153,20 @@ pub fn fill_triangle(
                     for light in lights {
                         match light.kind {
                             LightSourceKind::Linear(dir) => {
-                                reflection += normal * (normal.dot(dir) * 2.0 - dir)
+                                reflection += normal * (normal.dot(dir) * 2.0) - dir
                             }
                             LightSourceKind::Ambient => (),
                         }
                     }
 
-                    let spec_coeff = 25 + spec_map.get_pixel(spuvx, spuvy).0[2] as i32;
+                    let spec_coeff = (255.0 - spec_map.get_pixel(spuvx, spuvy).0[2] as f32) / 32.0;
+                    // let spec_coeff = 25 + spec_map.get_pixel(spuvx, spuvy).0[2] as i32;
 
-                    let reflected = (reflection.normalize().z).max(0.0).powi(spec_coeff);
+                    let reflected = (reflection.normalize().z).max(0.0).powf(spec_coeff);
                     spec = Vec3A::new(reflected, reflected, reflected);
                 }
 
-                let mut glow = Color::from_rgb(0, 0, 0);
+                let mut glow = Vec3A::ZERO;
 
                 if let Some(glow_map) = glow_map {
                     let (gw_width, gw_height) = (gw_width.unwrap(), gw_height.unwrap());
@@ -174,7 +175,8 @@ pub fn fill_triangle(
                         ((uv.y * gw_height as f32) as u32).min(gw_height - 1),
                     );
 
-                    glow = Color::from(glow_map.get_pixel(gwuvx, gwuvy));
+                    let rgba = glow_map.get_pixel(gwuvx, gwuvy).0;
+                    glow = Vec3A::new(rgba[0] as f32, rgba[1] as f32, rgba[2] as f32) / 128.0;
                 }
 
                 let mut intensities = Vec3A::ZERO;
@@ -189,10 +191,12 @@ pub fn fill_triangle(
                     }
                 }
 
-                intensities += spec;
+                intensities += 0.75 * spec;
+
+                intensities += glow;
 
                 let new_color =
-                    Color::from(texture.get_pixel(uvx, uvy)).apply_intensity(intensities) + glow;
+                    Color::from(texture.get_pixel(uvx, uvy)).apply_intensity(intensities);
                 *z_val = z_depth;
                 canvas[p] = new_color;
             }
