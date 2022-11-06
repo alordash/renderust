@@ -151,7 +151,7 @@ pub fn open_render_window(
         t_delta = (end - start).as_secs_f32();
 
         window.set_title(&format!(
-            "Renderust {:1.1?} FPS, [SPACE] light {}, yaw: {:1.2}, pitch: {:1.2}",
+            "Renderust {:1.1?} FPS, [R] light {}, yaw: {:1.2}, pitch: {:1.2}",
             1.0 / t_delta,
             if spin_light { "spinning" } else { "fixed" },
             render_config.camera.yaw,
