@@ -16,12 +16,14 @@ pub fn render_wavefront_depth(
     viewport_matrix: Mat4,
     projection: Mat4,
     view_matrix: Mat4,
+    rotation_matrix: Mat4,
 ) {
     let faces = calculate_wavefront_faces(
         model,
         viewport_matrix,
         projection,
         view_matrix,
+        rotation_matrix,
         0.0..depth_buffer.get_width() as f32,
         0.0..depth_buffer.get_height() as f32,
     );

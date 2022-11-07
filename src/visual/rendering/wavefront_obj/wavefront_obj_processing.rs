@@ -16,12 +16,13 @@ pub fn calculate_wavefront_faces(
     viewport_matrix: Mat4,
     projection: Mat4,
     view_matrix: Mat4,
+    rotation_matrix: Mat4,
     x_range: Range<f32>,
     y_range: Range<f32>,
 ) -> Vec<[Vertex; 3]> {
     let wavefront_obj = &model.obj;
-    let transform_matrix = viewport_matrix * projection * model.model_matrix * view_matrix;
-    let inverse_transposed_transform_matrix = view_matrix.transpose().inverse();
+    let transform_matrix = viewport_matrix * projection * model.model_matrix * rotation_matrix * view_matrix;
+    let inverse_transposed_transform_matrix = rotation_matrix.transpose().inverse();
 
     let faces = wavefront_obj
         .faces

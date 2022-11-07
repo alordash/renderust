@@ -200,24 +200,12 @@ pub fn render_triangle_mesh(
                                 );
                                 let shadow_2d_coord =
                                     (shadow_coord.x as usize, shadow_coord.y as usize);
-                                let shadowed =
-                                    (shadow_coord.z + 4.0) < shadow_buffer[shadow_2d_coord];
-                                // shadow_buffer[shadow_2d_coord] = if shadowed {
-                                //     f32::MAX
-                                // } else {
-                                //     shadow_buffer[shadow_2d_coord]
-                                // };
-                                self_shadow = 0.3 + 0.7 * (if shadowed { 0.0 } else { 1.0 });
-                                // self_shadow = if shadow_buffer[shadow_2d_coord] < z_depth {
+                                if shadow_buffer.contains(shadow_2d_coord.0, shadow_2d_coord.1) {
+                                    let shadowed =
+                                        (shadow_coord.z + 4.0) < shadow_buffer[shadow_2d_coord];
 
-                                // }
-                                // self_shadow = 0.3
-                                //     + 0.7
-                                //         * (if shadow_buffer[local_2d_coord] < z_depth {
-                                //             1.0
-                                //         } else {
-                                //             0.0
-                                //         });
+                                    self_shadow = 0.15 + 0.85 * (if shadowed { 0.0 } else { 1.0 });
+                                }
                             }
                             intensities +=
                                 light.spectrum * dir.dot(normal).max(0.0).powf(light.concentration)
@@ -228,9 +216,9 @@ pub fn render_triangle_mesh(
 
                 intensities += 0.95 * spec;
 
-                intensities += glow;
-
                 intensities *= self_shadow;
+
+                intensities += glow;
 
                 let new_color =
                     Color::from(texture.get_pixel(uvx, uvy)).apply_intensity(intensities);

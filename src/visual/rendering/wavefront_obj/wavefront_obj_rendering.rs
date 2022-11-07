@@ -30,6 +30,7 @@ pub fn render_wavefront_grid(
     projection: Mat4,
     view_matrix: Mat4,
     model_matrix: Mat4,
+    rotation_matrix: Mat4,
     color: Option<&Color>,
 ) {
     let transform_matrix = viewport_matrix * projection * view_matrix * model_matrix;
@@ -68,13 +69,16 @@ pub fn render_wavefront_mesh(
     viewport_matrix: Mat4,
     projection: Mat4,
     view_matrix: Mat4,
+    rotation_matrix: Mat4,
 ) {
     let wavefront_obj = &model.obj;
 
     for light in lights.iter_mut() {
         match &mut light.kind {
             LightSourceKind::Linear { dir, .. } => {
-                *dir = vector_apply_transform_matrix(*dir, view_matrix).normalize();
+                *dir = vertex_apply_transform_matrix(*dir, (rotation_matrix).transpose().inverse())
+                    .normalize();
+                // println!("{}", dir)
             }
             _ => (),
         }
@@ -85,6 +89,7 @@ pub fn render_wavefront_mesh(
         viewport_matrix,
         projection,
         view_matrix,
+        rotation_matrix,
         0.0..canvas.get_width() as f32,
         0.0..canvas.get_height() as f32,
     );

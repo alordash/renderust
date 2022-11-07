@@ -18,7 +18,7 @@ use crate::{
                 wavefront_render_model::WavefrontRenderModel,
             },
         },
-    },
+    }, math::{rotation::create_rotation_matrix, geometry::apply_transform_matrix::vector_apply_transform_matrix},
 };
 
 use super::{
@@ -54,14 +54,14 @@ pub fn open_render_window(
             up: Vec3A::Y,
         })
         .camera(CameraConfig {
-            pitch: std::f32::consts::FRAC_PI_2,
+            pitch: 0.0,
             yaw: 0.0,
             distance: 5.0,
         })
         .lights(vec![
             LightSource::new(
                 LightSourceKind::Linear {
-                    dir: Vec3A::Z,
+                    dir: Vec3A::Y,
                     shadow_buffer: None,
                     transform_matrix: None,
                 },
@@ -101,6 +101,7 @@ pub fn open_render_window(
     let mut spin_light = false;
     let mut mouse_pressed = false;
     let mut mouse_down_pos = Vec2::ZERO;
+    let mut rotation_matrix = create_rotation_matrix(0.0, 0.0);
 
     let mut light_spin_t = 0.0f32;
     let mut t_delta = 0.0;
@@ -118,12 +119,14 @@ pub fn open_render_window(
             &mut render_config,
             &mut mouse_down_pos,
             &mut mouse_pressed,
+            &mut rotation_matrix,
             t_delta,
         );
 
         match &mut render_config.lights[0].kind {
             LightSourceKind::Linear { dir, .. } => {
-                *dir = Vec3A::new(light_spin_t.sin(), 0.0, light_spin_t.cos()).normalize();
+                *dir = Vec3A::new(0.0, light_spin_t.sin(), light_spin_t.cos()).normalize();
+                // println!("d: {}", dir);
             }
             _ => (),
         }
@@ -139,6 +142,7 @@ pub fn open_render_window(
             } = render_config.transform_matrixes;
 
             let lights = &mut render_config.lights;
+            let lights_backup = lights.clone();
             let mut light_matrix = Mat4::IDENTITY;
             match &mut lights[0].kind {
                 LightSourceKind::Linear {
@@ -146,8 +150,6 @@ pub fn open_render_window(
                     shadow_buffer: local_z_buffer,
                     transform_matrix,
                 } => {
-                    let LookConfig { to, up, .. } = render_config.look;
-                    let light_view_matrix = create_view_matrix(*dir, to, up);
                     if local_z_buffer.is_none() {
                         *local_z_buffer = Some(PlaneBuffer::<f32>::new(
                             draw_buffer.get_z_buffer().get_width(),
@@ -155,20 +157,29 @@ pub fn open_render_window(
                             PlaneBufferCreateOption::Fill(|_| f32::MIN),
                         ));
                     }
+                    let light_rotation_matrix = create_rotation_matrix(0.0, light_spin_t);
+                    // println!("l: {}", light_dir);
                     let z_buffer = local_z_buffer.as_mut().unwrap();
                     render_wavefront_depth(
                         &model,
                         z_buffer,
                         viewport_matrix,
                         projection,
-                        light_view_matrix,
+                        light_rotation_matrix,
+                        view_matrix,
                     );
 
-                    light_matrix =
-                        viewport_matrix * projection * model.model_matrix * light_view_matrix;
+                    light_matrix = viewport_matrix
+                        * projection
+                        * model.model_matrix
+                        * light_rotation_matrix
+                        * view_matrix;
 
-                    let cam_matrix =
-                        viewport_matrix * projection * model.model_matrix * view_matrix;
+                    let cam_matrix = viewport_matrix
+                        * projection
+                        * model.model_matrix
+                        * rotation_matrix
+                        * view_matrix;
 
                     let cam_to_matrix = light_matrix * (cam_matrix.inverse());
                     *transform_matrix = Some(cam_to_matrix);
@@ -183,6 +194,7 @@ pub fn open_render_window(
                 render_config.transform_matrixes.viewport_matrix,
                 render_config.transform_matrixes.projection,
                 render_config.transform_matrixes.view_matrix,
+                rotation_matrix,
             );
 
             match &mut lights[0].kind {
@@ -216,6 +228,8 @@ pub fn open_render_window(
                 }
                 _ => (),
             }
+
+            *lights = lights_backup;
         }
 
         if render_config.ambient_occlusion.apply {

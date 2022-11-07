@@ -1,8 +1,8 @@
-use glam::{Vec2, Vec4};
+use glam::{Vec2, Vec4, Mat4};
 use minifb::{MouseButton, MouseMode, Window, Key};
 
 use crate::{
-    math::spherical_coordinate_system::spherical_to_cartesian_yzx,
+    math::{spherical_coordinate_system::spherical_to_cartesian_yzx, rotation::create_rotation_matrix},
     ui::render_window::render_config::render_config::{CameraConfig, LookConfig, RenderConfig},
     visual::rendering::matrix::{
         projection_matrix::create_projection_matrix, view_matrix::create_view_matrix,
@@ -26,6 +26,7 @@ pub fn handle_camera_controls(
     render_config: &mut RenderConfig,
     mouse_down_pos: &mut Vec2,
     mouse_pressed: &mut bool,
+    rotation_matrix: &mut Mat4,
     t_delta: f32
 ) {
     if let Some((_, y)) = window.get_scroll_wheel() {
@@ -54,17 +55,13 @@ pub fn handle_camera_controls(
         let CameraConfig {
             pitch,
             yaw,
-            distance,
+            ..
         } = &mut (render_config.camera);
         let (width, height) = window.get_size();
         *pitch = *pitch + (ROTATION_SPEED * diff.y / height as f32) * std::f32::consts::PI;
         *yaw = *yaw + (ROTATION_SPEED * diff.x / width as f32) * std::f32::consts::PI * 2.0;
 
-        let LookConfig { from, to, up } = &mut (render_config.look);
-
-        *from = spherical_to_cartesian_yzx(*yaw, *pitch, *distance).into();
-
-        render_config.transform_matrixes.view_matrix = create_view_matrix(*from, *to, *up);
+        *rotation_matrix = create_rotation_matrix(*yaw, *pitch);
     }
 
     for move_input in MOVE_INPUTS.iter() {
