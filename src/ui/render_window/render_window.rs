@@ -1,9 +1,13 @@
 use std::time::Instant;
 
-use glam::{Mat4, Vec2, Vec3A};
+use glam::{Mat4, Quat, Vec2, Vec3, Vec3A};
 use minifb::{Key, KeyRepeat, ScaleMode, Window, WindowOptions};
 
 use crate::{
+    math::{
+        geometry::apply_transform_matrix::vector_apply_transform_matrix,
+        rotation::create_rotation_matrix,
+    },
     plane_buffer::plane_buffer::{PlaneBuffer, PlaneBufferCreateOption},
     visual::{
         color::color::Color,
@@ -18,7 +22,7 @@ use crate::{
                 wavefront_render_model::WavefrontRenderModel,
             },
         },
-    }, math::{rotation::create_rotation_matrix, geometry::apply_transform_matrix::vector_apply_transform_matrix},
+    },
 };
 
 use super::{
@@ -157,7 +161,8 @@ pub fn open_render_window(
                             PlaneBufferCreateOption::Fill(|_| f32::MIN),
                         ));
                     }
-                    let light_rotation_matrix = create_rotation_matrix(0.0, light_spin_t);
+                    let light_rotation_matrix =
+                        Mat4::from_quat(Quat::from_rotation_arc((*dir).into(), Vec3::Z));
                     // println!("l: {}", light_dir);
                     let z_buffer = local_z_buffer.as_mut().unwrap();
                     render_wavefront_depth(

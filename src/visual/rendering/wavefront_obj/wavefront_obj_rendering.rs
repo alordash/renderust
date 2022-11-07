@@ -1,4 +1,4 @@
-use glam::{Mat4, Vec2, Vec3A, Vec4, Vec4Swizzles};
+use glam::{Mat4, Vec2, Vec3A, Vec4, Vec4Swizzles, Quat};
 
 use crate::{
     math::geometry::{
