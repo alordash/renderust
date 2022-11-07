@@ -65,7 +65,7 @@ pub fn render_wavefront_grid(
 pub fn render_wavefront_mesh(
     model: &WavefrontRenderModel,
     canvas: &mut DrawingBuffer,
-    lights: &mut Vec<LightSource>,
+    mut lights: Vec<LightSource>,
     viewport_matrix: Mat4,
     projection: Mat4,
     view_matrix: Mat4,
@@ -99,7 +99,7 @@ pub fn render_wavefront_mesh(
             &face,
             canvas,
             &wavefront_obj.texture,
-            lights,
+            &mut lights,
             if model.use_normal_map {
                 wavefront_obj.normal_map.as_ref()
             } else {

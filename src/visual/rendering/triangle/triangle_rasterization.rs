@@ -143,31 +143,6 @@ pub fn render_triangle_mesh(
                     normal = (B * nm).normalize();
                 }
 
-                let mut spec = Vec3A::ZERO;
-
-                if let Some(spec_map) = spec_map {
-                    let (sp_width, sp_height) = (sp_width.unwrap(), sp_height.unwrap());
-                    let (spuvx, spuvy) = (
-                        ((uv.x * sp_width as f32) as u32).min(sp_width - 1),
-                        ((uv.y * sp_height as f32) as u32).min(sp_height - 1),
-                    );
-
-                    let mut reflection = Vec3A::ZERO;
-                    for light in lights.iter() {
-                        match &light.kind {
-                            LightSourceKind::Linear { dir, .. } => {
-                                reflection += normal * (normal.dot(*dir) * 2.0) - *dir
-                            }
-                            LightSourceKind::Ambient => (),
-                        }
-                    }
-
-                    let spec_coeff = (255.0 - spec_map.get_pixel(spuvx, spuvy).0[2] as f32) / 32.0;
-
-                    let reflected = (reflection.normalize().z + 0.05).max(0.0).powf(spec_coeff);
-                    spec = Vec3A::new(reflected, reflected, reflected);
-                }
-
                 let mut glow = Vec3A::ZERO;
 
                 if let Some(glow_map) = glow_map {
@@ -183,8 +158,6 @@ pub fn render_triangle_mesh(
 
                 let mut intensities = Vec3A::ZERO;
 
-                let mut self_shadow = 1.0;
-
                 for light in lights.iter_mut() {
                     match &mut light.kind {
                         LightSourceKind::Linear {
@@ -192,6 +165,7 @@ pub fn render_triangle_mesh(
                             shadow_buffer,
                             transform_matrix,
                         } => {
+                            let mut self_shadow = 1.0;
                             if let Some(shadow_buffer) = shadow_buffer {
                                 let transform_matrix = transform_matrix.unwrap();
                                 let shadow_coord = vertex_apply_transform_matrix(
@@ -204,19 +178,37 @@ pub fn render_triangle_mesh(
                                     let shadowed =
                                         (shadow_coord.z + 4.0) < shadow_buffer[shadow_2d_coord];
 
-                                    self_shadow = 0.15 + 0.85 * (if shadowed { 0.0 } else { 1.0 });
+                                    self_shadow = 0.0 + 1.0 * (if shadowed { 0.0 } else { 1.0 });
                                 }
                             }
-                            intensities +=
-                                light.spectrum * dir.dot(normal).max(0.0).powf(light.concentration)
+
+                            let mut spec = Vec3A::ZERO;
+
+                            if let Some(spec_map) = spec_map {
+                                let (sp_width, sp_height) = (sp_width.unwrap(), sp_height.unwrap());
+                                let (spuvx, spuvy) = (
+                                    ((uv.x * sp_width as f32) as u32).min(sp_width - 1),
+                                    ((uv.y * sp_height as f32) as u32).min(sp_height - 1),
+                                );
+
+                                let reflection = normal * (normal.dot(*dir) * 2.0) - *dir;
+
+                                let spec_coeff =
+                                    (255.0 - spec_map.get_pixel(spuvx, spuvy).0[2] as f32) / 32.0;
+
+                                let reflected =
+                                    (reflection.normalize().z + 0.05).max(0.0).powf(spec_coeff);
+                                spec = Vec3A::ONE * reflected;
+                            }
+
+                            intensities += (light.spectrum
+                                * dir.dot(normal).max(0.0).powf(light.concentration)
+                                + 0.95 * spec)
+                                * self_shadow;
                         }
                         LightSourceKind::Ambient => intensities += light.spectrum,
                     }
                 }
-
-                intensities += 0.95 * spec;
-
-                intensities *= self_shadow;
 
                 intensities += glow;
 

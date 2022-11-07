@@ -69,10 +69,19 @@ pub fn open_render_window(
                     shadow_buffer: None,
                     transform_matrix: None,
                 },
-                Vec3A::ONE * 0.85,
+                Vec3A::ONE * 0.4,
                 1.0,
             ),
-            LightSource::new(LightSourceKind::Ambient, Vec3A::ONE * 0.25, 1.0),
+            LightSource::new(
+                LightSourceKind::Linear {
+                    dir: Vec3A::Y,
+                    shadow_buffer: None,
+                    transform_matrix: None,
+                },
+                Vec3A::ONE * 0.4,
+                1.0,
+            ),
+            LightSource::new(LightSourceKind::Ambient, Vec3A::ONE * 0.05, 1.0),
         ])
         .ambient_occlusion(AmbientOcclusionConfig {
             apply: false,
@@ -129,8 +138,7 @@ pub fn open_render_window(
 
         match &mut render_config.lights[0].kind {
             LightSourceKind::Linear { dir, .. } => {
-                *dir = Vec3A::new(0.0, light_spin_t.sin(), light_spin_t.cos()).normalize();
-                // println!("d: {}", dir);
+                *dir = Vec3A::new(light_spin_t.sin(), 0.0, light_spin_t.cos()).normalize();
             }
             _ => (),
         }
@@ -145,51 +153,51 @@ pub fn open_render_window(
                 viewport_matrix,
             } = render_config.transform_matrixes;
 
-            let lights = &mut render_config.lights;
-            let lights_backup = lights.clone();
-            let mut light_matrix = Mat4::IDENTITY;
-            match &mut lights[0].kind {
-                LightSourceKind::Linear {
-                    dir,
-                    shadow_buffer: local_z_buffer,
-                    transform_matrix,
-                } => {
-                    if local_z_buffer.is_none() {
-                        *local_z_buffer = Some(PlaneBuffer::<f32>::new(
-                            draw_buffer.get_z_buffer().get_width(),
-                            draw_buffer.get_z_buffer().get_height(),
-                            PlaneBufferCreateOption::Fill(|_| f32::MIN),
-                        ));
+            let mut lights = render_config.lights.clone();
+            for light in lights.iter_mut() {
+                match &mut light.kind {
+                    LightSourceKind::Linear {
+                        dir,
+                        shadow_buffer: local_z_buffer,
+                        transform_matrix,
+                    } => {
+                        if local_z_buffer.is_none() {
+                            *local_z_buffer = Some(PlaneBuffer::<f32>::new(
+                                draw_buffer.get_z_buffer().get_width(),
+                                draw_buffer.get_z_buffer().get_height(),
+                                PlaneBufferCreateOption::Fill(|_| f32::MIN),
+                            ));
+                        }
+                        let light_rotation_matrix =
+                            Mat4::from_quat(Quat::from_rotation_arc((*dir).into(), Vec3::Z));
+                        // println!("l: {}", light_dir);
+                        let z_buffer = local_z_buffer.as_mut().unwrap();
+                        render_wavefront_depth(
+                            &model,
+                            z_buffer,
+                            viewport_matrix,
+                            projection,
+                            light_rotation_matrix,
+                            view_matrix,
+                        );
+
+                        let light_matrix = viewport_matrix
+                            * projection
+                            * model.model_matrix
+                            * light_rotation_matrix
+                            * view_matrix;
+
+                        let cam_matrix = viewport_matrix
+                            * projection
+                            * model.model_matrix
+                            * rotation_matrix
+                            * view_matrix;
+
+                        let cam_to_matrix = light_matrix * (cam_matrix.inverse());
+                        *transform_matrix = Some(cam_to_matrix);
                     }
-                    let light_rotation_matrix =
-                        Mat4::from_quat(Quat::from_rotation_arc((*dir).into(), Vec3::Z));
-                    // println!("l: {}", light_dir);
-                    let z_buffer = local_z_buffer.as_mut().unwrap();
-                    render_wavefront_depth(
-                        &model,
-                        z_buffer,
-                        viewport_matrix,
-                        projection,
-                        light_rotation_matrix,
-                        view_matrix,
-                    );
-
-                    light_matrix = viewport_matrix
-                        * projection
-                        * model.model_matrix
-                        * light_rotation_matrix
-                        * view_matrix;
-
-                    let cam_matrix = viewport_matrix
-                        * projection
-                        * model.model_matrix
-                        * rotation_matrix
-                        * view_matrix;
-
-                    let cam_to_matrix = light_matrix * (cam_matrix.inverse());
-                    *transform_matrix = Some(cam_to_matrix);
+                    _ => (),
                 }
-                _ => (),
             }
 
             render_wavefront_mesh(
@@ -201,40 +209,6 @@ pub fn open_render_window(
                 render_config.transform_matrixes.view_matrix,
                 rotation_matrix,
             );
-
-            match &mut lights[0].kind {
-                LightSourceKind::Linear {
-                    dir,
-                    shadow_buffer: local_z_buffer,
-                    transform_matrix,
-                } => {
-                    let LookConfig { to, up, .. } = render_config.look;
-
-                    if local_z_buffer.is_none() {
-                        *local_z_buffer = Some(PlaneBuffer::<f32>::new(
-                            draw_buffer.get_z_buffer().get_width(),
-                            draw_buffer.get_z_buffer().get_height(),
-                            PlaneBufferCreateOption::Fill(|_| f32::MIN),
-                        ));
-                    }
-                    let z_buffer = local_z_buffer.as_mut().unwrap();
-                    for x in 0..draw_buffer.get_width() {
-                        for y in 0..draw_buffer.get_height() {
-                            let val = z_buffer[(x, y)];
-                            if val < -1000.0 {
-                                continue;
-                            }
-                            let shade = val as u8;
-                            // draw_buffer[(x, y)] = Color::from_rgb(shade, shade, shade);
-                        }
-                    }
-
-                    z_buffer.clean_with(&f32::MIN);
-                }
-                _ => (),
-            }
-
-            *lights = lights_backup;
         }
 
         if render_config.ambient_occlusion.apply {
