@@ -1,8 +1,10 @@
-use glam::{Vec2, Vec4, Mat4};
-use minifb::{MouseButton, MouseMode, Window, Key};
+use glam::{Mat4, Vec2, Vec4};
+use minifb::{Key, MouseButton, MouseMode, Window};
 
 use crate::{
-    math::{spherical_coordinate_system::spherical_to_cartesian_yzx, rotation::create_rotation_matrix},
+    math::{
+        rotation::create_rotation_matrix, spherical_coordinate_system::spherical_to_cartesian_yzx,
+    },
     ui::render_window::render_config::render_config::{CameraConfig, LookConfig, RenderConfig},
     visual::rendering::matrix::{
         projection_matrix::create_projection_matrix, view_matrix::create_view_matrix,
@@ -18,7 +20,7 @@ const MOVE_INPUTS: [(Key, Vec4); 6] = [
     (Key::A, Vec4::NEG_X),
     (Key::D, Vec4::X),
     (Key::LeftShift, Vec4::NEG_Y),
-    (Key::Space, Vec4::Y)
+    (Key::Space, Vec4::Y),
 ];
 
 pub fn handle_camera_controls(
@@ -27,7 +29,7 @@ pub fn handle_camera_controls(
     mouse_down_pos: &mut Vec2,
     mouse_pressed: &mut bool,
     rotation_matrix: &mut Mat4,
-    t_delta: f32
+    t_delta: f32,
 ) {
     if let Some((_, y)) = window.get_scroll_wheel() {
         let diff = -y / 100.0;
@@ -52,11 +54,7 @@ pub fn handle_camera_controls(
     if *mouse_pressed {
         let diff = Vec2::new(x, y) - *mouse_down_pos;
         *mouse_down_pos = pos;
-        let CameraConfig {
-            pitch,
-            yaw,
-            ..
-        } = &mut (render_config.camera);
+        let CameraConfig { pitch, yaw, .. } = &mut (render_config.camera);
         let (width, height) = window.get_size();
         *pitch = *pitch + (ROTATION_SPEED * diff.y / height as f32) * std::f32::consts::PI;
         *yaw = *yaw + (ROTATION_SPEED * diff.x / width as f32) * std::f32::consts::PI * 2.0;
@@ -64,10 +62,12 @@ pub fn handle_camera_controls(
         *rotation_matrix = create_rotation_matrix(*yaw, *pitch);
     }
 
-    for move_input in MOVE_INPUTS.iter() {
-        if window.is_key_down(move_input.0) {
-            for model in render_config.models.iter_mut() {
-                *model.model_matrix.col_mut(3) += move_input.1 * MOVE_SPEED * t_delta;
+    if !window.is_key_down(Key::LeftCtrl) {
+        for move_input in MOVE_INPUTS.iter() {
+            if window.is_key_down(move_input.0) {
+                for model in render_config.models.iter_mut() {
+                    *model.model_matrix.col_mut(3) += move_input.1 * MOVE_SPEED * t_delta;
+                }
             }
         }
     }
