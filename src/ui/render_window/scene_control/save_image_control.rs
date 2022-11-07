@@ -4,7 +4,7 @@ use minifb::{Key, KeyRepeat, Window};
 use crate::visual::drawing_buffer::DrawingBuffer;
 
 pub fn handle_image_save_controls(window: &Window, draw_buffer: &DrawingBuffer) -> ImageResult<()> {
-    if window.is_key_down(Key::LeftCtrl) && window.is_key_pressed(Key::S, KeyRepeat::No) {
+    if window.is_key_down(Key::LeftCtrl) && window.is_key_pressed(Key::P, KeyRepeat::No) {
         println!("Saving image");
         let image = RgbaImage::from_vec(
             draw_buffer.get_width() as u32,
@@ -21,6 +21,5 @@ pub fn handle_image_save_controls(window: &Window, draw_buffer: &DrawingBuffer) 
 
         image.save_with_format("./output.bmp", image::ImageFormat::Bmp)?;
     }
-
     Ok(())
 }

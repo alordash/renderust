@@ -126,7 +126,7 @@ pub fn open_render_window(
         if window.is_key_pressed(Key::R, KeyRepeat::No) {
             spin_light = !spin_light;
         }
-
+        handle_image_save_controls(&window, &draw_buffer);
         handle_render_config_controls(&window, &mut render_config);
         handle_camera_controls(
             &window,
@@ -136,7 +136,6 @@ pub fn open_render_window(
             &mut rotation_matrix,
             t_delta,
         );
-        handle_image_save_controls(&window, &draw_buffer);
 
         match &mut render_config.lights[0].kind {
             LightSourceKind::Linear { dir, .. } => {
