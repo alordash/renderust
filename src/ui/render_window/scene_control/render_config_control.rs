@@ -22,6 +22,12 @@ pub fn handle_render_config_controls(window: &Window, render_config: &mut Render
     }
 
     if window.is_key_pressed(Key::Key4, KeyRepeat::No) {
+        for model in render_config.models.iter_mut() {
+            model.use_self_shadowing = !model.use_self_shadowing;
+        }
+    }
+
+    if window.is_key_pressed(Key::Key5, KeyRepeat::No) {
         render_config.ambient_occlusion.apply = !render_config.ambient_occlusion.apply;
     }
 }
