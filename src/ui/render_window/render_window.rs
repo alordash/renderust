@@ -31,6 +31,7 @@ use super::{
     },
     scene_control::{
         render_config_control::handle_render_config_controls,
+        save_image_control::handle_image_save_controls,
         scene_camera_control::handle_camera_controls,
     },
 };
@@ -135,6 +136,7 @@ pub fn open_render_window(
             &mut rotation_matrix,
             t_delta,
         );
+        handle_image_save_controls(&window, &draw_buffer);
 
         match &mut render_config.lights[0].kind {
             LightSourceKind::Linear { dir, .. } => {
