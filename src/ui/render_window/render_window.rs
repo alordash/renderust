@@ -143,8 +143,7 @@ pub fn open_render_window(
 
         match &mut render_config.lights[0].kind {
             LightSourceKind::Linear { dir, .. } => {
-                // *dir = Vec3A::new(light_spin_t.sin(), 0.0, light_spin_t.cos()).normalize();
-                render_config.lights[0].spectrum = Vec3A::ONE * light_spin_t.cos().abs();
+                *dir = Vec3A::new(light_spin_t.sin(), 0.0, light_spin_t.cos()).normalize();
             }
             _ => (),
         }
