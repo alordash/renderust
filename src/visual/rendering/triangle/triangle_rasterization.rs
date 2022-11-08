@@ -198,7 +198,7 @@ pub fn render_triangle_mesh(
 
                                 let reflected =
                                     (reflection.normalize().z + 0.05).max(0.0).powf(spec_coeff);
-                                spec = Vec3A::ONE * reflected;
+                                spec = Vec3A::ONE * reflected * light.spectrum;
                             }
 
                             intensities += (light.spectrum
