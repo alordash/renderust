@@ -2,13 +2,9 @@ use glam::{Mat4, Vec2, Vec4};
 use minifb::{Key, MouseButton, MouseMode, Window};
 
 use crate::{
-    math::{
-        rotation::create_rotation_matrix, spherical_coordinate_system::spherical_to_cartesian_yzx,
-    },
-    ui::render_window::render_config::render_config::{CameraConfig, LookConfig, RenderConfig},
-    visual::rendering::matrix::{
-        projection_matrix::create_projection_matrix, view_matrix::create_view_matrix,
-    },
+    math::rotation::create_rotation_matrix,
+    ui::render_window::render_config::render_config::{CameraConfig, RenderConfig},
+    visual::rendering::matrix::projection_matrix::create_projection_matrix,
 };
 
 const MOVE_SPEED: f32 = 2.0;

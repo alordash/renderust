@@ -2,7 +2,7 @@ use glam::Mat4;
 
 use crate::{
     plane_buffer::plane_buffer::PlaneBuffer,
-    visual::rendering::{matrix::view_matrix, triangle::triangle_depth::render_triangle_depth},
+    visual::rendering::triangle::triangle_depth::render_triangle_depth,
 };
 
 use super::{

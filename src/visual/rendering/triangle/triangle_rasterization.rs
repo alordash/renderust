@@ -1,4 +1,4 @@
-use glam::{Mat3A, Vec3A, Vec4, Vec4Swizzles};
+use glam::{Mat3A, Vec3A};
 use image::{DynamicImage, GenericImageView};
 
 use crate::{

@@ -1,9 +1,8 @@
-use glam::{Mat4, Vec2, Vec3A, Vec4, Vec4Swizzles, Quat};
+use glam::Mat4;
 
 use crate::{
     math::geometry::{
-        apply_transform_matrix::{vector_apply_transform_matrix, vertex_apply_transform_matrix},
-        primitives::line::Line,
+        apply_transform_matrix::vertex_apply_transform_matrix, primitives::line::Line,
     },
     visual::{
         color::color::Color,
@@ -13,7 +12,6 @@ use crate::{
             line::line_rasterization::draw_line,
             triangle::triangle_rasterization::render_triangle_mesh,
         },
-        vertex::Vertex,
     },
     wavefront::wavefront_obj::WavefrontObj,
 };
@@ -33,7 +31,8 @@ pub fn render_wavefront_grid(
     rotation_matrix: Mat4,
     color: Option<&Color>,
 ) {
-    let transform_matrix = viewport_matrix * projection * view_matrix * model_matrix;
+    let transform_matrix =
+        viewport_matrix * projection * model_matrix * rotation_matrix * view_matrix;
 
     for i in 0..wavefront_obj.faces.len() {
         let face = &wavefront_obj.faces[i];
@@ -76,9 +75,8 @@ pub fn render_wavefront_mesh(
     for light in lights.iter_mut() {
         match &mut light.kind {
             LightSourceKind::Linear { dir, .. } => {
-                *dir = vertex_apply_transform_matrix(*dir, (rotation_matrix).transpose().inverse())
+                *dir = vertex_apply_transform_matrix(*dir, rotation_matrix.transpose().inverse())
                     .normalize();
-                // println!("{}", dir)
             }
             _ => (),
         }

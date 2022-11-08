@@ -4,18 +4,14 @@ use glam::{Mat4, Quat, Vec2, Vec3, Vec3A};
 use minifb::{Key, KeyRepeat, ScaleMode, Window, WindowOptions};
 
 use crate::{
-    math::{
-        geometry::apply_transform_matrix::vector_apply_transform_matrix,
-        rotation::create_rotation_matrix,
-    },
+    math::rotation::create_rotation_matrix,
     plane_buffer::plane_buffer::{PlaneBuffer, PlaneBufferCreateOption},
     visual::{
-        color::color::Color,
         drawing_buffer::DrawingBuffer,
         rendering::{
             ambient_occlusion::render_ambient_occlusion,
             light_source::{LightSource, LightSourceKind},
-            matrix::{view_matrix::create_view_matrix, viewport_matrix::create_view_port_matrix},
+            matrix::viewport_matrix::create_view_port_matrix,
             wavefront_obj::{
                 wavefront_obj_depth::render_wavefront_depth,
                 wavefront_obj_rendering::render_wavefront_mesh,
@@ -126,7 +122,9 @@ pub fn open_render_window(
         if window.is_key_pressed(Key::R, KeyRepeat::No) {
             spin_light = !spin_light;
         }
-        handle_image_save_controls(&window, &draw_buffer);
+        if let Err(e) = handle_image_save_controls(&window, &draw_buffer) {
+            println!("Error saving file: {}", e);
+        }
         handle_render_config_controls(&window, &mut render_config);
         handle_camera_controls(
             &window,
@@ -221,20 +219,6 @@ pub fn open_render_window(
                 render_config.ambient_occlusion.effect_radius,
                 render_config.ambient_occlusion.intensity,
             );
-        }
-
-        if window.is_key_pressed(Key::X, KeyRepeat::No) {
-            match &mut render_config.lights[0].kind {
-                LightSourceKind::Linear {
-                    shadow_buffer: local_z_buffer,
-                    ..
-                } => {
-                    if let Some(ref mut z_buffer) = local_z_buffer {
-                        z_buffer.clean_with(&f32::MIN);
-                    }
-                }
-                _ => (),
-            }
         }
 
         window
