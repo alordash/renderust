@@ -25,7 +25,7 @@ const AFRO_MODEL: WaveFrontObjSource = WaveFrontObjSource::new(
     "./resources/african_head.obj",
     "./resources/african_head_diffuse.tga",
     Some("./resources/african_head_nm_tangent.tga"),
-    None,
+    Some("./resources/african_head_spec.tga"),
     None
 );
 
