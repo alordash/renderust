@@ -32,3 +32,7 @@ With effects (normal maps, specular light, self shadowing, glow map, ambient occ
 <img src="./demo/output_effects.png" width="512px" height="512px"><img/>  
 Self shadows from two lights (which are directed top-down and back-forward)  
 <img src="./demo/output_shadow.png" width="512px" height="512px"><img/></details>
+
+<details> <summary>More pictures</summary>
+
+<img src="./demo/mysterious_face.png" width="512px" height="512px"><img/> <img src="./demo/sideview.png" width="512px" height="512px"><img/></details>
