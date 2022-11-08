@@ -11,8 +11,8 @@ pub mod wavefront_obj {
 pub mod triangle {
     pub mod triangle_rasterization;
     pub mod triangle_depth;
+    pub mod interpolation_values;
 }
-pub mod interpolation_values;
 pub mod matrix {
     pub mod view_matrix;
     pub mod viewport_matrix;

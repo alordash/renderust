@@ -7,7 +7,7 @@ impl<T: Copy + PartialOrd + Add<Output = Self> + Sub<Output = Self>> Interpolabl
 pub struct Interpolator<T: Interpolable> {
     begin: T,
     end: T,
-    d: T,
+    t: T,
 }
 
 impl<T: Interpolable> Interpolator<T> {
@@ -15,8 +15,8 @@ impl<T: Interpolable> Interpolator<T> {
         if end < begin {
             (begin, end) = (end, begin);
         }
-        let d = end - begin;
-        Interpolator { begin, end, d }
+        let t = end - begin;
+        Interpolator { begin, end, t }
     }
 
     pub fn interpolate<U>(
@@ -29,7 +29,7 @@ impl<T: Interpolable> Interpolator<T> {
         U: Mul<T, Output = U> + Div<T, Output = U> + Add<U, Output = U>,
     {
         let dphase = phase - self.begin;
-        (interpolation_value * dphase) / self.d + begin_interpolation_value
+        (interpolation_value * dphase) / self.t + begin_interpolation_value
     }
 
     pub fn get_interpolation_range(&self) -> Range<T> {
@@ -45,7 +45,7 @@ impl<T: Interpolable> Interpolator<T> {
     }
 
     pub fn get_diff(&self) -> &T {
-        &self.d
+        &self.t
     }
 }
 

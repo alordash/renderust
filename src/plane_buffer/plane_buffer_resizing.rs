@@ -19,7 +19,6 @@ impl<T: Default + Copy> PlaneBuffer<T> {
             let old_width = self.get_width();
             let new_width = new_size.width;
             unsafe {
-                println!("Refilling");
                 let buff_ptr = self.get_buffer_mut().as_mut_ptr();
                 for i in filling_range {
                     let dst_offset = new_width * i;

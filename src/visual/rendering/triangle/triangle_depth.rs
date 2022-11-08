@@ -1,7 +1,7 @@
 use crate::{
     math::interpolation::Interpolator,
     plane_buffer::plane_buffer::PlaneBuffer,
-    visual::{rendering::interpolation_values::InterpolationValues, vertex::Vertex},
+    visual::{rendering::triangle::interpolation_values::InterpolationValues, vertex::Vertex},
 };
 
 pub fn render_triangle_depth(vertices: &[Vertex; 3], depth_buffer: &mut PlaneBuffer<f32>) {

@@ -122,9 +122,15 @@ pub fn open_render_window(
         if window.is_key_pressed(Key::R, KeyRepeat::No) {
             spin_light = !spin_light;
         }
-        if let Err(e) = handle_image_save_controls(&window, &draw_buffer) {
-            println!("Error saving file: {}", e);
-        }
+
+        match handle_image_save_controls(&window, &draw_buffer) {
+            Ok(save_triggered) => {
+                if save_triggered {
+                    println!("Successfully saved image")
+                }
+            }
+            Err(e) => println!("Error saving file: {}", e),
+        };
         handle_render_config_controls(&window, &mut render_config);
         handle_camera_controls(
             &window,

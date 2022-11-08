@@ -11,8 +11,8 @@ use crate::{
         color::color::Color,
         drawing_buffer::DrawingBuffer,
         rendering::{
-            interpolation_values::InterpolationValues,
             light_source::{LightSource, LightSourceKind},
+            triangle::interpolation_values::InterpolationValues,
         },
         vertex::Vertex,
     },
