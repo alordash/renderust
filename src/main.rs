@@ -11,7 +11,6 @@ pub mod visual;
 pub mod wavefront;
 
 use ui::render_window::render_window::open_render_window;
-use visual::rendering::wavefront_obj::wavefront_render_model::WavefrontRenderModel;
 use wavefront::{wavefront_obj::WavefrontObj, wavefront_obj_source::WaveFrontObjSource};
 
 const BUFFER_WIDTH: usize = 1000;
