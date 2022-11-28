@@ -36,3 +36,7 @@ Self shadows from two lights (which are directed top-down and back-forward)
 <details> <summary>More pictures</summary>
 
 <img src="./demo/mysterious_face.png" width="512px" height="512px"><img/> <img src="./demo/sideview.png" width="512px" height="512px"><img/></details>
+
+<details> <summary>Video</summary>
+
+<img src="./demo/effects.gif"><img/></details>
