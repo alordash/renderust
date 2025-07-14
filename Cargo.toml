@@ -5,9 +5,8 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
-minifb = "0.23"
+minifb = "0.28.0"
 rand = "0.8.5"
-thiserror = "1.0.32"
 num = "0.4.0"
 image = "0.23.12"
 glam = "0.21.3"
